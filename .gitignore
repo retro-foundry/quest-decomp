@@ -1,0 +1,8 @@
+/build/
+*.bak
+*.log
+*.tmp
+*.user
+*.code-workspace
+.vs/
+.vscode/
