@@ -3696,7 +3696,7 @@ ORG update_lift_and_hazard_group
 
 ASSERT update_lift_and_hazard_group_source = update_lift_and_hazard_group
 ASSERT update_lift_and_hazard_group_source_end = &2423
-COPYBLOCK update_lift_and_hazard_group_source, update_lift_and_hazard_group_source_end, &3C01
+COPYBLOCK update_lift_and_hazard_group_source, update_lift_and_hazard_group_source_end, update_lift_and_hazard_group+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2401-$2422 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3C01-$3C22.
@@ -3748,7 +3748,7 @@ ORG update_lift_or_hazard_by_class
 
 ASSERT update_lift_or_hazard_by_class_source = update_lift_or_hazard_by_class
 ASSERT update_lift_or_hazard_by_class_source_end = &244E
-COPYBLOCK update_lift_or_hazard_by_class_source, update_lift_or_hazard_by_class_source_end, &3C23
+COPYBLOCK update_lift_or_hazard_by_class_source, update_lift_or_hazard_by_class_source_end, update_lift_or_hazard_by_class+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2423-$244D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3C23-$3C4D.
@@ -3789,7 +3789,7 @@ ORG refill_energy_in_28_steps
 
 ASSERT refill_energy_in_28_steps_source = refill_energy_in_28_steps
 ASSERT refill_energy_in_28_steps_source_end = &24E7
-COPYBLOCK refill_energy_in_28_steps_source, refill_energy_in_28_steps_source_end, &3CD2
+COPYBLOCK refill_energy_in_28_steps_source, refill_energy_in_28_steps_source_end, refill_energy_in_28_steps+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $24D2-$24E6 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3CD2-$3CE6.
@@ -3825,7 +3825,7 @@ ORG set_velocity_step_from_horizontal_band
 
 ASSERT set_velocity_step_from_horizontal_band_source = set_velocity_step_from_horizontal_band
 ASSERT set_velocity_step_from_horizontal_band_source_end = &24F4
-COPYBLOCK set_velocity_step_from_horizontal_band_source, set_velocity_step_from_horizontal_band_source_end, &3CE7
+COPYBLOCK set_velocity_step_from_horizontal_band_source, set_velocity_step_from_horizontal_band_source_end, set_velocity_step_from_horizontal_band+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $24E7-$24F3 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3CE7-$3CF3.
@@ -3879,7 +3879,7 @@ ASSERT advance_bounded_tick_target_source = advance_bounded_tick_target
 ASSERT bounded_tick_target_initial_data = bounded_tick_target_delta
 ASSERT bounded_tick_target_initial_data + 1 = bounded_tick_target_delay_counter
 ASSERT advance_bounded_tick_target_source_end = main_gameplay_loop
-COPYBLOCK advance_bounded_tick_target_source, advance_bounded_tick_target_source_end, &3CF9
+COPYBLOCK advance_bounded_tick_target_source, advance_bounded_tick_target_source_end, advance_bounded_tick_target+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $24F9-$252E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3CF9-$3D2E.
@@ -3912,7 +3912,7 @@ ORG collect_power_crystal_and_refill_energy
 
 ASSERT collect_power_crystal_and_refill_energy_source = collect_power_crystal_and_refill_energy
 ASSERT collect_power_crystal_and_refill_energy_source_end = &2471
-COPYBLOCK collect_power_crystal_and_refill_energy_source, collect_power_crystal_and_refill_energy_source_end, &3C53
+COPYBLOCK collect_power_crystal_and_refill_energy_source, collect_power_crystal_and_refill_energy_source_end, collect_power_crystal_and_refill_energy+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2453-$2470 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3C53-$3C70.
@@ -4006,7 +4006,7 @@ ASSERT initialise_new_game_source = initialise_new_game
 ASSERT unused_new_game_inline_mode1_record_source_data = unused_new_game_inline_mode1_record
 ASSERT draw_cleared_icon_slot = &0C10
 ASSERT initialise_new_game_source_end = &0C43
-COPYBLOCK initialise_new_game_source, initialise_new_game_source_end, &24C8
+COPYBLOCK initialise_new_game_source, initialise_new_game_source_end, initialise_new_game+LOW_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $0BC8-$0C42 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $24C8-$2542.
@@ -4084,7 +4084,7 @@ ORG walk_player_toward_target_position
 
 ASSERT walk_player_toward_target_position_source = walk_player_toward_target_position
 ASSERT walk_player_toward_target_position_source_end = &2630
-COPYBLOCK walk_player_toward_target_position_source, walk_player_toward_target_position_source_end, &3DDC
+COPYBLOCK walk_player_toward_target_position_source, walk_player_toward_target_position_source_end, walk_player_toward_target_position+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $25DC-$262F overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3DDC-$3E2F.
@@ -4191,7 +4191,7 @@ ASSERT run_startup_room_sequence_until_space_source = run_startup_room_sequence_
 ASSERT startup_press_space_vdu_stream = &0CBE
 ASSERT update_startup_room = &0CCF
 ASSERT run_startup_room_sequence_until_space_source_end = startup_room_sequence_table
-COPYBLOCK run_startup_room_sequence_until_space_source, run_startup_room_sequence_until_space_source_end, &256E
+COPYBLOCK run_startup_room_sequence_until_space_source, run_startup_room_sequence_until_space_source_end, run_startup_room_sequence_until_space+LOW_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $0C6E-$0CEC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $256E-$25EC.
@@ -4219,7 +4219,7 @@ ORG wait_vsync_then_call_display_helpers
 
 ASSERT wait_vsync_then_call_display_helpers_source = wait_vsync_then_call_display_helpers
 ASSERT wait_vsync_then_call_display_helpers_source_end = &2790
-COPYBLOCK wait_vsync_then_call_display_helpers_source, wait_vsync_then_call_display_helpers_source_end, &3F82
+COPYBLOCK wait_vsync_then_call_display_helpers_source, wait_vsync_then_call_display_helpers_source_end, wait_vsync_then_call_display_helpers+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2782-$278F overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3F82-$3F8F.
@@ -4266,7 +4266,7 @@ ORG redraw_energy_bar_segment
 
 ASSERT redraw_energy_bar_segment_source = redraw_energy_bar_segment
 ASSERT redraw_energy_bar_segment_source_end = &2654
-COPYBLOCK redraw_energy_bar_segment_source, redraw_energy_bar_segment_source_end, &3E30
+COPYBLOCK redraw_energy_bar_segment_source, redraw_energy_bar_segment_source_end, redraw_energy_bar_segment+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2630-$2653 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3E30-$3E53.
@@ -4290,7 +4290,7 @@ ORG set_display_pointer_three_mode1_rows_below_player
 
 ASSERT set_display_pointer_three_mode1_rows_below_player_source = set_display_pointer_three_mode1_rows_below_player
 ASSERT set_display_pointer_three_mode1_rows_below_player_source_end = &28A7
-COPYBLOCK set_display_pointer_three_mode1_rows_below_player_source, set_display_pointer_three_mode1_rows_below_player_source_end, &4099
+COPYBLOCK set_display_pointer_three_mode1_rows_below_player_source, set_display_pointer_three_mode1_rows_below_player_source_end, set_display_pointer_three_mode1_rows_below_player+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2899-$28A6 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4099-$40A6.
@@ -4347,7 +4347,7 @@ ORG move_player_right_with_collision
 
 ASSERT move_player_right_with_collision_source = move_player_right_with_collision
 ASSERT move_player_right_with_collision_source_end = &27D6
-COPYBLOCK move_player_right_with_collision_source, move_player_right_with_collision_source_end, &3F97
+COPYBLOCK move_player_right_with_collision_source, move_player_right_with_collision_source_end, move_player_right_with_collision+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2797-$27D5 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3F97-$3FD5.
@@ -4408,7 +4408,7 @@ ORG move_player_left_with_collision
 
 ASSERT move_player_left_with_collision_source = move_player_left_with_collision
 ASSERT move_player_left_with_collision_source_end = &2813
-COPYBLOCK move_player_left_with_collision_source, move_player_left_with_collision_source_end, &3FD6
+COPYBLOCK move_player_left_with_collision_source, move_player_left_with_collision_source_end, move_player_left_with_collision+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $27D6-$2812 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3FD6-$4012.
@@ -4440,7 +4440,7 @@ ORG advance_player_vertical_position_and_display_pointer
 
 ASSERT advance_player_vertical_position_and_display_pointer_source = advance_player_vertical_position_and_display_pointer
 ASSERT advance_player_vertical_position_and_display_pointer_source_end = scan_display_column_for_blocking_byte
-COPYBLOCK advance_player_vertical_position_and_display_pointer_source, advance_player_vertical_position_and_display_pointer_source_end, &40EF
+COPYBLOCK advance_player_vertical_position_and_display_pointer_source, advance_player_vertical_position_and_display_pointer_source_end, advance_player_vertical_position_and_display_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $28EF-$290A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $40EF-$410A.
@@ -4547,7 +4547,7 @@ ORG move_player_down_by_velocity
 
 ASSERT move_player_down_by_velocity_source = move_player_down_by_velocity
 ASSERT move_player_down_by_velocity_source_end = &2893
-COPYBLOCK move_player_down_by_velocity_source, move_player_down_by_velocity_source_end, &4013
+COPYBLOCK move_player_down_by_velocity_source, move_player_down_by_velocity_source_end, move_player_down_by_velocity+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2813-$2892 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4013-$4092.
@@ -4751,7 +4751,7 @@ ORG poll_controls_and_apply_gameplay_actions
 
 ASSERT poll_controls_and_apply_gameplay_actions_source = poll_controls_and_apply_gameplay_actions
 ASSERT poll_controls_and_apply_gameplay_actions_source_end = &2782
-COPYBLOCK poll_controls_and_apply_gameplay_actions_source, poll_controls_and_apply_gameplay_actions_source_end, &3E5A
+COPYBLOCK poll_controls_and_apply_gameplay_actions_source, poll_controls_and_apply_gameplay_actions_source_end, poll_controls_and_apply_gameplay_actions+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $265A-$2781 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3E5A-$3F81.
@@ -4809,7 +4809,7 @@ ORG scan_display_column_for_blocking_byte
 ASSERT scan_display_column_for_blocking_byte_source = scan_display_column_for_blocking_byte
 ASSERT shared_display_scan_rts = shared_display_scan_return
 ASSERT scan_display_column_for_blocking_byte_source_end = adjust_display_pointer_then_scan_markers
-COPYBLOCK scan_display_column_for_blocking_byte_source, scan_display_column_for_blocking_byte_source_end, &410B
+COPYBLOCK scan_display_column_for_blocking_byte_source, scan_display_column_for_blocking_byte_source_end, scan_display_column_for_blocking_byte+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $290B-$293E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $410B-$413E.
@@ -4841,7 +4841,7 @@ ORG adjust_display_pointer_then_scan_markers
 
 ASSERT adjust_display_pointer_then_scan_markers_source = adjust_display_pointer_then_scan_markers
 ASSERT adjust_display_pointer_then_scan_markers_source_end = scan_four_display_bytes_for_markers
-COPYBLOCK adjust_display_pointer_then_scan_markers_source, adjust_display_pointer_then_scan_markers_source_end, &413F
+COPYBLOCK adjust_display_pointer_then_scan_markers_source, adjust_display_pointer_then_scan_markers_source_end, adjust_display_pointer_then_scan_markers+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $293F-$2956 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $413F-$4156.
@@ -4916,7 +4916,7 @@ ORG move_player_up_by_velocity
 
 ASSERT move_player_up_by_velocity_source = move_player_up_by_velocity
 ASSERT move_player_up_by_velocity_source_end = &28EF
-COPYBLOCK move_player_up_by_velocity_source, move_player_up_by_velocity_source_end, &40A7
+COPYBLOCK move_player_up_by_velocity_source, move_player_up_by_velocity_source_end, move_player_up_by_velocity+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $28A7-$28EE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $40A7-$40EE.
@@ -4986,7 +4986,7 @@ ORG scan_four_display_bytes_for_markers
 
 ASSERT scan_four_display_bytes_for_markers_source = scan_four_display_bytes_for_markers
 ASSERT scan_four_display_bytes_for_markers_source_end = &29A2
-COPYBLOCK scan_four_display_bytes_for_markers_source, scan_four_display_bytes_for_markers_source_end, &4157
+COPYBLOCK scan_four_display_bytes_for_markers_source, scan_four_display_bytes_for_markers_source_end, scan_four_display_bytes_for_markers+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2957-$29A1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4157-$41A1.
@@ -5014,7 +5014,7 @@ ORG check_player_relative_column_junction
 
 ASSERT check_player_relative_column_junction_source = check_player_relative_column_junction
 ASSERT check_player_relative_column_junction_source_end = &2A4E
-COPYBLOCK check_player_relative_column_junction_source, check_player_relative_column_junction_source_end, &4235
+COPYBLOCK check_player_relative_column_junction_source, check_player_relative_column_junction_source_end, check_player_relative_column_junction+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2A35-$2A4D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4235-$424D.
@@ -5067,7 +5067,7 @@ ASSERT timed_effect_selector_source = timed_effect_selector
 ASSERT saved_effect_display_pointer_source = saved_effect_display_pointer_low
 ASSERT lift_and_hazard_state_block_source = lift_and_hazard_state_block
 ASSERT room_entity_and_effect_state_source_end = enter_run_terminal_interaction
-COPYBLOCK room_entity_and_effect_state_source, room_entity_and_effect_state_source_end, &2A29
+COPYBLOCK room_entity_and_effect_state_source, room_entity_and_effect_state_source_end, room_moving_object_graphic_state_block+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR room_entity_and_effect_state_source, room_entity_and_effect_state_source_end
 
 ORG enter_run_terminal_interaction
@@ -5085,7 +5085,7 @@ ORG enter_run_terminal_interaction
 
 ASSERT enter_run_terminal_interaction_source = enter_run_terminal_interaction
 ASSERT enter_run_terminal_interaction_source_end = &124E
-COPYBLOCK enter_run_terminal_interaction_source, enter_run_terminal_interaction_source_end, &2A4B
+COPYBLOCK enter_run_terminal_interaction_source, enter_run_terminal_interaction_source_end, enter_run_terminal_interaction+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $124B-$124D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2A4B-$2A4D.
@@ -5109,7 +5109,7 @@ ORG test_item_code_matches_either_slot
 
 ASSERT test_item_code_matches_either_slot_source = test_item_code_matches_either_slot
 ASSERT test_item_code_matches_either_slot_source_end = &2146
-COPYBLOCK test_item_code_matches_either_slot_source, test_item_code_matches_either_slot_source_end, &393C
+COPYBLOCK test_item_code_matches_either_slot_source, test_item_code_matches_either_slot_source_end, test_item_code_matches_either_slot+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $213C-$2145 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $393C-$3945.
