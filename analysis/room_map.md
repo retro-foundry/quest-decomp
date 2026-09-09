@@ -20,10 +20,10 @@ Where the two disagree the disagreement is recorded rather than resolved.
 | --- | --- | --- | --- |
 | `room_appearance_table` | `$09B0` | 80 bytes, `$8F * 8 + $90` | palette nibble and tile-pair index per room |
 | `item_and_goal_record_table` | `$0900` | 12 records of 4 | eleven item-indexed records plus the Golden Dragon ending at index 3 |
-| `roaming_graphic_room_record_table` | `$0930` | 16 records of 5 | roaming graphics: caterpillars in B0/A3/B5/C4/C1/B2/F0/G3/G5/E6, mice in G1/G9, lifts in C2/D3/G4, and fish in E7 |
+| `room_moving_object_record_table` | `$0930` | 16 records of 5 | room-local moving objects: caterpillars in B0/A3/B5/C4/C1/B2/F0/G3/G5/E6, mice in G1/G9, lifts in C2/D3/G4, and fish in E7 |
 | `initial_item_and_goal_record_table` | `$0980` | 12 records of 4 | new-game image copied over the mutable `$0900` records by `$3245` |
 | `room_enemy_record_table` | `$0A00` | 20 records of 6 | bat, small bouncing robot, or moth enemies, per room |
-| `second_room_entity_record_table` | `$0A96` | 20 records of 5 | the second entity class, per room |
+| `lift_and_hazard_room_record_table` | `$0A96` | 20 records of 5 | three lift records and seventeen moth-shaped damaging-hazard records, per room |
 | `indexed_pair_record_table` | `$0A78` | 10 records of 3, by `$8F` | one roaming pair per level |
 | `across_to_password_number` | `$18AA` | 8 bytes, by `$90` | which password a column carries |
 
@@ -142,7 +142,7 @@ C5 G2 E5 E2 A2 E3 F4 E4 H7 D6 C7 D7. This contains **every room the account
 calls out for an enemy**: D0, G2, E5, E3 (the homing one) and F4. The rest are
 hazard, water, acid and plant rooms.
 
-`second_room_entity_record_table` at `$0A96`, twenty records — A4 B2 B6 G2 A1 B3
+`lift_and_hazard_room_record_table` at `$0A96`, twenty records — A4 B2 B6 G2 A1 B3
 C0 G8 F0 E8 E5 G8 G5 H7 H4 E3 C2 E6 B8 D5. This is the class whose renderer
 `$23BF` was shown by play to draw the vertical lifts, and whose update pushes or
 carries the player. It contains C2, reported as an acid-vat platform room, and
@@ -182,7 +182,7 @@ what the two selector columns mean in play is not.
 
 Kept verbatim as testimony. Rooms the payload has something to say about are
 marked: **i** an item placement, **e** a first-class entity, **s** a
-second-class entity, **P** a password, **R** palette B (reactor), **D** palette
+lift or moth-shaped hazard, **P** a password, **R** palette B (reactor), **D** palette
 A (decoy).
 
 | Room | Reported | Payload |

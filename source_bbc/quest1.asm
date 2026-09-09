@@ -214,7 +214,7 @@
 ;          records name down 10, outside the grid, matching items the account
 ;          says are produced by puzzles rather than found: the herring and mouse.
 ;
-;   $0930  roaming_graphic_room_record_table, sixteen five-byte records. A matching
+;   $0930  room_moving_object_record_table, sixteen five-byte records. A matching
 ;          record configures four positions for a caterpillar, fish, mouse or
 ;          lift. Its last three bytes are the display row and lower and upper
 ;          position limits. Fish and mouse records keep an existing nonzero
@@ -240,9 +240,9 @@
 ;          once appeared to do nothing: whether one is in the room being watched
 ;          depends on where it has roamed to.
 ;
-;   $0A96  second_room_entity_record_table, twenty five-byte records, the second
-;          entity class - the one whose renderer $23BF was shown by play to draw
-;          the vertical lifts, and whose update carries or pushes the player.
+;   $0A96  lift_and_hazard_room_record_table, twenty five-byte records selecting
+;          either the vertical-lift graphic or the damaging moth-shaped frames.
+;          The lift update carries or pushes the player.
 ;          A room can appear twice, so it can hold two.
 ;
 ;   Twelve power crystals are reported and twelve is also the limit
@@ -1502,10 +1502,10 @@ ORG indexed_xor_graphic_state
     EQUB &00                         ; $121D indexed XOR state element 0
     EQUB &00                         ; $121E lower selector limit / element 1
     EQUB &00                         ; $121F upper selector limit / element 2
-    EQUB &00                         ; $1220 roaming-graphic room selector / element 3
+    EQUB &00                         ; $1220 room-moving-object room selector / element 3
     EQUB &00                         ; $1221 active enemy species
     EQUB &00                         ; $1222 active enemy last even slot
-    EQUB &00                         ; $1223 roaming-graphic even-slot loop limit
+    EQUB &00                         ; $1223 room-moving-object even-slot loop limit
     EQUB &00                         ; $1224 graphic source base pointer offset
     EQUB &00                         ; $1225 complete current room cell
 .room_render_state_source_end
@@ -2285,14 +2285,14 @@ ORG dispatch_game_tick_updates
     JSR run_horizontal_16_warp_sequence
 
 .dispatch_game_tick_updates_branch_2
-    LDA roaming_graphics_active
+    LDA room_moving_objects_active
     BEQ dispatch_game_tick_updates_branch_3
-    JSR update_and_draw_roaming_graphics
+    JSR update_and_draw_room_moving_objects
 
 .dispatch_game_tick_updates_branch_3
     LDA &A3
     BEQ dispatch_game_tick_updates_branch_4
-    JSR update_second_entity_slots
+    JSR update_lift_and_hazard_slots
 
 .dispatch_game_tick_updates_branch_4
     LDA &A5
@@ -2323,9 +2323,9 @@ ORG dispatch_game_tick_updates
     JSR &2D98
 
 .dispatch_game_tick_updates_branch_9
-    LDA &1245
+    LDA lift_and_hazard_active
     BEQ dispatch_game_tick_updates_branch_10
-    JSR update_second_entity_group
+    JSR update_lift_and_hazard_group
 
 .dispatch_game_tick_updates_branch_10
     LDA &4E
@@ -2802,10 +2802,10 @@ COPYBLOCK initialise_room_enemy_from_table_source, initialise_room_enemy_from_ta
 CLEAR initialise_room_enemy_from_table_source, initialise_room_enemy_from_table_source_end
 
 
-ORG initialise_second_room_entity_from_table
+ORG initialise_lifts_and_hazards_from_table
 
-; Runtime $1FEF-$2081. The second entity slot, initialised the same way as the
-; first but from its own table and into its own fields.
+; Runtime $1FEF-$2081. Initialise the room's vertical lifts or moth-shaped
+; hazards from their dedicated table and state fields.
 ; The table at $0A96 holds twenty five-byte records: X counts up to $14 and is
 ; multiplied by five. The packed match leaves the graphic selectors in $31 and
 ; $32, which go to $124A biased by $0A and to $1249. The three remaining bytes
@@ -2820,29 +2820,29 @@ ORG initialise_second_room_entity_from_table
 ; next table starting where the previous one ends.
 ;
 ; This is the table the moving platforms and the room hazards come from.
-; Suppressing its renderer, xor_draw_second_entity, was tested in play and made
+; Suppressing its renderer, xor_draw_lift_or_hazard, was tested in play and made
 ; the vertical lifts disappear while leaving the enemy robots alone.
 ;
 ; The $1249 this routine writes, from the high nibble of the record's second
-; byte, is what decides which of the two a room gets. test_entity_hit_player
-; charges energy only when $1249 is exactly 1, and update_second_entity_by_class
-; sends class 1 to the player-overlap test and everything else to
+; byte, is what decides which of the two a room gets. test_lift_or_hazard_hit_player
+; charges energy only when $1249 is exactly 1, and update_lift_or_hazard_by_class
+; sends LIFT_OR_HAZARD_HAZARD to the player-overlap test and a lift to
 ; apply_moving_entity_to_player, which carries or pushes the player instead of
 ; hurting them. Decoding all twenty records splits them
-;   class 0, a surface that carries the player   A4 B2 B6
-;   class 1, a hazard that charges energy        G2 A1 B3 C0 G8 F0 E8 E5 G8
+;   LIFT_OR_HAZARD_LIFT, carries the player      A4 B2 B6
+;   LIFT_OR_HAZARD_HAZARD, moth-shaped and hurts G2 A1 B3 C0 G8 F0 E8 E5 G8
 ;                                                G5 H7 H4 E3 C2 E6 B8 D5
 ; so only three rooms hold a platform of this class and seventeen hold a
 ; hazard, and G8 holds two. The renderer draws both alike; only contact
 ; differs.
-.initialise_second_room_entity_from_table_source
+.initialise_lifts_and_hazards_from_table_source
     LDA #&96
     STA &13
     LDA #&0A
     STA &14
     LDX #&00
 
-.test_next_entity_record_two
+.test_next_lift_or_hazard_record
     TXA
     ASL A
     ASL A
@@ -2851,44 +2851,44 @@ ORG initialise_second_room_entity_from_table
     ADC &33
     TAY
     JSR match_packed_record_against_references
-    BCS unpack_matched_entity_record_two
+    BCS unpack_matched_lift_or_hazard_record
     INX
     CPX #&14
-    BNE test_next_entity_record_two
+    BNE test_next_lift_or_hazard_record
     RTS
 
-.unpack_matched_entity_record_two
+.unpack_matched_lift_or_hazard_record
     LDA &31
     CLC
     ADC #&0A
-    STA &124A
+    STA lift_and_hazard_slot_limit
     LDA &32
-    STA &1249
+    STA active_lift_or_hazard_class
     LDA #&01
-    STA &1245
+    STA lift_and_hazard_active
     INY
-    LDA second_room_entity_record_table,Y
-    STA &1248
+    LDA lift_and_hazard_room_record_table,Y
+    STA lift_or_hazard_horizontal_extent
     SEC
     SBC #&04
     STA &0B
     INY
-    LDA second_room_entity_record_table,Y
+    LDA lift_and_hazard_room_record_table,Y
     STA &0A
     ASL A
     ASL A
     ASL A
-    STA &1246
+    STA lift_or_hazard_lower_position
     STA &23
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
     STA &5B
     LDA display_pointer_high
     STA &5C
-    LDA &1248
+    LDA lift_or_hazard_horizontal_extent
     STA &0B
     INY
-    LDA second_room_entity_record_table,Y
+    LDA lift_and_hazard_room_record_table,Y
     SEC
     SBC #&02
     STA &0A
@@ -2897,7 +2897,7 @@ ORG initialise_second_room_entity_from_table
     ASL A
     STA &21
     ADC #&10
-    STA &1247
+    STA lift_or_hazard_upper_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
     STA &59
@@ -2906,29 +2906,29 @@ ORG initialise_second_room_entity_from_table
     LDA #&02
     STA &20
     STA &22
-    LDA &1249
+    LDA active_lift_or_hazard_class
     ASL A
     ASL A
     TAY
     LDX #&00
 
-.copy_next_descriptor_byte_two
+.copy_next_lift_or_hazard_descriptor_byte
     LDA lift_and_hazard_graphic_descriptor_table,Y
     STA lift_and_hazard_graphic_descriptor,X
     INY
     INX
     CPX #&04
-    BNE copy_next_descriptor_byte_two
+    BNE copy_next_lift_or_hazard_descriptor_byte
     RTS
-.initialise_second_room_entity_from_table_source_end
+.initialise_lifts_and_hazards_from_table_source_end
 
-ASSERT initialise_second_room_entity_from_table_source = initialise_second_room_entity_from_table
-ASSERT initialise_second_room_entity_from_table_source_end = &2082
-COPYBLOCK initialise_second_room_entity_from_table_source, initialise_second_room_entity_from_table_source_end, &37EF
+ASSERT initialise_lifts_and_hazards_from_table_source = initialise_lifts_and_hazards_from_table
+ASSERT initialise_lifts_and_hazards_from_table_source_end = &2082
+COPYBLOCK initialise_lifts_and_hazards_from_table_source, initialise_lifts_and_hazards_from_table_source_end, &37EF
 
 ; Runtime $1FEF-$2081 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $37EF-$3881.
-CLEAR initialise_second_room_entity_from_table_source, initialise_second_room_entity_from_table_source_end
+CLEAR initialise_lifts_and_hazards_from_table_source, initialise_lifts_and_hazards_from_table_source_end
 
 
 ORG run_terminal_interaction
@@ -3032,8 +3032,8 @@ CLEAR run_terminal_interaction_source, run_terminal_interaction_source_end
 ORG lift_and_hazard_graphic_descriptor_table
 ; Two pairs of sprite-frame pointers selected by lift/hazard class.
 .lift_and_hazard_graphic_descriptor_table_source
-    EQUB &A0, &0E, &A0, &0E
-    EQUB &C0, &04, &E0, &04
+    EQUW &0EA0, &0EA0 ; LIFT_OR_HAZARD_LIFT: repeated vertical-lift graphic
+    EQUW &04C0, &04E0 ; LIFT_OR_HAZARD_HAZARD: moth-shaped animation frames
 .lift_and_hazard_graphic_descriptor_table_source_end
 ASSERT lift_and_hazard_graphic_descriptor_table_source = lift_and_hazard_graphic_descriptor_table
 ASSERT lift_and_hazard_graphic_descriptor_table_source_end = match_packed_record_against_references
@@ -3393,7 +3393,7 @@ ORG game_entry_jump_table
 
     JMP test_range_with_supplied_box
 
-    JMP draw_entity_without_slot_check
+    JMP draw_lift_or_hazard_without_slot_check
 
     JMP dispatch_game_tick_updates
     NOP
@@ -3410,9 +3410,9 @@ COPYBLOCK game_entry_jump_table_source, game_entry_jump_table_source_end, &3A00
 CLEAR game_entry_jump_table_source, game_entry_jump_table_source_end
 
 
-ORG update_second_entity_slots
+ORG update_lift_and_hazard_slots
 
-; Runtime $22D6-$22FD. Update the second-class entity slots, on a schedule driven
+; Runtime $22D6-$22FD. Update the lift/hazard slots on a schedule driven
 ; by a rolling counter.
 ; The counter at $28 is incremented once per call and copied into $34, which is
 ; then used as a bit mask: after the first three slots are updated
@@ -3423,43 +3423,43 @@ ORG update_second_entity_slots
 ; a two-byte pair in the $18, $19 and $51/$52 arrays. The draws that bracket the
 ; group use the $23C7 entry, which skips the slot check the per-entity path
 ; performs.
-.update_second_entity_slots_source
+.update_lift_and_hazard_slots_source
     INC &28
     LDA &28
     STA &34
     LDY #&00
-    JSR draw_entity_without_slot_check
-    JSR update_one_second_entity
-    JSR update_one_second_entity
-    JSR draw_entity_without_slot_check
+    JSR draw_lift_or_hazard_without_slot_check
+    JSR update_one_lift_or_hazard
+    JSR update_one_lift_or_hazard
+    JSR draw_lift_or_hazard_without_slot_check
     INY
     INY
-    JSR update_one_second_entity
+    JSR update_one_lift_or_hazard
     INY
     INY
     ROR &34
     BCC test_next_scheduled_slot
-    JMP update_one_second_entity
+    JMP update_one_lift_or_hazard
 
 .test_next_scheduled_slot
     INY
     INY
     ROR &34
     BCC entity_update_loop_exit
-.update_second_entity_slots_source_end
+.update_lift_and_hazard_slots_source_end
 
-ASSERT update_second_entity_slots_source = update_second_entity_slots
-ASSERT update_second_entity_slots_source_end = &22FE
-COPYBLOCK update_second_entity_slots_source, update_second_entity_slots_source_end, &3AD6
+ASSERT update_lift_and_hazard_slots_source = update_lift_and_hazard_slots
+ASSERT update_lift_and_hazard_slots_source_end = &22FE
+COPYBLOCK update_lift_and_hazard_slots_source, update_lift_and_hazard_slots_source_end, &3AD6
 
 ; Runtime $22D6-$22FD overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3AD6-$3AFD.
-CLEAR update_second_entity_slots_source, update_second_entity_slots_source_end
+CLEAR update_lift_and_hazard_slots_source, update_lift_and_hazard_slots_source_end
 
 
-ORG update_one_second_entity
+ORG update_one_lift_or_hazard
 
-; Runtime $22FE-$230C. Update one second-class entity: erase, clamp, act on the
+; Runtime $22FE-$230C. Update one lift or moth-shaped hazard: erase, clamp, act on the
 ; player, step, redraw.
 ; The order matters. The entity is drawn once before it moves and once after,
 ; and because the renderer is XOR the first call erases it from where it was.
@@ -3467,21 +3467,21 @@ ORG update_one_second_entity
 ; player applied, and the signed step taken.
 ; The final draw is a tail jump rather than a call, so the redraw returns
 ; straight to this routine caller.
-.update_one_second_entity_source
-    JSR reverse_second_entity_delta_at_limits
-    JSR xor_draw_second_entity
+.update_one_lift_or_hazard_source
+    JSR reverse_lift_or_hazard_delta_at_limits
+    JSR xor_draw_lift_or_hazard
     JSR apply_moving_entity_to_player
-    JSR advance_second_entity_vertical_position
-    JMP xor_draw_second_entity
-.update_one_second_entity_source_end
+    JSR advance_lift_or_hazard_vertical_position
+    JMP xor_draw_lift_or_hazard
+.update_one_lift_or_hazard_source_end
 
-ASSERT update_one_second_entity_source = update_one_second_entity
-ASSERT update_one_second_entity_source_end = &230D
-COPYBLOCK update_one_second_entity_source, update_one_second_entity_source_end, &3AFE
+ASSERT update_one_lift_or_hazard_source = update_one_lift_or_hazard
+ASSERT update_one_lift_or_hazard_source_end = &230D
+COPYBLOCK update_one_lift_or_hazard_source, update_one_lift_or_hazard_source_end, &3AFE
 
 ; Runtime $22FE-$230C overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3AFE-$3B0C.
-CLEAR update_one_second_entity_source, update_one_second_entity_source_end
+CLEAR update_one_lift_or_hazard_source, update_one_lift_or_hazard_source_end
 
 
 ORG apply_moving_entity_to_player
@@ -3560,9 +3560,9 @@ COPYBLOCK apply_moving_entity_to_player_source, apply_moving_entity_to_player_so
 CLEAR apply_moving_entity_to_player_source, apply_moving_entity_to_player_source_end
 
 
-ORG reverse_second_entity_delta_at_limits
+ORG reverse_lift_or_hazard_delta_at_limits
 
-; Runtime $2375-$2393. Keep a second-class entity inside its range by reversing
+; Runtime $2375-$2393. Keep a lift or moth-shaped hazard inside its range by reversing
 ; its delta at either limit, and flag that the check ran.
 ; $75 is set to 1 on entry. The entity value at $19 is masked to $FE and tested
 ; against the two limits at $1246 and $1247: matching the first stores +2 into
@@ -3572,44 +3572,44 @@ ORG reverse_second_entity_delta_at_limits
 ; drives +1 and -1 against $1235 and $1236, reverse_indexed_123b_delta_at_limits
 ; drives +2 and -2 against $1237 and $1238 by equality, and this one drives +2
 ; and -2 against $1246 and $1247. Those last two limits are the pair
-; initialise_second_room_entity_from_table unpacks, so each entity class carries
+; initialise_lifts_and_hazards_from_table unpacks, so each entity class carries
 ; its own limits and its own clamp.
-.reverse_second_entity_delta_at_limits_source
+.reverse_lift_or_hazard_delta_at_limits_source
     LDA #&01
     STA &75
     LDA &0019,Y
     AND #&FE
-    CMP &1246
-    BEQ set_second_entity_delta_positive
-    CMP &1247
-    BEQ set_second_entity_delta_negative
+    CMP lift_or_hazard_lower_position
+    BEQ set_lift_or_hazard_delta_positive
+    CMP lift_or_hazard_upper_position
+    BEQ set_lift_or_hazard_delta_negative
     RTS
 
-.set_second_entity_delta_positive
+.set_lift_or_hazard_delta_positive
     LDA #&02
 
-.store_second_entity_delta
+.store_lift_or_hazard_delta
     STA &0018,Y
     RTS
 
-.set_second_entity_delta_negative
+.set_lift_or_hazard_delta_negative
     LDA #&FE
-    JMP store_second_entity_delta
-.reverse_second_entity_delta_at_limits_source_end
+    JMP store_lift_or_hazard_delta
+.reverse_lift_or_hazard_delta_at_limits_source_end
 
-ASSERT reverse_second_entity_delta_at_limits_source = reverse_second_entity_delta_at_limits
-ASSERT reverse_second_entity_delta_at_limits_source_end = &2394
-COPYBLOCK reverse_second_entity_delta_at_limits_source, reverse_second_entity_delta_at_limits_source_end, &3B75
+ASSERT reverse_lift_or_hazard_delta_at_limits_source = reverse_lift_or_hazard_delta_at_limits
+ASSERT reverse_lift_or_hazard_delta_at_limits_source_end = &2394
+COPYBLOCK reverse_lift_or_hazard_delta_at_limits_source, reverse_lift_or_hazard_delta_at_limits_source_end, &3B75
 
 ; Runtime $2375-$2393 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B75-$3B93.
-CLEAR reverse_second_entity_delta_at_limits_source, reverse_second_entity_delta_at_limits_source_end
+CLEAR reverse_lift_or_hazard_delta_at_limits_source, reverse_lift_or_hazard_delta_at_limits_source_end
 
 
-ORG advance_second_entity_vertical_position
+ORG advance_lift_or_hazard_vertical_position
 
-; Runtime $2394-$23BE. Apply one signed vertical step to the Y-indexed
-; second-class entity, then clear the check flag at $75.
+; Runtime $2394-$23BE. Apply one signed vertical step to the Y-indexed lift or
+; moth-shaped hazard, then clear the check flag at $75.
 ; The state is copied into the shared scratch fields, stepped by
 ; apply_signed_vertical_step_to_pointer and copied back, exactly as
 ; advance_indexed_entity_vertical_position does for the other class and
@@ -3618,9 +3618,9 @@ ORG advance_second_entity_vertical_position
 ; $51/$52 for the display pointer.
 ; All three movers therefore share one helper, so every moving thing in the game
 ; falls and climbs by the same two display scanlines per unit.
-; The $75 it clears is the flag reverse_second_entity_delta_at_limits sets on
+; The $75 it clears is the flag reverse_lift_or_hazard_delta_at_limits sets on
 ; entry, so the clamp and the step bracket each other.
-.advance_second_entity_vertical_position_source
+.advance_lift_or_hazard_vertical_position_source
     LDA &0019,Y
     STA indexed_pair_output_half_offset
     LDA &0018,Y
@@ -3639,20 +3639,20 @@ ORG advance_second_entity_vertical_position
     LDA #&00
     STA &75
     RTS
-.advance_second_entity_vertical_position_source_end
+.advance_lift_or_hazard_vertical_position_source_end
 
-ASSERT advance_second_entity_vertical_position_source = advance_second_entity_vertical_position
-ASSERT advance_second_entity_vertical_position_source_end = &23BF
-COPYBLOCK advance_second_entity_vertical_position_source, advance_second_entity_vertical_position_source_end, &3B94
+ASSERT advance_lift_or_hazard_vertical_position_source = advance_lift_or_hazard_vertical_position
+ASSERT advance_lift_or_hazard_vertical_position_source_end = &23BF
+COPYBLOCK advance_lift_or_hazard_vertical_position_source, advance_lift_or_hazard_vertical_position_source_end, &3B94
 
 ; Runtime $2394-$23BE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B94-$3BBE.
-CLEAR advance_second_entity_vertical_position_source, advance_second_entity_vertical_position_source_end
+CLEAR advance_lift_or_hazard_vertical_position_source, advance_lift_or_hazard_vertical_position_source_end
 
 
-ORG xor_draw_second_entity
+ORG xor_draw_lift_or_hazard
 
-; Runtime $23BF-$23F5. XOR-draw the Y-indexed second-class entity.
+; Runtime $23BF-$23F5. XOR-draw the Y-indexed lift or moth-shaped hazard.
 ; The $23BF entry skips slots 0 and 8 through the shared RTS at $23BE; $23C7 is
 ; the entry for callers that have already decided the slot is drawable, and is
 ; used far more often.
@@ -3667,54 +3667,54 @@ ORG xor_draw_second_entity
 ; lifts disappeared while the enemy robots were unaffected. It draws the whole
 ; second class the same way regardless of $1249, so a hazard and a moving
 ; platform look alike to this routine; only what happens on contact differs,
-; which update_second_entity_by_class decides.
-.xor_draw_second_entity_source
+; which update_lift_or_hazard_by_class decides.
+.xor_draw_lift_or_hazard_source
     CPY #&00
-    BEQ second_entity_step_rts
+    BEQ lift_or_hazard_step_rts
     CPY #&08
-    BEQ second_entity_step_rts
+    BEQ lift_or_hazard_step_rts
 
-.draw_entity_without_slot_check
+.draw_lift_or_hazard_without_slot_check
     LDX #&0C
-    LDA &1249
+    LDA active_lift_or_hazard_class
     LSR A
-    BCC single_row_entity
+    BCC single_row_lift_or_hazard
     LDA &0019,Y
     LSR A
     LSR A
     LSR A
-    BCS test_two_row_entity
+    BCS test_two_row_lift_or_hazard
     LDX #&0E
 
-.test_two_row_entity
-    LDA &124A
-    BEQ single_row_entity
+.test_two_row_lift_or_hazard
+    LDA lift_and_hazard_slot_limit
+    BEQ single_row_lift_or_hazard
     LDA #&01
     STA xor_graphic_repeat_source_scanlines
     LDA #&02
-    JMP draw_entity_at_pointer
+    JMP draw_lift_or_hazard_at_pointer
 
-.single_row_entity
+.single_row_lift_or_hazard
     LDA #&01
 
-.draw_entity_at_pointer
+.draw_lift_or_hazard_at_pointer
     STA xor_graphic_character_rows_remaining
     LDA &0052,Y
     STA display_pointer_high
     LDA &0051,Y
     JMP select_graphic_then_xor_draw
-.xor_draw_second_entity_source_end
+.xor_draw_lift_or_hazard_source_end
 
-ASSERT xor_draw_second_entity_source = xor_draw_second_entity
-ASSERT xor_draw_second_entity_source_end = &23F6
-COPYBLOCK xor_draw_second_entity_source, xor_draw_second_entity_source_end, &3BBF
+ASSERT xor_draw_lift_or_hazard_source = xor_draw_lift_or_hazard
+ASSERT xor_draw_lift_or_hazard_source_end = &23F6
+COPYBLOCK xor_draw_lift_or_hazard_source, xor_draw_lift_or_hazard_source_end, &3BBF
 
 ; Runtime $23BF-$23F5 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3BBF-$3BF5.
-CLEAR xor_draw_second_entity_source, xor_draw_second_entity_source_end
+CLEAR xor_draw_lift_or_hazard_source, xor_draw_lift_or_hazard_source_end
 
 
-ORG test_entity_hit_player
+ORG test_lift_or_hazard_hit_player
 
 ; Runtime $235C-$2374. Read and clear the collision flag at $0B, and charge energy
 ; for it when this room entity class is the one that hurts.
@@ -3726,34 +3726,34 @@ ORG test_entity_hit_player
 ; learns whether there was a collision even when no energy was charged.
 ;
 ; The class byte this tests, $1249, comes straight from the room's record in
-; second_room_entity_record_table, so whether the moving thing in a room hurts
-; is fixed per room. Seventeen of the twenty records are class 1 and hurt;
+; lift_and_hazard_room_record_table, so whether the moving thing in a room hurts
+; is fixed per room. Seventeen records select LIFT_OR_HAZARD_HAZARD and hurt;
 ; three - A4, B2 and B6 - are not, and those are the rooms where the moving
 ; thing is a surface to ride.
-.test_entity_hit_player_source
+.test_lift_or_hazard_hit_player_source
     LDX &0B
     LDA #&00
     STA &0B
-    LDA &1249
-    CMP #&01
-    BNE test_entity_hit_player_branch_1
+    LDA active_lift_or_hazard_class
+    CMP #LIFT_OR_HAZARD_HAZARD
+    BNE test_lift_or_hazard_hit_player_branch_1
     CPX #&01
-    BNE test_entity_hit_player_branch_1
+    BNE test_lift_or_hazard_hit_player_branch_1
     LDX #&00
     JSR apply_player_damage_and_redraw_energy
 
-.test_entity_hit_player_branch_1
+.test_lift_or_hazard_hit_player_branch_1
     CPX #&01
     RTS
-.test_entity_hit_player_source_end
+.test_lift_or_hazard_hit_player_source_end
 
-ASSERT test_entity_hit_player_source = test_entity_hit_player
-ASSERT test_entity_hit_player_source_end = &2375
-COPYBLOCK test_entity_hit_player_source, test_entity_hit_player_source_end, &3B5C
+ASSERT test_lift_or_hazard_hit_player_source = test_lift_or_hazard_hit_player
+ASSERT test_lift_or_hazard_hit_player_source_end = &2375
+COPYBLOCK test_lift_or_hazard_hit_player_source, test_lift_or_hazard_hit_player_source_end, &3B5C
 
 ; Runtime $235C-$2374 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B5C-$3B74.
-CLEAR test_entity_hit_player_source, test_entity_hit_player_source_end
+CLEAR test_lift_or_hazard_hit_player_source, test_lift_or_hazard_hit_player_source_end
 
 
 ORG prepare_player_relative_display_scan
@@ -3885,9 +3885,9 @@ COPYBLOCK enter_add_collected_icon_source, enter_add_collected_icon_source_end, 
 CLEAR enter_add_collected_icon_source, enter_add_collected_icon_source_end
 
 
-ORG update_second_entity_group
+ORG update_lift_and_hazard_group
 
-; Runtime $2401-$2422. Walk the second-class entity slots, drawing each one either
+; Runtime $2401-$2422. Walk the lift/hazard slots, drawing each one either
 ; side of its update.
 ; Y starts at 8 and advances by two per slot until it reaches the count at
 ; $124A, so the slots are two-byte pairs and the record decides how many exist.
@@ -3898,43 +3898,43 @@ ORG update_second_entity_group
 ; of its neighbours.
 ; The repeated-scanline flag is cleared on exit, so the two-row entity draws do
 ; not leak into whatever runs next.
-.update_second_entity_group_source
+.update_lift_and_hazard_group_source
     LDY #&08
 
 .draw_update_next_slot
     LDA &61
     BEQ update_this_slot
-    JSR draw_entity_without_slot_check
+    JSR draw_lift_or_hazard_without_slot_check
 
 .update_this_slot
-    JSR update_second_entity_by_class
+    JSR update_lift_or_hazard_by_class
     CPY #&0A
     BNE redraw_slot
-    JSR update_second_entity_by_class
+    JSR update_lift_or_hazard_by_class
 
 .redraw_slot
-    JSR draw_entity_without_slot_check
+    JSR draw_lift_or_hazard_without_slot_check
     INY
     INY
-    CPY &124A
+    CPY lift_and_hazard_slot_limit
     BNE draw_update_next_slot
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
     RTS
-.update_second_entity_group_source_end
+.update_lift_and_hazard_group_source_end
 
-ASSERT update_second_entity_group_source = update_second_entity_group
-ASSERT update_second_entity_group_source_end = &2423
-COPYBLOCK update_second_entity_group_source, update_second_entity_group_source_end, &3C01
+ASSERT update_lift_and_hazard_group_source = update_lift_and_hazard_group
+ASSERT update_lift_and_hazard_group_source_end = &2423
+COPYBLOCK update_lift_and_hazard_group_source, update_lift_and_hazard_group_source_end, &3C01
 
 ; Runtime $2401-$2422 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3C01-$3C22.
-CLEAR update_second_entity_group_source, update_second_entity_group_source_end
+CLEAR update_lift_and_hazard_group_source, update_lift_and_hazard_group_source_end
 
 
-ORG update_second_entity_by_class
+ORG update_lift_or_hazard_by_class
 
-; Runtime $2423-$244D. Update one second-class entity, choosing between two
+; Runtime $2423-$244D. Update one lift or moth-shaped hazard, choosing between two
 ; behaviours according to its class byte, then step it.
 ; The slot index is turned into a scaled offset by subtracting 8 from Y and
 ; doubling, and the range clamp runs first. A class byte of 1 then takes the
@@ -3944,24 +3944,24 @@ ORG update_second_entity_by_class
 ; apply_moving_entity_to_player.
 ; Either way the entity is stepped by a tail jump, so both routes end in the
 ; same movement.
-; So class 1 entities hurt on overlap and everything else acts as a moving
-; surface, which is the same split test_entity_hit_player makes when deciding
+; So moth-shaped hazards hurt on overlap and lifts act as moving surfaces,
+; which is the same split test_lift_or_hazard_hit_player makes when deciding
 ; whether to charge energy.
-.update_second_entity_by_class_source
+.update_lift_or_hazard_by_class_source
     TYA
     SEC
     SBC #&08
     ASL A
     STA &31
-    JSR reverse_second_entity_delta_at_limits
-    LDA &1249
-    CMP #&01
+    JSR reverse_lift_or_hazard_delta_at_limits
+    LDA active_lift_or_hazard_class
+    CMP #LIFT_OR_HAZARD_HAZARD
     BNE push_player_with_entity
     LDA &0019,Y
     LSR A
     STA indexed_pair_output_half_offset
     SEC
-    LDA &1248
+    LDA lift_or_hazard_horizontal_extent
     SBC &31
     STA indexed_pair_output_value
     JSR check_player_candidate_bounds_overlap
@@ -3971,16 +3971,16 @@ ORG update_second_entity_by_class
     JSR apply_moving_entity_to_player
 
 .step_entity
-    JMP advance_second_entity_vertical_position
-.update_second_entity_by_class_source_end
+    JMP advance_lift_or_hazard_vertical_position
+.update_lift_or_hazard_by_class_source_end
 
-ASSERT update_second_entity_by_class_source = update_second_entity_by_class
-ASSERT update_second_entity_by_class_source_end = &244E
-COPYBLOCK update_second_entity_by_class_source, update_second_entity_by_class_source_end, &3C23
+ASSERT update_lift_or_hazard_by_class_source = update_lift_or_hazard_by_class
+ASSERT update_lift_or_hazard_by_class_source_end = &244E
+COPYBLOCK update_lift_or_hazard_by_class_source, update_lift_or_hazard_by_class_source_end, &3C23
 
 ; Runtime $2423-$244D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3C23-$3C4D.
-CLEAR update_second_entity_by_class_source, update_second_entity_by_class_source_end
+CLEAR update_lift_or_hazard_by_class_source, update_lift_or_hazard_by_class_source_end
 
 
 ORG refill_energy_in_28_steps
@@ -5297,8 +5297,8 @@ ORG enter_run_terminal_interaction
 ; fixed entry independent of where that routine sits.
 ; Like enter_copy_16_byte_graphic_to_display at $1226, it is wedged into the
 ; runtime variable block rather than sitting in the table at $1200: $124A before
-; it is the second entity class slot count that
-; initialise_second_room_entity_from_table writes, and $124E after it is the
+; it is the lift/hazard slot count that
+; initialise_lifts_and_hazards_from_table writes, and $124E after it is the
 ; first instruction of store_byte_and_advance_source_pointer. So the three bytes
 ; are a vector between a variable and a routine, not part of either.
 .enter_run_terminal_interaction_source
@@ -6229,7 +6229,7 @@ ORG pick_up_item_below_player
     CMP #&03
     BEQ find_empty_item_slot
     LDA #&00
-    STA roaming_graphics_active
+    STA room_moving_objects_active
 
 .find_empty_item_slot
     PLA
@@ -7984,9 +7984,9 @@ ORG select_graphic_then_xor_draw
 ; X, Y, and the entry stack depth are unchanged at the fall-through boundary.
 .select_graphic_then_xor_draw_source
     PHA
-    LDA active_roaming_graphic_pointer_table,X
+    LDA active_room_moving_object_pointer_table,X
     STA graphic_source_pointer_low
-    LDA active_roaming_graphic_pointer_table+1,X
+    LDA active_room_moving_object_pointer_table+1,X
     STA graphic_source_pointer_high
     PLA
 .select_graphic_then_xor_draw_source_end
@@ -8726,17 +8726,17 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     CMP &09
     BNE configure_dynamic_object_outside_column_seven
     LDA #&D0
-    STA &1246
+    STA lift_or_hazard_lower_position
     LDA #&00
     JMP store_dynamic_room_object_class
 
 .configure_dynamic_object_outside_column_seven
     LDA #&CC
-    STA &1246
+    STA lift_or_hazard_lower_position
     LDA #&01
 
 .store_dynamic_room_object_class
-    STA &1249
+    STA active_lift_or_hazard_class
     STX &34
     JSR &1B58
     LDX #&08
@@ -8747,7 +8747,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     DEX
     BNE draw_next_dynamic_room_object_tile
     LDA #&00
-    STA &124A
+    STA lift_and_hazard_slot_limit
     JSR &206D
     LDA display_pointer_low
     PHA
@@ -9550,13 +9550,13 @@ COPYBLOCK draw_character_row_as_tiles_source, draw_character_row_as_tiles_source
 CLEAR draw_character_row_as_tiles_source, draw_character_row_as_tiles_source_end
 
 
-ORG reverse_roaming_graphic_delta_at_limits
+ORG reverse_room_moving_object_delta_at_limits
 
 ; Runtime $343A-$3452. Keep the Y-indexed selector state moving between the
 ; inclusive limits at $121E/$121F. A lower-limit match selects delta +1; an
 ; upper-limit match selects delta -1; an interior value leaves the delta
 ; unchanged. X and Y are preserved.
-.reverse_roaming_graphic_delta_at_limits_source
+.reverse_room_moving_object_delta_at_limits_source
     LDA indexed_xor_graphic_selector_state,Y
     CMP indexed_xor_graphic_selector_lower_limit
     BEQ indexed_xor_select_positive_delta
@@ -9573,15 +9573,15 @@ ORG reverse_roaming_graphic_delta_at_limits
 .indexed_xor_select_negative_delta
     LDA #&FF
     JMP indexed_xor_store_reversed_delta
-.reverse_roaming_graphic_delta_at_limits_source_end
+.reverse_room_moving_object_delta_at_limits_source_end
 
-ASSERT reverse_roaming_graphic_delta_at_limits_source = reverse_roaming_graphic_delta_at_limits
-ASSERT reverse_roaming_graphic_delta_at_limits_source_end = &3453
-COPYBLOCK reverse_roaming_graphic_delta_at_limits_source, reverse_roaming_graphic_delta_at_limits_source_end, &4C3A
+ASSERT reverse_room_moving_object_delta_at_limits_source = reverse_room_moving_object_delta_at_limits
+ASSERT reverse_room_moving_object_delta_at_limits_source_end = &3453
+COPYBLOCK reverse_room_moving_object_delta_at_limits_source, reverse_room_moving_object_delta_at_limits_source_end, &4C3A
 
 ; Runtime $343A-$3452 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C3A-$4C52.
-CLEAR reverse_roaming_graphic_delta_at_limits_source, reverse_roaming_graphic_delta_at_limits_source_end
+CLEAR reverse_room_moving_object_delta_at_limits_source, reverse_room_moving_object_delta_at_limits_source_end
 
 ORG play_note_for_position_and_test_tune
 
@@ -9651,7 +9651,7 @@ COPYBLOCK play_note_for_position_and_test_tune_source, play_note_for_position_an
 CLEAR play_note_for_position_and_test_tune_source, play_note_for_position_and_test_tune_source_end
 
 
-ORG update_and_draw_roaming_graphics
+ORG update_and_draw_room_moving_objects
 
 ; Runtime $33C1-$3439. Update the room's active caterpillar, fish, mouse or
 ; lift graphics. Each instance occupies an even Y index because its display pointer is a two-byte
@@ -9666,18 +9666,18 @@ ORG update_and_draw_roaming_graphics
 ; records the candidate delta and accepts item $30 for a fish or item $38 for
 ; a mouse; if neither carried slot has that item it substitutes the
 ; scratch value in $33. Every observed $2203 call returns carry clear.
-.update_and_draw_roaming_graphics_source
+.update_and_draw_room_moving_objects_source
     LDY #&00
 
 .indexed_xor_update_loop
     LDA indexed_xor_erase_previous_graphic
     BEQ indexed_xor_old_image_removed
-    JSR draw_roaming_graphic
+    JSR draw_room_moving_object
 
 .indexed_xor_old_image_removed
     LDA current_room_cell
     BEQ advance_indexed_xor_graphic
-    CMP #ROAMING_GRAPHIC_LIFT
+    CMP #ROOM_MOVING_OBJECT_LIFT
     BEQ advance_indexed_xor_graphic
     SEC
     LDA indexed_xor_graphic_selector_state,Y
@@ -9695,7 +9695,7 @@ ORG update_and_draw_roaming_graphics
     LDA inline_vdu_stream_pointer_low
     STA indexed_xor_graphic_selector_delta,Y
     LDA current_room_cell
-    CMP #ROAMING_GRAPHIC_FISH
+    CMP #ROOM_MOVING_OBJECT_FISH
     BNE indexed_xor_require_item_38
     LDA #&30
     JMP indexed_xor_test_required_item
@@ -9705,9 +9705,9 @@ ORG update_and_draw_roaming_graphics
     JMP indexed_xor_test_required_item
 
 .advance_indexed_xor_graphic
-    JSR reverse_roaming_graphic_delta_at_limits
-    JSR advance_roaming_graphic_state_and_pointer
-    JSR draw_roaming_graphic
+    JSR reverse_room_moving_object_delta_at_limits
+    JSR advance_room_moving_object_state_and_pointer
+    JSR draw_room_moving_object
     LDA current_room_cell
     BNE indexed_xor_next_instance
     LDA indexed_xor_graphic_selector_state,Y
@@ -9723,7 +9723,7 @@ ORG update_and_draw_roaming_graphics
 .indexed_xor_next_instance
     INY
     INY
-    CPY roaming_graphic_slot_limit
+    CPY room_moving_object_slot_limit
     BMI indexed_xor_update_loop
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
@@ -9737,16 +9737,16 @@ ORG update_and_draw_roaming_graphics
     LDA &33                         ; candidate helper scratch/fallback value
     STA indexed_xor_graphic_selector_delta,Y
     JMP advance_indexed_xor_graphic
-.update_and_draw_roaming_graphics_source_end
+.update_and_draw_room_moving_objects_source_end
 
-ASSERT update_and_draw_roaming_graphics_source = update_and_draw_roaming_graphics
-ASSERT update_and_draw_roaming_graphics_source_end = reverse_roaming_graphic_delta_at_limits
+ASSERT update_and_draw_room_moving_objects_source = update_and_draw_room_moving_objects
+ASSERT update_and_draw_room_moving_objects_source_end = reverse_room_moving_object_delta_at_limits
 ASSERT indexed_xor_test_required_item = &342A
-COPYBLOCK update_and_draw_roaming_graphics_source, update_and_draw_roaming_graphics_source_end, &4BC1
+COPYBLOCK update_and_draw_room_moving_objects_source, update_and_draw_room_moving_objects_source_end, &4BC1
 
 ; Runtime $33C1-$3439 overlaps the loaded transport image. Release it after
 ; copying its source-built bytes to loaded $4BC1-$4C39.
-CLEAR update_and_draw_roaming_graphics_source, update_and_draw_roaming_graphics_source_end
+CLEAR update_and_draw_room_moving_objects_source, update_and_draw_room_moving_objects_source_end
 
 
 ORG initialise_four_dynamic_room_object_slots
@@ -9791,7 +9791,7 @@ ORG initialise_four_dynamic_room_object_slots
     PLA
     STA display_pointer_low
     LDA #&FE
-    STA &1247
+    STA lift_or_hazard_upper_position
     RTS
 .initialise_four_dynamic_room_object_slots_source_end
 
@@ -9804,7 +9804,7 @@ COPYBLOCK initialise_four_dynamic_room_object_slots_source, initialise_four_dyna
 CLEAR initialise_four_dynamic_room_object_slots_source, initialise_four_dynamic_room_object_slots_source_end
 
 
-ORG draw_roaming_graphic
+ORG draw_room_moving_object
 
 ; Runtime $3453-$3487. Y indexes selector inputs and a display pointer. X is
 ; built from whether the signed delta is $FF and whether selector-state bit 2
@@ -9812,7 +9812,7 @@ ORG draw_roaming_graphic
 ; observed globals select the repeated-source/two-row setup; the bypass leaves
 ; the initial one-row count in place. The final jump tail-calls the proven
 ; graphic selector and XOR renderer.
-.draw_roaming_graphic_source
+.draw_room_moving_object_source
     LDA #&01
     STA xor_graphic_character_rows_remaining
     LDX #&00
@@ -9835,7 +9835,7 @@ ORG draw_roaming_graphic
 .indexed_xor_selector_ready
     LDA &1225
     BNE indexed_xor_load_display_pointer
-    LDA roaming_graphic_slot_limit
+    LDA room_moving_object_slot_limit
     CMP #&05
     BPL indexed_xor_load_display_pointer
     JSR configure_two_row_repeated_xor_graphic
@@ -9845,15 +9845,15 @@ ORG draw_roaming_graphic
     STA display_pointer_high
     LDA indexed_xor_display_pointer_low,Y
     JMP select_graphic_then_xor_draw
-.draw_roaming_graphic_source_end
+.draw_room_moving_object_source_end
 
-ASSERT draw_roaming_graphic_source = draw_roaming_graphic
-ASSERT draw_roaming_graphic_source_end = &3488
-COPYBLOCK draw_roaming_graphic_source, draw_roaming_graphic_source_end, &4C53
+ASSERT draw_room_moving_object_source = draw_room_moving_object
+ASSERT draw_room_moving_object_source_end = &3488
+COPYBLOCK draw_room_moving_object_source, draw_room_moving_object_source_end, &4C53
 
 ; Runtime $3453-$3487 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C53-$4C87.
-CLEAR draw_roaming_graphic_source, draw_roaming_graphic_source_end
+CLEAR draw_room_moving_object_source, draw_room_moving_object_source_end
 
 ORG draw_and_initialise_room
 
@@ -9875,7 +9875,7 @@ ORG draw_and_initialise_room
 ; blank tiles instead.
 ; The body is then drawn a row at a time: eight cells per row through $1284,
 ; stepping the room pointer 40 bytes per row, until the row counter reaches
-; $1F. Records, entities and second-class entities are initialised from their
+; $1F. Records, enemies, and lifts/hazards are initialised from their
 ; three tables, the keyboard is reset through OSBYTE $09, $0A and $15, and the
 ; player position is snapshotted into $2D to $30 as the room entry point.
 ; Finally, a secondary reference below 8 takes the $221F vector before the
@@ -9891,13 +9891,13 @@ ORG draw_and_initialise_room
     STA &A3
     STA &A5
     STA jet_boots_enabled_this_room
-    STA roaming_graphics_active
+    STA room_moving_objects_active
     STA &79
     STA &1239
     STA &6E
     STA timed_effect_selector
     STA &61
-    STA &1245
+    STA lift_and_hazard_active
     STA &4C
     STA &4E
     STA music_tune_progress
@@ -9969,9 +9969,9 @@ ORG draw_and_initialise_room
     CMP #&1F
     BNE start_next_room_row
     JSR draw_matching_records_from_table
-    JSR initialise_roaming_graphics_for_room
+    JSR initialise_room_moving_objects
     JSR initialise_room_enemy_from_table
-    JSR initialise_second_room_entity_from_table
+    JSR initialise_lifts_and_hazards_from_table
     LDA #&00
     STA alternate_palette_selector
     LDX #&03
@@ -10017,13 +10017,13 @@ COPYBLOCK draw_and_initialise_room_source, draw_and_initialise_room_source_end, 
 CLEAR draw_and_initialise_room_source, draw_and_initialise_room_source_end
 
 
-ORG advance_roaming_graphic_state_and_pointer
+ORG advance_room_moving_object_state_and_pointer
 
 ; Runtime $3488-$34BA. Add the Y-indexed signed delta to selector state, then
 ; move the paired display pointer by one Mode 1 byte column (eight bytes).
 ; Delta sign alone chooses +8 or -8. X and Y are preserved; A returns the
 ; updated display-pointer high byte.
-.advance_roaming_graphic_state_and_pointer_source
+.advance_room_moving_object_state_and_pointer_source
     LDA indexed_xor_graphic_selector_state,Y
     CLC
     ADC indexed_xor_graphic_selector_delta,Y
@@ -10049,15 +10049,15 @@ ORG advance_roaming_graphic_state_and_pointer
     SBC #&00
     STA indexed_xor_display_pointer_high,Y
     RTS
-.advance_roaming_graphic_state_and_pointer_source_end
+.advance_room_moving_object_state_and_pointer_source_end
 
-ASSERT advance_roaming_graphic_state_and_pointer_source = advance_roaming_graphic_state_and_pointer
-ASSERT advance_roaming_graphic_state_and_pointer_source_end = &34BB
-COPYBLOCK advance_roaming_graphic_state_and_pointer_source, advance_roaming_graphic_state_and_pointer_source_end, &4C88
+ASSERT advance_room_moving_object_state_and_pointer_source = advance_room_moving_object_state_and_pointer
+ASSERT advance_room_moving_object_state_and_pointer_source_end = &34BB
+COPYBLOCK advance_room_moving_object_state_and_pointer_source, advance_room_moving_object_state_and_pointer_source_end, &4C88
 
 ; Runtime $3488-$34BA overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C88-$4CBA.
-CLEAR advance_roaming_graphic_state_and_pointer_source, advance_roaming_graphic_state_and_pointer_source_end
+CLEAR advance_room_moving_object_state_and_pointer_source, advance_room_moving_object_state_and_pointer_source_end
 
 
 ORG set_room_data_pointer
@@ -10806,10 +10806,10 @@ COPYBLOCK show_golden_dragon_ending_source, show_golden_dragon_ending_source_end
 CLEAR show_golden_dragon_ending_source, show_golden_dragon_ending_source_end
 
 
-ORG initialise_roaming_graphics_for_room
+ORG initialise_room_moving_objects
 
 ; Runtime $1E6C-$1F0E. Scan the sixteen five-byte records at $0930 for the
-; current room. No match returns without changing the roaming-graphic
+; current room. No match returns without changing the room-moving-object
 ; configuration. A match saves the record type and a selector derived from the
 ; packed room bytes; fish and mouse records return early when the existing
 ; puzzle state at $63 is nonzero.
@@ -10819,8 +10819,8 @@ ORG initialise_roaming_graphics_for_room
 ; converted into display pointers. An eight-byte graphic-pointer set selected
 ; by the record type is copied from $1F0F to $0B5F, and the four alternating +1/-1
 ; selector deltas are initialised. The downstream $343A/$3453/$3488 routines
-; clamp, draw, and advance these same four roaming instances.
-.initialise_roaming_graphics_for_room_source
+; clamp, draw, and advance these same four room-local instances.
+.initialise_room_moving_objects_source
     LDX #&00
     LDA #&30
     STA &13
@@ -10848,11 +10848,11 @@ ORG initialise_roaming_graphics_for_room
     LDX &31
     INX
     INX
-    STX roaming_graphic_slot_limit
+    STX room_moving_object_slot_limit
     LDA &1225
-    CMP #ROAMING_GRAPHIC_FISH
+    CMP #ROOM_MOVING_OBJECT_FISH
     BEQ test_existing_special_xor_state
-    CMP #ROAMING_GRAPHIC_MOUSE
+    CMP #ROOM_MOVING_OBJECT_MOUSE
     BNE initialise_indexed_xor_record
 
 .test_existing_special_xor_state
@@ -10862,12 +10862,12 @@ ORG initialise_roaming_graphics_for_room
 
 .initialise_indexed_xor_record
     LDX #&01
-    STX roaming_graphics_active
+    STX room_moving_objects_active
     DEX
 
 .copy_indexed_xor_record_fields
     INY
-    LDA roaming_graphic_room_record_table,Y
+    LDA room_moving_object_record_table,Y
     STA &121D,X
     INX
     CPX #&03
@@ -10906,8 +10906,8 @@ ORG initialise_roaming_graphics_for_room
     LDX #&00
 
 .copy_indexed_xor_graphic_pointers
-    LDA roaming_graphic_pointer_sets,Y
-    STA active_roaming_graphic_pointer_table,X
+    LDA room_moving_object_pointer_sets,Y
+    STA active_room_moving_object_pointer_table,X
     INY
     INX
     CPX #&08
@@ -10919,15 +10919,15 @@ ORG initialise_roaming_graphics_for_room
     STA &122C
     STA &1230
     RTS
-.initialise_roaming_graphics_for_room_source_end
+.initialise_room_moving_objects_source_end
 
-ASSERT initialise_roaming_graphics_for_room_source = initialise_roaming_graphics_for_room
-ASSERT initialise_roaming_graphics_for_room_source_end = &1F0F
-COPYBLOCK initialise_roaming_graphics_for_room_source, initialise_roaming_graphics_for_room_source_end, &366C
+ASSERT initialise_room_moving_objects_source = initialise_room_moving_objects
+ASSERT initialise_room_moving_objects_source_end = &1F0F
+COPYBLOCK initialise_room_moving_objects_source, initialise_room_moving_objects_source_end, &366C
 
 ; Runtime $1E6C-$1F0E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $366C-$370E.
-CLEAR initialise_roaming_graphics_for_room_source, initialise_roaming_graphics_for_room_source_end
+CLEAR initialise_room_moving_objects_source, initialise_room_moving_objects_source_end
 
 
 ; Named gameplay databases. One EQUB row is one proved record.
@@ -11027,19 +11027,19 @@ ORG music_tune_sequence
     EQUB &44, &3C, &34, &44, &3C, &34, &50, &48, &44, &50, &48, &44
 .music_tune_sequence_source_end
 ASSERT music_tune_sequence_source = music_tune_sequence
-ASSERT music_tune_sequence_source_end = active_roaming_graphic_pointer_table
+ASSERT music_tune_sequence_source_end = active_room_moving_object_pointer_table
 COPYBLOCK music_tune_sequence_source, music_tune_sequence_source_end, &2453
 CLEAR music_tune_sequence_source, music_tune_sequence_source_end
 
-ORG active_roaming_graphic_pointer_table
+ORG active_room_moving_object_pointer_table
 ; Runtime 0B5F-0B66: four pointers populated during room initialisation.
-.active_roaming_graphic_pointer_table_source
+.active_room_moving_object_pointer_table_source
     EQUW &0000, &0000, &0000, &0000
-.active_roaming_graphic_pointer_table_source_end
-ASSERT active_roaming_graphic_pointer_table_source = active_roaming_graphic_pointer_table
-ASSERT active_roaming_graphic_pointer_table_source_end = &0B67
-COPYBLOCK active_roaming_graphic_pointer_table_source, active_roaming_graphic_pointer_table_source_end, &245F
-CLEAR active_roaming_graphic_pointer_table_source, active_roaming_graphic_pointer_table_source_end
+.active_room_moving_object_pointer_table_source_end
+ASSERT active_room_moving_object_pointer_table_source = active_room_moving_object_pointer_table
+ASSERT active_room_moving_object_pointer_table_source_end = &0B67
+COPYBLOCK active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end, &245F
+CLEAR active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end
 
 ORG enemy_graphic_descriptor
 ; Runtime 0B67-0B6A: current enemy's two sprite-frame pointers.
@@ -11433,22 +11433,22 @@ ASSERT room_tile_pair_sets_source_end = draw_matching_records_from_table
 COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, &3590
 CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
-ORG roaming_graphic_pointer_sets
+ORG room_moving_object_pointer_sets
 ; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
 ; the four-direction caterpillar; the fish's right- and left-facing graphics;
 ; the mouse's right- and left-facing graphics; and the vertical lift graphic.
-; These roaming/puzzle graphics are separate from the room-entity pairs
+; These room-local creature/puzzle graphics are separate from the room-enemy pairs
 ; selected by the descriptor table at $1FDF.
-.roaming_graphic_pointer_sets_source
-    EQUW &0400, &0420, &0440, &0460 ; ROAMING_GRAPHIC_CATERPILLAR
-    EQUW &06A0, &1140, &06A0, &1140 ; ROAMING_GRAPHIC_FISH
-    EQUW &0680, &1160, &0680, &1160 ; ROAMING_GRAPHIC_MOUSE
-    EQUW &0EA0, &0EA0, &0EA0, &0EA0 ; ROAMING_GRAPHIC_LIFT
-.roaming_graphic_pointer_sets_source_end
-ASSERT roaming_graphic_pointer_sets_source = roaming_graphic_pointer_sets
-ASSERT roaming_graphic_pointer_sets_source_end = initialise_room_enemy_from_table
-COPYBLOCK roaming_graphic_pointer_sets_source, roaming_graphic_pointer_sets_source_end, &370F
-CLEAR roaming_graphic_pointer_sets_source, roaming_graphic_pointer_sets_source_end
+.room_moving_object_pointer_sets_source
+    EQUW &0400, &0420, &0440, &0460 ; ROOM_MOVING_OBJECT_CATERPILLAR
+    EQUW &06A0, &1140, &06A0, &1140 ; ROOM_MOVING_OBJECT_FISH
+    EQUW &0680, &1160, &0680, &1160 ; ROOM_MOVING_OBJECT_MOUSE
+    EQUW &0EA0, &0EA0, &0EA0, &0EA0 ; ROOM_MOVING_OBJECT_LIFT
+.room_moving_object_pointer_sets_source_end
+ASSERT room_moving_object_pointer_sets_source = room_moving_object_pointer_sets
+ASSERT room_moving_object_pointer_sets_source_end = initialise_room_enemy_from_table
+COPYBLOCK room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end, &370F
+CLEAR room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end
 
 ORG item_and_goal_record_table
 ; Runtime 0900-092F: twelve mutable item/goal records.
@@ -11471,10 +11471,10 @@ ASSERT item_and_goal_record_table_source_end = &0930
 COPYBLOCK item_and_goal_record_table_source, item_and_goal_record_table_source_end, &2200
 CLEAR item_and_goal_record_table_source, item_and_goal_record_table_source_end
 
-ORG roaming_graphic_room_record_table
-; Runtime 0930-097F: sixteen roaming-creature/lift records. The second byte's
-; high nibble selects ROAMING_GRAPHIC_*; the comments decode the packed room.
-.roaming_graphic_room_record_table_source
+ORG room_moving_object_record_table
+; Runtime 0930-097F: sixteen room-local creature/lift records. The second byte's
+; high nibble selects ROOM_MOVING_OBJECT_*; the comments decode the packed room.
+.room_moving_object_record_table_source
     EQUB &40, &01, &10, &1D, &46 ; B0 caterpillar
     EQUB &03, &00, &18, &30, &46 ; A3 caterpillar
     EQUB &05, &01, &18, &04, &1B ; B5 caterpillar
@@ -11491,11 +11491,11 @@ ORG roaming_graphic_room_record_table
     EQUB &09, &26, &19, &1A, &33 ; G9 mouse
     EQUB &07, &14, &16, &00, &2F ; E7 fish
     EQUB &06, &04, &10, &24, &45 ; E6 caterpillar
-.roaming_graphic_room_record_table_source_end
-ASSERT roaming_graphic_room_record_table_source = roaming_graphic_room_record_table
-ASSERT roaming_graphic_room_record_table_source_end = &0980
-COPYBLOCK roaming_graphic_room_record_table_source, roaming_graphic_room_record_table_source_end, &2230
-CLEAR roaming_graphic_room_record_table_source, roaming_graphic_room_record_table_source_end
+.room_moving_object_record_table_source_end
+ASSERT room_moving_object_record_table_source = room_moving_object_record_table
+ASSERT room_moving_object_record_table_source_end = &0980
+COPYBLOCK room_moving_object_record_table_source, room_moving_object_record_table_source_end, &2230
+CLEAR room_moving_object_record_table_source, room_moving_object_record_table_source_end
 
 ORG initial_item_and_goal_record_table
 ; Runtime 0980-09AF: twelve pristine new-game item/goal records.
@@ -11588,34 +11588,35 @@ ASSERT indexed_pair_record_table_source_end = &0A96
 COPYBLOCK indexed_pair_record_table_source, indexed_pair_record_table_source_end, &2378
 CLEAR indexed_pair_record_table_source, indexed_pair_record_table_source_end
 
-ORG second_room_entity_record_table
-; Runtime 0A96-0AF9: twenty second-class room entity records.
-.second_room_entity_record_table_source
-    EQUB &44, &00, &08, &07, &1B
-    EQUB &42, &01, &28, &0C, &16
-    EQUB &06, &01, &44, &14, &1B
-    EQUB &02, &16, &1E, &0C, &13
-    EQUB &41, &10, &08, &04, &13
-    EQUB &03, &11, &06, &07, &10
-    EQUB &40, &12, &14, &0C, &16
-    EQUB &48, &16, &08, &11, &18
-    EQUB &00, &15, &26, &05, &10
-    EQUB &08, &14, &10, &08, &0E
-    EQUB &05, &14, &21, &09, &11
-    EQUB &08, &16, &00, &14, &18
-    EQUB &05, &16, &2E, &0C, &12
-    EQUB &07, &17, &26, &0E, &18
-    EQUB &44, &17, &18, &05, &0C
-    EQUB &03, &14, &2E, &04, &12
-    EQUB &42, &12, &34, &05, &13
-    EQUB &06, &14, &40, &0D, &19
-    EQUB &08, &11, &26, &04, &15
-    EQUB &45, &13, &38, &11, &16
-.second_room_entity_record_table_source_end
-ASSERT second_room_entity_record_table_source = second_room_entity_record_table
-ASSERT second_room_entity_record_table_source_end = &0AFA
-COPYBLOCK second_room_entity_record_table_source, second_room_entity_record_table_source_end, &2396
-CLEAR second_room_entity_record_table_source, second_room_entity_record_table_source_end
+ORG lift_and_hazard_room_record_table
+; Runtime 0A96-0AF9: twenty lift/hazard room records. The second byte's high
+; nibble selects LIFT_OR_HAZARD_*; the comments decode the packed room.
+.lift_and_hazard_room_record_table_source
+    EQUB &44, &00, &08, &07, &1B ; A4 lift
+    EQUB &42, &01, &28, &0C, &16 ; B2 lift
+    EQUB &06, &01, &44, &14, &1B ; B6 lift
+    EQUB &02, &16, &1E, &0C, &13 ; G2 moth-shaped hazard
+    EQUB &41, &10, &08, &04, &13 ; A1 moth-shaped hazard
+    EQUB &03, &11, &06, &07, &10 ; B3 moth-shaped hazard
+    EQUB &40, &12, &14, &0C, &16 ; C0 moth-shaped hazard
+    EQUB &48, &16, &08, &11, &18 ; G8 moth-shaped hazard, first
+    EQUB &00, &15, &26, &05, &10 ; F0 moth-shaped hazard
+    EQUB &08, &14, &10, &08, &0E ; E8 moth-shaped hazard
+    EQUB &05, &14, &21, &09, &11 ; E5 moth-shaped hazard
+    EQUB &08, &16, &00, &14, &18 ; G8 moth-shaped hazard, second
+    EQUB &05, &16, &2E, &0C, &12 ; G5 moth-shaped hazard
+    EQUB &07, &17, &26, &0E, &18 ; H7 moth-shaped hazard
+    EQUB &44, &17, &18, &05, &0C ; H4 moth-shaped hazard
+    EQUB &03, &14, &2E, &04, &12 ; E3 moth-shaped hazard
+    EQUB &42, &12, &34, &05, &13 ; C2 moth-shaped hazard
+    EQUB &06, &14, &40, &0D, &19 ; E6 moth-shaped hazard
+    EQUB &08, &11, &26, &04, &15 ; B8 moth-shaped hazard
+    EQUB &45, &13, &38, &11, &16 ; D5 moth-shaped hazard
+.lift_and_hazard_room_record_table_source_end
+ASSERT lift_and_hazard_room_record_table_source = lift_and_hazard_room_record_table
+ASSERT lift_and_hazard_room_record_table_source_end = &0AFA
+COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end, &2396
+CLEAR lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end
 
 ORG unused_runtime_low_tail_bytes
 ; Runtime $0AFA-$0AFF, loaded $23FA-$23FF. These six bytes lie after the exact
@@ -11651,7 +11652,7 @@ ORG enemy_graphic_descriptor_table
     EQUW &0620, &0600 ; jellyfish_frame_0/1 (unselected here)
 .enemy_graphic_descriptor_table_source_end
 ASSERT enemy_graphic_descriptor_table_source = enemy_graphic_descriptor_table
-ASSERT enemy_graphic_descriptor_table_source_end = initialise_second_room_entity_from_table
+ASSERT enemy_graphic_descriptor_table_source_end = initialise_lifts_and_hazards_from_table
 COPYBLOCK enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_source_end, &37DF
 CLEAR enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_source_end
 

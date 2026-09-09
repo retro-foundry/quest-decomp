@@ -54,7 +54,7 @@
       "source_file": "source_bbc/quest1.asm",
       "meaning_level": "behavioral",
       "evidence": [
-        "the preceding second_room_entity_record_table is bounded to exactly twenty five-byte records by the $1FEF scanner's CPX #$14",
+        "the preceding lift_and_hazard_room_record_table is bounded to exactly twenty five-byte records by the $1FEF scanner's CPX #$14",
         "relocated_game_entry begins independently at the next address $0B00",
         "no static operand, table pointer, reachable selector, execution or committed runtime read reaches bytes $7C $0E $4C $44 $59 $63, proving them unused runtime-low tail data"
       ]
@@ -234,7 +234,7 @@
       ]
     },
     {
-     "name": "active_roaming_graphic_pointer_table",
+     "name": "active_room_moving_object_pointer_table",
      "runtime_start": 2911,
      "runtime_end_exclusive": 2919,
      "loaded_start": 9311,
@@ -243,7 +243,7 @@
       "meaning_level": "behavioral",
       "record_size": 2,
       "evidence": [
-        "initialise_roaming_graphics_for_room fills four little-endian caterpillar, fish, mouse or lift pointers here; select_graphic_then_xor_draw reads them"
+        "initialise_room_moving_objects fills four little-endian caterpillar, fish, mouse or lift pointers here; select_graphic_then_xor_draw reads them"
       ]
     },
     {
@@ -270,8 +270,8 @@
       "meaning_level": "behavioral",
       "record_size": 4,
       "evidence": [
-        "initialise_second_room_entity_from_table copies the selected lift/hazard sprite-frame pointer pair from $2082 into this workspace",
-        "xor_draw_second_entity consumes the pair; suppressing that renderer makes vertical lifts disappear while enemy robots remain"
+        "initialise_lifts_and_hazards_from_table copies the selected lift/hazard sprite-frame pointer pair from $2082 into this workspace",
+        "xor_draw_lift_or_hazard consumes the pair; suppressing that renderer makes vertical lifts disappear while enemy robots remain"
       ]
     },
     {
@@ -436,7 +436,7 @@
       ]
     },
     {
-     "name": "roaming_graphic_pointer_sets",
+     "name": "room_moving_object_pointer_sets",
      "runtime_start": 7951,
      "runtime_end_exclusive": 7983,
      "loaded_start": 14095,
@@ -445,7 +445,7 @@
       "meaning_level": "behavioral",
       "record_size": 8,
       "evidence": [
-        "initialise_roaming_graphics_for_room copies one of four eight-byte pointer sets: caterpillar $0400-$0460, fish $06A0/$1140, mouse $0680/$1160, or lift $0EA0"
+        "initialise_room_moving_objects copies one of four eight-byte pointer sets: caterpillar $0400-$0460, fish $06A0/$1140, mouse $0680/$1160, or lift $0EA0"
       ]
     },
     {
@@ -462,7 +462,7 @@
       ]
     },
     {
-      "name": "roaming_graphic_room_record_table",
+      "name": "room_moving_object_record_table",
       "runtime_start": 2352,
       "runtime_end_exclusive": 2432,
       "loaded_start": 8752,
@@ -471,7 +471,7 @@
       "meaning_level": "behavioral",
       "record_size": 5,
       "evidence": [
-        "initialise_roaming_graphics_for_room scans sixteen five-byte records: ten caterpillar rooms, two mouse rooms, three lift rooms and one fish room, then copies the matched row and position limits"
+        "initialise_room_moving_objects scans sixteen five-byte records: ten caterpillar rooms, two mouse rooms, three lift rooms and one fish room, then copies the matched row and position limits"
       ]
     },
     {
@@ -527,7 +527,7 @@
       ]
     },
     {
-      "name": "second_room_entity_record_table",
+      "name": "lift_and_hazard_room_record_table",
       "runtime_start": 2710,
       "runtime_end_exclusive": 2810,
       "loaded_start": 9110,
@@ -536,7 +536,7 @@
       "meaning_level": "behavioral",
       "record_size": 5,
       "evidence": [
-        "initialise_second_room_entity_from_table scans twenty five-byte records and unpacks the lift/hazard entity class"
+        "initialise_lifts_and_hazards_from_table scans twenty five-byte records: three class-zero lift records and seventeen class-one moth-shaped damaging hazards"
       ]
     },
     {
@@ -628,8 +628,8 @@
       "meaning_level": "behavioral",
       "record_size": 4,
       "evidence": [
-        "initialise_second_room_entity_from_table selects one of two lift/hazard sprite-frame pointer pairs by class",
-        "the class-one pair is $04C0/$04E0 and is consumed by the renderer proven to draw vertical lifts"
+        "initialise_lifts_and_hazards_from_table selects one of two sprite-frame pairs by class",
+        "class zero repeats the proved vertical-lift graphic $0EA0; class one selects the user-identified moth frames $04C0/$04E0 and damages the player on contact"
       ]
     },
     {
@@ -1239,7 +1239,7 @@
       "evidence": [
         "the single instruction executes in analysis/runtime_trace/played_room_4_1_card_fly/executed_pcs.csv",
         "the only reference in the runtime image is the JSR at $29E8, in the obstruction handling that follows the cell tests",
-        "$124A is written by initialise_second_room_entity_from_table and $124E is owned as store_byte_and_advance_source_pointer, which bounds the vector to exactly these three bytes"
+        "$124A is written by initialise_lifts_and_hazards_from_table and $124E is owned as store_byte_and_advance_source_pointer, which bounds the vector to exactly these three bytes"
       ]
     },
     {
@@ -2237,7 +2237,7 @@
       ]
     },
     {
-      "name": "initialise_roaming_graphics_for_room",
+      "name": "initialise_room_moving_objects",
       "runtime_start": 7788,
       "runtime_end_exclusive": 7951,
       "loaded_start": 13932,
@@ -2266,7 +2266,7 @@
       ]
     },
     {
-      "name": "initialise_second_room_entity_from_table",
+      "name": "initialise_lifts_and_hazards_from_table",
       "runtime_start": 8175,
       "runtime_end_exclusive": 8322,
       "loaded_start": 14319,
@@ -2276,7 +2276,8 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all seventy-eight instructions: 16 entries driving 254 record tests against a table of 20, with 4 matches unpacked",
         "the times-five index and the three INY-separated reads past the match confirm a five-byte record stride, and $0A96 plus twenty five-byte records reaches $0AFA",
-        "the descriptor copy loop runs 32 times against 8 entries, which is 8 times 4, and lands at $0B6B immediately after the $0B67 slot the first initialiser fills"
+        "the descriptor copy loop runs 32 times against 8 entries, which is 8 times 4, and lands at $0B6B immediately after the $0B67 slot the enemy initialiser fills",
+        "the decoded class-zero descriptor repeats vertical lift $0EA0; class one selects moth frames $04C0/$04E0"
       ]
     },
     {
@@ -2419,7 +2420,7 @@
       ]
     },
     {
-      "name": "update_second_entity_slots",
+      "name": "update_lift_and_hazard_slots",
       "runtime_start": 8918,
       "runtime_end_exclusive": 8958,
       "loaded_start": 15062,
@@ -2433,7 +2434,7 @@
       ]
     },
     {
-      "name": "update_one_second_entity",
+      "name": "update_one_lift_or_hazard",
       "runtime_start": 8958,
       "runtime_end_exclusive": 8973,
       "loaded_start": 15102,
@@ -2462,7 +2463,7 @@
       ]
     },
     {
-      "name": "test_entity_hit_player",
+      "name": "test_lift_or_hazard_hit_player",
       "runtime_start": 9052,
       "runtime_end_exclusive": 9077,
       "loaded_start": 15196,
@@ -2472,11 +2473,11 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all twelve instructions 5,990 times, with 2,123 collisions reaching the class test and only 46 of those costing energy",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves both callers 0x2323 and 0x2342, the two halves of apply_moving_entity_to_player",
-        "the $1249 it tests is the same class byte xor_draw_second_entity reads to choose between two graphics, so appearance and harmfulness come from one record field"
+        "active_lift_or_hazard_class is the same field xor_draw_lift_or_hazard reads: class zero selects the lift and carries the player, while class one selects moth frames and damages"
       ]
     },
     {
-      "name": "reverse_second_entity_delta_at_limits",
+      "name": "reverse_lift_or_hazard_delta_at_limits",
       "runtime_start": 9077,
       "runtime_end_exclusive": 9108,
       "loaded_start": 15221,
@@ -2486,11 +2487,11 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all fourteen instructions 7,711 times, with 122 lower-limit and 174 upper-limit reversals against 7,413 pass-throughs",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves callers 0x22fe and 0x242a",
-        "the limits it tests, $1246 and $1247, are written by initialise_second_room_entity_from_table from the same record whose position fields it also scales"
+        "lift_or_hazard_lower_position and lift_or_hazard_upper_position are written by initialise_lifts_and_hazards_from_table from the same record"
       ]
     },
     {
-      "name": "advance_second_entity_vertical_position",
+      "name": "advance_lift_or_hazard_vertical_position",
       "runtime_start": 9108,
       "runtime_end_exclusive": 9151,
       "loaded_start": 15252,
@@ -2498,13 +2499,13 @@
       "source_file": "source_bbc/quest1.asm",
       "meaning_level": "behavioral",
       "evidence": [
-        "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all eighteen instructions 7,709 times, matching the 7,711 entries to reverse_second_entity_delta_at_limits that precede them",
+        "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all eighteen instructions 7,709 times, matching the 7,711 entries to reverse_lift_or_hazard_delta_at_limits that precede them",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves the sole caller 0x2307, adjacent to the 0x2304 that calls apply_moving_entity_to_player",
         "the three fields it copies are the same $18, $19 and $51/$52 that apply_moving_entity_to_player reads when deciding which way the entity pushes the player"
       ]
     },
     {
-      "name": "xor_draw_second_entity",
+      "name": "xor_draw_lift_or_hazard",
       "runtime_start": 9151,
       "runtime_end_exclusive": 9206,
       "loaded_start": 15295,
@@ -2513,7 +2514,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all twenty-six instructions: 7,426 entries at $23BF against 10,846 reaching $23C7, so most arrive through the second entry",
-        "the two fields it reads, $1249 and $124A, are both written by initialise_second_room_entity_from_table from the same record",
+        "active_lift_or_hazard_class and lift_and_hazard_slot_limit are both written by initialise_lifts_and_hazards_from_table from the same record",
         "its caller sequence calls it once before and once after the entity moves, which is what an XOR erase and redraw requires"
       ]
     },
@@ -2531,7 +2532,7 @@
       ]
     },
     {
-      "name": "update_second_entity_group",
+      "name": "update_lift_and_hazard_group",
       "runtime_start": 9217,
       "runtime_end_exclusive": 9251,
       "loaded_start": 15361,
@@ -2541,11 +2542,11 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all sixteen instructions 1,382 times, driving 2,764 slot iterations and 1,383 double updates of slot $0A",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves the sole caller 0x2293 inside dispatch_game_tick_updates",
-        "the count it compares against, $124A, is the field initialise_second_room_entity_from_table writes from the record, so a room decides how many of these entities it has"
+        "lift_and_hazard_slot_limit is written from the room record, so a room decides how many lift/hazard slots it has"
       ]
     },
     {
-      "name": "update_second_entity_by_class",
+      "name": "update_lift_or_hazard_by_class",
       "runtime_start": 9251,
       "runtime_end_exclusive": 9294,
       "loaded_start": 15395,
@@ -2555,7 +2556,7 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all twenty instructions 4,146 times, splitting 2,259 overlap-tested against 2,277 pushed",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves both callers 0x240a and 0x2411 inside the slot walk",
-        "the $1249 class byte and the $1248 extent are both unpacked by initialise_second_room_entity_from_table from one record"
+        "active_lift_or_hazard_class and lift_or_hazard_horizontal_extent are unpacked by initialise_lifts_and_hazards_from_table from one record"
       ]
     },
     {
@@ -3911,7 +3912,7 @@
       ]
     },
     {
-      "name": "update_and_draw_roaming_graphics",
+      "name": "update_and_draw_room_moving_objects",
       "runtime_start": 13249,
       "runtime_end_exclusive": 13370,
       "loaded_start": 19393,
@@ -3941,12 +3942,12 @@
       "evidence": [
         "pcode/game.pcode.json function $33C1 has 55 instructions, sole caller $2258, and calls the indexed-XOR limit, advance, draw and candidate-overlap helpers",
         "committed runtime traces enter the routine 1,487 times and execute 39 instructions, including both type-zero/type-three bypasses and 48 carry-clear candidate tests",
-        "Y advances by two through the two-byte display-pointer arrays until roaming_graphic_slot_limit, proving the even-indexed instance loop",
+        "Y advances by two through the two-byte display-pointer arrays until room_moving_object_slot_limit, proving the even-indexed instance loop",
         "the traced type-zero path derives candidate fields from selector state and indexed state, sets height $12, and calls the player-bounds overlap entry before clearing the repeat-source flag"
       ]
     },
     {
-      "name": "reverse_roaming_graphic_delta_at_limits",
+      "name": "reverse_room_moving_object_delta_at_limits",
       "runtime_start": 13370,
       "runtime_end_exclusive": 13395,
       "loaded_start": 19514,
@@ -3961,7 +3962,7 @@
       ]
     },
     {
-      "name": "draw_roaming_graphic",
+      "name": "draw_room_moving_object",
       "runtime_start": 13395,
       "runtime_end_exclusive": 13448,
       "loaded_start": 19539,
@@ -3977,7 +3978,7 @@
       ]
     },
     {
-      "name": "advance_roaming_graphic_state_and_pointer",
+      "name": "advance_room_moving_object_state_and_pointer",
       "runtime_start": 13448,
       "runtime_end_exclusive": 13499,
       "loaded_start": 19592,
@@ -4181,7 +4182,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all eleven instructions 4,057 times, with 44 lower-limit and 33 upper-limit reversals against 4,027 pass-throughs",
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv proves the caller 0x35a2",
-        "the shape matches reverse_roaming_graphic_delta_at_limits, which applies the same two-limit reversal to the graphic selector rather than the position"
+        "the shape matches reverse_room_moving_object_delta_at_limits, which applies the same two-limit reversal to the graphic selector rather than the position"
       ]
     },
     {

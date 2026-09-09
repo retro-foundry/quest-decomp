@@ -42,7 +42,7 @@ routines highlighted in detail below include:
 - runtime `$3256-$327D`, loaded `$4A56-$4A7D`,
   `print_inline_vdu_stream`, including its stack-rewritten return;
 - runtime `$1E6C-$1F0E`, loaded `$366C-$370E`,
-  `initialise_roaming_graphics_for_room`;
+  `initialise_room_moving_objects`;
 - runtime `$2453-$2470`, loaded `$3C53-$3C70`,
   `collect_power_crystal_and_refill_energy`;
 - runtime `$2237-$223A`, loaded `$3A37-$3A3A`,
@@ -94,11 +94,11 @@ routines highlighted in detail below include:
 - runtime `$3343-$334B`, loaded `$4B43-$4B4B`,
   `configure_two_row_repeated_xor_graphic`; and
 - runtime `$343A-$3452`, loaded `$4C3A-$4C52`,
-  `reverse_roaming_graphic_delta_at_limits`; and
+  `reverse_room_moving_object_delta_at_limits`; and
 - runtime `$3453-$3487`, loaded `$4C53-$4C87`,
-  `draw_roaming_graphic`; and
+  `draw_room_moving_object`; and
 - runtime `$3488-$34BA`, loaded `$4C88-$4CBA`,
-  `advance_roaming_graphic_state_and_pointer`; and
+  `advance_room_moving_object_state_and_pointer`; and
 - runtime `$3563-$35C1`, loaded `$4D63-$4DC1`,
   `update_and_draw_room_enemies`; and
 - runtime `$35FA-$362D`, loaded `$4DFA-$4E2D`,
@@ -335,7 +335,7 @@ instruction, 16-cycle state transition and its two zero-page writes. The
 second static caller at `$3544` remains unobserved. See
 `analysis/reconstruction/configure_two_row_repeated_xor_graphic_contract.md`.
 
-The roaming-graphic delta-limit helper compares Y-indexed selector state with the
+The room-moving-object delta-limit helper compares Y-indexed selector state with the
 inclusive `$1D/$46` limits. Ten committed calls prove its no-match path, while
 focused calls 52 and 77 in the same no-input replay naturally prove reversal
 to `$01` at the lower limit and `$FF` at the upper limit. Both write paths,
@@ -343,7 +343,7 @@ register/flag effects, and absence of display/hardware effects match the
 authority exactly. See
 `analysis/reconstruction/reverse_indexed_xor_graphic_delta_at_limits_contract.md`.
 
-The roaming-graphic draw wrapper maps Y-indexed `$122A/$64` state to all four observed
+The room-moving-object draw wrapper maps Y-indexed `$122A/$64` state to all four observed
 even graphic selectors, loads a Y-indexed display pointer from `$43/$44`, and
 tail-calls the proven selector and renderer. The no-input trace contains 20
 complete calls split across callers `$33C7/$3403`; focused captures cover
@@ -351,7 +351,7 @@ opposite selector branches and exact two-row display effects. The global
 one-row bypass remains static-only. See
 `analysis/reconstruction/draw_indexed_xor_graphic_contract.md`.
 
-The adjacent roaming-graphic updater adds its Y-indexed `$01/$FF` delta to selector state and
+The adjacent room-moving-object updater adds its Y-indexed `$01/$FF` delta to selector state and
 moves the paired 16-bit display pointer by `+8/-8` according to delta sign.
 All ten no-input calls are checked byte for byte; they split 5/5 by direction
 and include a positive pointer-page carry. Focused calls prove both directions
