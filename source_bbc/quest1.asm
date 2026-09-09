@@ -2076,11 +2076,11 @@ ORG dispatch_game_tick_updates
 
 .after_game_clock_update
     LDA timed_effect_selector
-    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_WITH_FF_STATE_MOTIF
-    BNE after_ff_state_cell_effect
-    JSR replace_saved_cell_with_ff_state_motif_then_play_sound
+    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_WITH_OUTER_ONLY_STATE_MOTIF
+    BNE after_outer_only_state_cell_effect
+    JSR replace_saved_cell_with_outer_only_state_motif_then_play_sound
 
-.after_ff_state_cell_effect
+.after_outer_only_state_cell_effect
     LDA lift_and_hazard_active
     BEQ after_lift_hazard_group_update
     JSR update_lift_and_hazard_group
@@ -2279,7 +2279,7 @@ ORG advance_bcd_counter_and_print
 
 ; Consume the pending clock tick, increment the low packed-BCD counter, and roll
 ; it after 59 while incrementing the high byte. Low-counter states zero and one
-; select ROOM_CELL_BLANK_STATE_MOTIF or ROOM_CELL_FF_STATE_MOTIF for G0. While
+; select ROOM_CELL_BLANK_STATE_MOTIF or ROOM_CELL_OUTER_ONLY_STATE_MOTIF for G0. While
 ; G0 itself is active the value becomes the transient-effect selector; otherwise
 ; it is written directly to the named G0 map cell. The continuation prints the
 ; high and low two-digit bytes at the named cursor, separated by a horizontal tab.
@@ -2310,7 +2310,7 @@ ORG advance_bcd_counter_and_print
 .test_bcd_counter_one
     CMP #GAME_CLOCK_STATE_ONE
     BNE print_bcd_counter
-    LDA #ROOM_CELL_FF_STATE_MOTIF
+    LDA #ROOM_CELL_OUTER_ONLY_STATE_MOTIF
 
 .apply_bcd_counter_state_value
     LDX reference_pair_primary_value
@@ -2980,7 +2980,7 @@ ORG place_initial_map_objects
 
 ; Write the mutable starting cell types into named locations in the room map.
 ; This straight-line initialiser stamps twelve centered slopes, three
-; ROOM_CELL_FF_STATE_MOTIF values, both key motifs, and the remaining named
+; ROOM_CELL_OUTER_ONLY_STATE_MOTIF values, both key motifs, and the remaining named
 ; layouts. It runs once from
 ; initialise_new_game before the first room is drawn.
 ; The Music Room location starts as ROOM_CELL_MUSIC_ROOM_SIGN;
@@ -3000,7 +3000,7 @@ ORG place_initial_map_objects
     STA room_C7_row_2_cell_3
     STA room_G9_row_0_cell_3
     STA room_B9_row_2_cell_2
-    LDA #ROOM_CELL_FF_STATE_MOTIF
+    LDA #ROOM_CELL_OUTER_ONLY_STATE_MOTIF
     STA room_G0_row_2_cell_4
     STA room_E1_row_1_cell_4
     STA room_G3_row_1_cell_4
@@ -3020,7 +3020,7 @@ ORG place_initial_map_objects
     LDA #ROOM_CELL_BORDERED_CHECKER
     STA room_F3_row_1_cell_1
     STA room_F3_row_1_cell_3
-    LDA #ROOM_CELL_MIRRORED_FF_LAST_COLUMN
+    LDA #ROOM_CELL_MIRRORED_OUTER_ONLY_LAST_COLUMN
     STA room_D4_row_2_cell_2
     STA room_C6_row_2_cell_2
     STA room_A7_row_2_cell_2
@@ -5621,7 +5621,7 @@ ORG dispatch_room_cell
     EQUW draw_table_selected_four_tile_half_row-1 ; ROOM_CELL_FOUR_TILE_HALF_ROW
     EQUW draw_curved_bowl_or_edge_pattern_row-1 ; ROOM_CELL_CURVED_BOWL_OR_EDGE_PATTERN
     EQUW draw_fixed_edge_pair_or_alternating_pattern_row-1 ; ROOM_CELL_FIXED_EDGE_PAIR
-    EQUW draw_ff_state_column_motif-1 ; ROOM_CELL_FF_STATE_MOTIF
+    EQUW draw_outer_only_state_column_motif-1 ; ROOM_CELL_OUTER_ONLY_STATE_MOTIF
     EQUW draw_narrow_bar_fixture_row-1 ; ROOM_CELL_NARROW_BAR_FIXTURE
     EQUW draw_last_column_special_pair_row-1 ; ROOM_CELL_LAST_COLUMN_SPECIAL
     EQUW draw_state_selected_narrow_bar_center_row-1 ; ROOM_CELL_STATE_SELECTED_NARROW_BAR_CENTER; alternate layout remains unexecuted
@@ -5648,7 +5648,7 @@ ORG dispatch_room_cell
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_CHAPEL_SIGN
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_PASSWORD_PROMPT
     EQUW select_blank_or_right_half_pattern_by_column-1 ; ROOM_CELL_RIGHT_HALF_PATTERN
-    EQUW set_ff_state_and_draw_last_column_special_row-1 ; ROOM_CELL_FF_LAST_COLUMN
+    EQUW set_outer_only_state_and_draw_last_column_special_row-1 ; ROOM_CELL_OUTER_ONLY_LAST_COLUMN
     EQUW draw_column_gated_edge_pair_row-1 ; ROOM_CELL_COLUMN_GATED_EDGE_PAIR
     EQUW draw_fixed_pair_gap_row-1 ; ROOM_CELL_FIXED_PAIR_GAP
     EQUW draw_bordered_checker_diagonal_row-1 ; ROOM_CELL_BORDERED_CHECKER
@@ -6379,7 +6379,7 @@ ORG draw_bordered_horizontal_bar_row
     STX bordered_row_interior_graphic
     JMP draw_bordered_row_with_selected_interior
 
-.draw_ff_state_column_motif_source
+.draw_outer_only_state_column_motif_source
     LDY #COLUMN_MOTIF_OUTER_ONLY
     JMP store_column_motif_selector
 .draw_first_key_column_motif_source
@@ -6467,7 +6467,7 @@ ORG draw_bordered_horizontal_bar_row
 .draw_bordered_horizontal_bar_row_source_end
 
 ASSERT draw_bordered_horizontal_bar_row_source = draw_bordered_horizontal_bar_row
-ASSERT draw_ff_state_column_motif_source = draw_ff_state_column_motif
+ASSERT draw_outer_only_state_column_motif_source = draw_outer_only_state_column_motif
 ASSERT draw_first_key_column_motif_source = draw_first_key_column_motif
 ASSERT draw_second_key_column_motif_source = draw_second_key_column_motif
 ASSERT draw_blank_state_column_motif_source = draw_blank_state_column_motif
@@ -6625,27 +6625,27 @@ COPYBLOCK draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_
 CLEAR draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_source_end
 
 
-ORG replace_saved_cell_with_ff_state_motif_then_play_sound
+ORG replace_saved_cell_with_outer_only_state_motif_then_play_sound
 
 ; Select GRAPHIC_UNIFORM_PATTERN for the redraw and save
 ; it as the interaction item code, then enter the shared replacement tail with
-; ROOM_CELL_FF_STATE_MOTIF. Unlike the ordinary entry, this prefix skips the
+; ROOM_CELL_OUTER_ONLY_STATE_MOTIF. Unlike the ordinary entry, this prefix skips the
 ; ROOM_CELL_BLANK_STATE_MOTIF setup before the common write/redraw/sound tail.
-.replace_saved_cell_with_ff_state_motif_then_play_sound_source
+.replace_saved_cell_with_outer_only_state_motif_then_play_sound_source
     LDY #GRAPHIC_UNIFORM_PATTERN
     STY record_row_graphic_index
     STY saved_interaction_item_code
-    LDA #ROOM_CELL_FF_STATE_MOTIF
+    LDA #ROOM_CELL_OUTER_ONLY_STATE_MOTIF
     JMP write_saved_cell_and_redraw
-.replace_saved_cell_with_ff_state_motif_then_play_sound_source_end
+.replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end
 
-ASSERT replace_saved_cell_with_ff_state_motif_then_play_sound_source = replace_saved_cell_with_ff_state_motif_then_play_sound
-ASSERT replace_saved_cell_with_ff_state_motif_then_play_sound_source_end = replace_saved_cell_then_play_sound
-COPYBLOCK replace_saved_cell_with_ff_state_motif_then_play_sound_source, replace_saved_cell_with_ff_state_motif_then_play_sound_source_end, &4598
+ASSERT replace_saved_cell_with_outer_only_state_motif_then_play_sound_source = replace_saved_cell_with_outer_only_state_motif_then_play_sound
+ASSERT replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end = replace_saved_cell_then_play_sound
+COPYBLOCK replace_saved_cell_with_outer_only_state_motif_then_play_sound_source, replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end, &4598
 
 ; Runtime $2D98-$2DA2 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4598-$45A2.
-CLEAR replace_saved_cell_with_ff_state_motif_then_play_sound_source, replace_saved_cell_with_ff_state_motif_then_play_sound_source_end
+CLEAR replace_saved_cell_with_outer_only_state_motif_then_play_sound_source, replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end
 
 
 ORG replace_saved_cell_then_play_sound
@@ -8442,7 +8442,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 ; ROOM_CELL_RIGHT_HALF_PATTERN enables the water environment, blanks the
 ; selector-matching column, and otherwise enters the right-half alternating
 ; handler. ROOM_CELL_CENTERED_ALTERNATING surrounds its column-derived odd run
-; with blanks. ROOM_CELL_FF_LAST_COLUMN selects the long icon effect, draws its
+; with blanks. ROOM_CELL_OUTER_ONLY_LAST_COLUMN selects the long icon effect, draws its
 ; special row, and saves the cell/display pointers. Natural traces and focused
 ; real-dispatch fixtures cover every instruction with exact authority/rebuild
 ; parity.
@@ -8600,7 +8600,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     INX
     JMP draw_blank_tile_run
 
-.set_ff_state_and_draw_last_column_special_row_source
+.set_outer_only_state_and_draw_last_column_special_row_source
     LDX #ROOM_INTERACTION_LONG_ICON_EFFECT
     STX room_interaction_code
     JSR draw_last_column_special_pair_row
@@ -8615,7 +8615,7 @@ ASSERT draw_or_configure_secondary_dynamic_object_source = draw_or_configure_sec
 ASSERT draw_and_configure_dynamic_room_object_source = draw_and_configure_dynamic_room_object
 ASSERT select_blank_or_right_half_pattern_by_column_source = select_blank_or_right_half_pattern_by_column
 ASSERT draw_centered_alternating_run_by_column_source = draw_centered_alternating_run_by_column
-ASSERT set_ff_state_and_draw_last_column_special_row_source = set_ff_state_and_draw_last_column_special_row
+ASSERT set_outer_only_state_and_draw_last_column_special_row_source = set_outer_only_state_and_draw_last_column_special_row
 ASSERT draw_fixed_pair_gap_and_bordered_rows_source_end = &19AA
 COPYBLOCK draw_fixed_pair_gap_and_bordered_rows_source, draw_fixed_pair_gap_and_bordered_rows_source_end, &30B2
 
