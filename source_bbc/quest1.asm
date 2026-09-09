@@ -9739,7 +9739,7 @@ ORG update_and_draw_room_moving_objects
     INY
     CPY room_moving_object_slot_limit
     BMI room_moving_object_update_loop
-    LDA #&00
+    LDA #XOR_GRAPHIC_REPEAT_DISABLED
     STA xor_graphic_repeat_source_scanlines
     RTS
 
@@ -9765,9 +9765,12 @@ CLEAR update_and_draw_room_moving_objects_source, update_and_draw_room_moving_ob
 
 ORG initialise_four_dynamic_room_object_slots
 
-; Called by the dynamic-room-object setup at $1943 with an even slot offset in Y. It preserves the display pointer, initialises four circular even-indexed slots with display addresses spaced $20 bytes apart and paired $FE/$00 state bytes at $18/$19, restores the pointer, then writes $FE to $1247.
+; Called by the dynamic-room-object setup with an even slot offset in Y. It
+; preserves the display pointer, initialises four circular even-indexed slots
+; with named display spacing and negative-step/zero-position state, restores
+; the pointer, then stores the final upper position limit.
 .initialise_four_dynamic_room_object_slots_source
-    LDX #&00
+    LDX #DYNAMIC_ROOM_OBJECT_FIRST_COUNT
     LDA display_pointer_low
     PHA
     LDA display_pointer_high
@@ -9777,19 +9780,19 @@ ORG initialise_four_dynamic_room_object_slots
     CLC
     LDA display_pointer_low
     STA moving_entity_display_pointer_low,Y
-    ADC #&20
+    ADC #DYNAMIC_ROOM_OBJECT_POINTER_SPACING
     STA display_pointer_low
     LDA display_pointer_high
     STA moving_entity_display_pointer_high,Y
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
-    LDA #&FE
+    LDA #ENTITY_VERTICAL_STEP_NEGATIVE
     STA moving_entity_delta,Y
-    LDA #&00
+    LDA #DYNAMIC_ROOM_OBJECT_INITIAL_POSITION
     STA moving_entity_position,Y
     INY
     INY
-    CPY #&0A
+    CPY #DYNAMIC_ROOM_OBJECT_SLOT_WRAP_INDEX
     BMI advance_dynamic_object_slot
     DEY
     DEY
@@ -9798,13 +9801,13 @@ ORG initialise_four_dynamic_room_object_slots
 
 .advance_dynamic_object_slot
     INX
-    CPX #&04
+    CPX #DYNAMIC_ROOM_OBJECT_SLOT_COUNT
     BNE initialise_next_dynamic_object_slot
     PLA
     STA display_pointer_high
     PLA
     STA display_pointer_low
-    LDA #&FE
+    LDA #DYNAMIC_ROOM_OBJECT_FINAL_UPPER_POSITION
     STA lift_or_hazard_upper_position
     RTS
 .initialise_four_dynamic_room_object_slots_source_end
@@ -9821,15 +9824,15 @@ CLEAR initialise_four_dynamic_room_object_slots_source, initialise_four_dynamic_
 ORG draw_room_moving_object
 
 ; Y indexes selector inputs and a display pointer. X is
-; built from whether the signed delta is $FF and whether selector-state bit 2
-; is clear, giving the even graphic-table indices $00/$02/$04/$06. The common
+; built from movement direction and selector-state bit 2, giving the four even
+; frame-pointer offsets. The common
 ; observed globals select the repeated-source/two-row setup; the bypass leaves
 ; the initial one-row count in place. The final jump tail-calls the proven
 ; graphic selector and XOR renderer.
 .draw_room_moving_object_source
     LDA #ROOM_MOVING_OBJECT_DEFAULT_GRAPHIC_ROWS
     STA xor_graphic_character_rows_remaining
-    LDX #&00
+    LDX #ROOM_MOVING_OBJECT_FORWARD_FRAME_OFFSET
     LDA room_moving_object_graphic_selector_delta,Y
     CMP #ROOM_MOVING_OBJECT_STEP_NEGATIVE
     BNE room_moving_object_test_selector_state
@@ -10050,7 +10053,7 @@ ORG advance_room_moving_object_state_and_pointer
     ADC #MODE1_CELL_COLUMN_BYTES
     STA room_moving_object_display_pointer_low,Y
     LDA room_moving_object_display_pointer_high,Y
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA room_moving_object_display_pointer_high,Y
     RTS
 
@@ -10060,7 +10063,7 @@ ORG advance_room_moving_object_state_and_pointer
     SBC #MODE1_CELL_COLUMN_BYTES
     STA room_moving_object_display_pointer_low,Y
     LDA room_moving_object_display_pointer_high,Y
-    SBC #&00
+    SBC #POINTER_HIGH_CARRY_BIAS
     STA room_moving_object_display_pointer_high,Y
     RTS
 .advance_room_moving_object_state_and_pointer_source_end
@@ -10077,12 +10080,12 @@ CLEAR advance_room_moving_object_state_and_pointer_source, advance_room_moving_o
 ORG set_room_data_pointer
 
 ; Build the pointer to the current room cell data.
-; The horizontal reference at $90 is multiplied by five and added to the level
+; The primary room reference is multiplied by ROOM_CELLS_PER_DRAW_ROW and added to the level
 ; base in room_cell_level_base_low/high, then adds room_cell_map to form
 ; room_data_pointer_low/high. A room occupies five bytes and the saved level
 ; base selects its horizontal band. The level transitions maintain the source
 ; level_room_map_offset by one complete level stride in either direction.
-; The RTS at $1CA8 is shared, running far more often than this body.
+; The trailing return is shared, running far more often than this body.
 .set_room_data_pointer_source
     LDA reference_pair_primary_value
     ASL A
@@ -10093,7 +10096,7 @@ ORG set_room_data_pointer
     ADC room_data_map_offset_low
     STA room_data_map_offset_low
     LDA room_cell_level_base_high
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA room_data_map_offset_high
     LDA #LO(room_cell_map)
     CLC
@@ -10116,21 +10119,21 @@ CLEAR set_room_data_pointer_source, set_room_data_pointer_source_end
 
 ORG retreat_secondary_reference_and_pointer
 
-; Decrement the secondary reference at $8F, move the pointer
-; at $70/$71 back by $78, and dispatch to $1B98.
+; Decrement the secondary reference, move the level-room-map offset back by one
+; ROOM_LEVEL_MAP_BYTES stride, and redraw the room.
 ; This is the exact mirror of advance_secondary_reference_and_pointer, SEC/SBC
 ; against CLC/ADC, and the two are reached through adjacent
-; display_action_jump_table vectors at $1203 and $1209. enter_room_above uses
-; the $1203 vector, so stepping the reference backwards is what a vertical
+; display_action_jump_table vectors. enter_room_above uses the retreating vector,
+; so stepping the reference backwards is what a vertical
 ; transition does.
 .retreat_secondary_reference_and_pointer_source
     DEC reference_pair_secondary_value
     SEC
     LDA level_room_map_offset_low
-    SBC #&78
+    SBC #ROOM_LEVEL_MAP_BYTES
     STA level_room_map_offset_low
     LDA level_room_map_offset_high
-    SBC #&00
+    SBC #POINTER_HIGH_CARRY_BIAS
     STA level_room_map_offset_high
     JMP draw_and_initialise_room
 .retreat_secondary_reference_and_pointer_source_end
