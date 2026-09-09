@@ -9659,14 +9659,14 @@ ORG update_and_draw_room_moving_objects
 ; its display pointer, and drawn in the new position.
 ;
 ; Caterpillars and lifts bypass the candidate/item path. A caterpillar also
-; submits the moved graphic to the player-bounds test as an $12-high candidate.
-; For the other types, $2203 tests the selector/state-derived candidate. The
+; submits the moved graphic to the player-bounds test using its named collision
+; extent. For the other types, the shared range helper tests the candidate. The
 ; carry-set path was not reached in committed play, but its exact static code
-; records the candidate delta and accepts item $30 for a fish or item $38 for
-; a mouse; if neither carried slot has that item it substitutes the
-; scratch value in $33. Every observed $2203 call returns carry clear.
+; records the candidate delta and accepts a worm for a fish or cheese for a
+; mouse; if neither carried slot has that item it substitutes the named missing-
+; item delta. Every observed range-helper call returns carry clear.
 .update_and_draw_room_moving_objects_source
-    LDY #&00
+    LDY #ROOM_MOVING_OBJECT_FIRST_SLOT
 
 .room_moving_object_update_loop
     LDA erase_previous_xor_sprite_flag
@@ -10281,7 +10281,7 @@ ORG advance_room_enemy_with_collision_checks
 ; also blocked, and tail-transfer to the horizontal mover.
 .advance_room_enemy_with_collision_checks_source
     LDA enemy_vertical_delta,Y
-    CMP #&02
+    CMP #ENTITY_VERTICAL_STEP_POSITIVE
     BNE probe_room_enemy_vertical_path
     JSR scan_markers_below_room_enemy
     BCS handle_blocked_room_enemy_vertical_path
@@ -10294,7 +10294,7 @@ ORG advance_room_enemy_with_collision_checks
 
 .handle_blocked_room_enemy_vertical_path
     LDA room_enemy_horizontal_delta,Y
-    CMP #&01
+    CMP #ENTITY_HORIZONTAL_STEP_POSITIVE
     BNE probe_behind_room_enemy
     JSR scan_column_ahead_of_room_enemy
     BCC advance_room_enemy_horizontally
@@ -10321,18 +10321,15 @@ CLEAR advance_room_enemy_with_collision_checks_source, advance_room_enemy_with_c
 
 ORG set_display_pointer_from_grid_position
 
-; Convert a grid position into a display address.
-; $0A is multiplied by 5 and then by 128, which is $0280, one Mode 1 character
-; row, so $0A is the row. $0B is multiplied by 8, one character cell, so $0B is
-; the column. The two are added and biased by the grid origin, giving
-; pointer = display_grid_origin + row * $0280 + column * 8.
+; Convert a named grid row and column into a display pointer. The row is
+; multiplied by five and shifted seven times, producing one Mode 1 character-
+; row stride; the column is shifted three times to produce one cell stride.
 ;
-; That origin is not arbitrary. $3A00 is exactly one character row below the
-; CRTC display start of $3C80, so grid row 1 lands on the first visible row
+; The grid origin is exactly one character row before the CRTC display start,
+; so grid row 1 lands on the first visible row
 ; and row 0 sits in the margin above it. The grid is therefore 1-based
-; vertically against the visible display, which is why callers bias their
-; stored rows before converting: initialise_room_enemy_from_table adds $0A to
-; one row and subtracts 6 and 3 from the other.
+; vertically against the visible display, which is why callers bias stored rows
+; before converting them.
 ;
 ; X is preserved across the whole computation; A and the named column-offset
 ; scratch word are not.
@@ -10344,9 +10341,9 @@ ORG set_display_pointer_from_grid_position
     ASL A
     ADC display_grid_row
     STA display_pointer_low
-    LDA #&00
+    LDA #DISPLAY_GRID_OFFSET_HIGH_CLEAR
     STA display_pointer_high
-    LDX #&07
+    LDX #DISPLAY_GRID_ROW_SCALE_SHIFT_COUNT
 
 .multiply_row_by_character_row
     ASL display_pointer_low
@@ -10357,7 +10354,7 @@ ORG set_display_pointer_from_grid_position
     STA display_grid_column_offset_low
     LDA #ROOM_COLUMN_FIRST
     STA display_grid_column_offset_high
-    LDX #&03
+    LDX #DISPLAY_GRID_COLUMN_SCALE_SHIFT_COUNT
 
 .multiply_column_by_cell
     ASL display_grid_column_offset_low
@@ -10387,20 +10384,20 @@ CLEAR set_display_pointer_from_grid_position_source, set_display_pointer_from_gr
 
 ORG scan_column_behind_room_enemy
 
-; Place the display pointer 8 bytes before the Y-indexed
-; entry pointer, one Mode 1 character cell back, then tail-jump into
+; Place the display pointer one Mode 1 character cell before the selected enemy
+; pointer, then tail-jump into
 ; scan_column_below_room_enemy.
 ; It is the opposed member of the probe pair with
-; scan_column_ahead_of_room_enemy, which offsets forward by $20 into the same
+; scan_column_ahead_of_room_enemy, which offsets four cells forward into the same
 ; tail. reflect_room_enemy_at_obstacles tries this one first and only falls
 ; through to the other when this reports clear.
 .scan_column_behind_room_enemy_source
     LDA room_enemy_display_pointer_low,Y
     SEC
-    SBC #&08
+    SBC #ROOM_ENEMY_BEHIND_PROBE_BYTES
     STA display_pointer_low
     LDA room_enemy_display_pointer_high,Y
-    SBC #&00
+    SBC #POINTER_HIGH_CARRY_BIAS
     JMP scan_column_below_room_enemy
 .scan_column_behind_room_enemy_source_end
 
@@ -10415,19 +10412,19 @@ CLEAR scan_column_behind_room_enemy_source, scan_column_behind_room_enemy_source
 
 ORG scan_column_ahead_of_room_enemy
 
-; Place the display pointer $20 past the Y-room enemy
-; pointer at $47/$48, two Mode 1 character cells ahead, then tail-jump into
+; Place the display pointer four Mode 1 character cells past the selected enemy
+; pointer, then tail-jump into
 ; scan_column_below_room_enemy to scan eight rows there.
 ; Sharing that tail is what makes this a probe variant rather than a routine of
-; its own: the caller gets the same carry-set-when-blocked answer, measured two
+; its own: the caller gets the same carry-set-when-blocked answer, measured four
 ; cells further on.
 .scan_column_ahead_of_room_enemy_source
     LDA room_enemy_display_pointer_low,Y
     CLC
-    ADC #&20
+    ADC #ROOM_ENEMY_AHEAD_PROBE_BYTES
     STA display_pointer_low
     LDA room_enemy_display_pointer_high,Y
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     JMP scan_column_below_room_enemy
 .scan_column_ahead_of_room_enemy_source_end
 
@@ -10443,8 +10440,8 @@ CLEAR scan_column_ahead_of_room_enemy_source, scan_column_ahead_of_room_enemy_so
 ORG draw_item_graphic_pair
 
 ; Draw the two consecutive graphic records selected by
-; item/goal-table index X. Index 3 first calls the Golden Dragon ending sequence
-; at $1E3F. The graphic pair itself is always $28 + 2X and the following index.
+; item/goal-table index X. The Golden Dragon record first calls its ending
+; sequence. Each pair begins at ITEM_CODE_KEY_1 plus twice the record index.
 .draw_item_graphic_pair_source
     TXA
     PHA
@@ -10473,8 +10470,8 @@ CLEAR draw_item_graphic_pair_source, draw_item_graphic_pair_source_end
 
 ORG load_room_enemy_display_pointer_then_scan_markers
 
-; Load the display pointer for the Y-room enemy, then
-; run the marker scan through the $220F jump-table vector, preserving Y across
+; Load the display pointer for the selected room enemy, then run the marker scan
+; through its named jump-table entry, preserving Y across
 ; the call by saving it on the stack. The scan itself does not preserve Y, so
 ; the save is what lets the caller keep iterating over entries.
 .load_room_enemy_display_pointer_then_scan_markers_source
@@ -10498,12 +10495,11 @@ CLEAR load_room_enemy_display_pointer_then_scan_markers_source, load_room_enemy_
 
 ORG scan_markers_below_room_enemy
 
-; Place the display pointer one or two Mode 1 character rows
-; below the Y-room enemy pointer at $47/$48, then run the four-byte marker
+; Place the display pointer one or two Mode 1 character rows below the selected
+; room enemy pointer, then run the four-byte marker
 ; scan through its jump-table vector, preserving Y across the call.
-; A character row is $0280 bytes. When the repeated-scanline flag at $6C is
-; clear the pointer is offset by one row; when it is set the low byte is left
-; untouched and only $05 is added to the high byte, which is two rows. The
+; When the repeated-scanline flag is clear the pointer is offset by one row;
+; when it is set the pointer is offset by two rows. The
 ; scan itself does not preserve Y, so the save is what lets the caller keep
 ; iterating over entries.
 .scan_markers_below_room_enemy_source
@@ -10511,10 +10507,10 @@ ORG scan_markers_below_room_enemy
     LDX xor_graphic_repeat_source_scanlines
     BNE offset_two_character_rows
     CLC
-    ADC #&80
+    ADC #LO(MODE1_CHARACTER_ROW_BYTES)
     STA display_pointer_low
     LDA room_enemy_display_pointer_high,Y
-    ADC #&02
+    ADC #HI(MODE1_CHARACTER_ROW_BYTES)
 
 .store_pointer_then_scan
     STA display_pointer_high
@@ -10529,7 +10525,7 @@ ORG scan_markers_below_room_enemy
     CLC
     STA display_pointer_low
     LDA room_enemy_display_pointer_high,Y
-    ADC #&05
+    ADC #HI(MODE1_TWO_CHARACTER_ROWS_BYTES)
     JMP store_pointer_then_scan
 .scan_markers_below_room_enemy_source_end
 
@@ -10571,7 +10567,7 @@ ORG scan_column_below_room_enemy
 ; room enemy and report whether it is blocked. A is the display pointer high byte on
 ; entry, the low byte having already been set by the caller.
 ; Y is preserved across the scan, which does not preserve it. A blocking byte
-; calls $334C with A = 4 and returns carry set; a clear column returns carry
+; submits the named blocked-path pitch and returns carry set; a clear column returns carry
 ; clear.
 .scan_column_below_room_enemy_source
     STA display_pointer_high
@@ -10666,7 +10662,7 @@ ORG advance_room_enemy_horizontal_position
     ADC #MODE1_CELL_COLUMN_BYTES
     STA room_enemy_display_pointer_low,Y
     LDA room_enemy_display_pointer_high,Y
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA room_enemy_display_pointer_high,Y
     RTS
 
@@ -10676,7 +10672,7 @@ ORG advance_room_enemy_horizontal_position
     SBC #MODE1_CELL_COLUMN_BYTES
     STA room_enemy_display_pointer_low,Y
     LDA room_enemy_display_pointer_high,Y
-    SBC #&00
+    SBC #POINTER_HIGH_CARRY_BIAS
     STA room_enemy_display_pointer_high,Y
     RTS
 .advance_room_enemy_horizontal_position_source_end
