@@ -11216,15 +11216,25 @@ ORG cross_room_robot_ghost_record_table
 ; enemy classes use this cross-room subsystem. Bats, moths, jellyfish, fish,
 ; mice and caterpillars never use it.
 .cross_room_robot_ghost_record_table_source
+.level_0_cross_room_small_robot_record
     EQUB &51, &8D, &0F
+.level_1_cross_room_small_robot_record
     EQUB &1D, &46, &07
+.level_2_cross_room_small_robot_record
     EQUB &8C, &76, &13
+.level_3_cross_room_small_robot_record
     EQUB &7B, &7E, &0A
+.level_4_cross_room_small_robot_record
     EQUB &60, &3A, &11
+.level_5_cross_room_small_robot_record
     EQUB &69, &7A, &18
+.level_6_cross_room_small_robot_record
     EQUB &4D, &8E, &08
+.level_7_cross_room_small_robot_record
     EQUB &6A, &94, &0B
+.level_8_cross_room_ghost_record
     EQUB &28, &3F, &19
+.level_9_cross_room_ghost_record
     EQUB &60, &7F, &1C
 .cross_room_robot_ghost_record_table_source_end
 ASSERT cross_room_robot_ghost_record_table_source = cross_room_robot_ghost_record_table
@@ -11237,25 +11247,45 @@ ORG lift_and_hazard_room_record_table
 ; Twenty lift/hazard room records. The second byte's high
 ; nibble selects LIFT_OR_HAZARD_*; the comments decode the packed room.
 .lift_and_hazard_room_record_table_source
+.room_A4_lift_platform_record
     EQUB &44, &00, &08, &07, &1B ; A4 lift
+.room_B2_lift_platform_record
     EQUB &42, &01, &28, &0C, &16 ; B2 lift
+.room_B6_lift_platform_record
     EQUB &06, &01, &44, &14, &1B ; B6 lift
+.room_G2_moth_hazard_record
     EQUB &02, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &1E, &0C, &13 ; G2 moth-shaped hazard
+.room_A1_moth_hazard_record
     EQUB &41, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE, &08, &04, &13 ; A1 moth-shaped hazard
+.room_B3_moth_hazard_record
     EQUB &03, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&01, &06, &07, &10 ; B3 moth-shaped hazard
+.room_C0_moth_hazard_record
     EQUB &40, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&02, &14, &0C, &16 ; C0 moth-shaped hazard
+.room_G8_first_moth_hazard_record
     EQUB &48, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &08, &11, &18 ; G8 moth-shaped hazard, first
+.room_F0_moth_hazard_record
     EQUB &00, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&05, &26, &05, &10 ; F0 moth-shaped hazard
+.room_E8_moth_hazard_record
     EQUB &08, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &10, &08, &0E ; E8 moth-shaped hazard
+.room_E5_moth_hazard_record
     EQUB &05, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &21, &09, &11 ; E5 moth-shaped hazard
+.room_G8_second_moth_hazard_record
     EQUB &08, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &00, &14, &18 ; G8 moth-shaped hazard, second
+.room_G5_moth_hazard_record
     EQUB &05, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &2E, &0C, &12 ; G5 moth-shaped hazard
+.room_H7_moth_hazard_record
     EQUB &07, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&07, &26, &0E, &18 ; H7 moth-shaped hazard
+.room_H4_moth_hazard_record
     EQUB &44, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&07, &18, &05, &0C ; H4 moth-shaped hazard
+.room_E3_moth_hazard_record
     EQUB &03, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &2E, &04, &12 ; E3 moth-shaped hazard
+.room_C2_moth_hazard_record
     EQUB &42, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&02, &34, &05, &13 ; C2 moth-shaped hazard
+.room_E6_moth_hazard_record
     EQUB &06, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &40, &0D, &19 ; E6 moth-shaped hazard
+.room_B8_moth_hazard_record
     EQUB &08, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&01, &26, &04, &15 ; B8 moth-shaped hazard
+.room_D5_moth_hazard_record
     EQUB &45, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&03, &38, &11, &16 ; D5 moth-shaped hazard
 .lift_and_hazard_room_record_table_source_end
 ASSERT lift_and_hazard_room_record_table_source = lift_and_hazard_room_record_table
