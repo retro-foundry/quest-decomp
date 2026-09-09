@@ -2707,7 +2707,7 @@ ORG initialise_room_enemy_from_table
     JSR match_packed_record_against_references
     BCS unpack_matched_entity_record
     INX
-    CPX #&14
+    CPX #ROOM_ENEMY_RECORD_COUNT
     BNE test_next_entity_record
     RTS
 
@@ -2730,7 +2730,7 @@ ORG initialise_room_enemy_from_table
     LDA room_enemy_record_table,Y
     STA enemy_horizontal_lower_limit
     CLC
-    ADC #&0A
+    ADC #ENEMY_FIRST_HORIZONTAL_BIAS
     STA display_grid_column
     STA moving_entity_horizontal_position
     JSR set_display_pointer_from_grid_position
@@ -2741,7 +2741,7 @@ ORG initialise_room_enemy_from_table
     INY
     LDA room_enemy_record_table,Y
     SEC
-    SBC #&03
+    SBC #ENEMY_SECOND_VERTICAL_BIAS
     STA display_grid_row
     ASL A
     ASL A
@@ -2756,7 +2756,7 @@ ORG initialise_room_enemy_from_table
     LDA room_enemy_record_table,Y
     STA enemy_horizontal_upper_limit
     SEC
-    SBC #&06
+    SBC #ENEMY_SECOND_HORIZONTAL_BIAS
     STA display_grid_column
     STA shared_workspace_6a
     JSR set_display_pointer_from_grid_position
@@ -2764,7 +2764,7 @@ ORG initialise_room_enemy_from_table
     STA shared_workspace_49
     LDA display_pointer_high
     STA shared_workspace_4a
-    LDY #&0C
+    LDY #ENEMY_JELLYFISH_DESCRIPTOR_OFFSET
     LDA shared_workspace_79
     BNE copy_entity_descriptor
     LDA active_enemy_species
@@ -2780,16 +2780,16 @@ ORG initialise_room_enemy_from_table
     STA enemy_graphic_descriptor,X
     INX
     INY
-    CPX #&04
+    CPX #ENEMY_GRAPHIC_DESCRIPTOR_BYTES
     BNE copy_next_descriptor_byte
-    LDX #&01
+    LDX #ENEMY_DELTA_SEED_FIRST_INDEX
 
 .seed_entity_deltas
     TXA
     STA room_tick_update_selector,X
     STA enemy_vertical_delta,X
     INX
-    CPX #&03
+    CPX #ENEMY_DELTA_SEED_END_INDEX
     BNE seed_entity_deltas
     RTS
 .initialise_room_enemy_from_table_source_end
@@ -11710,11 +11710,19 @@ ORG enemy_graphic_descriptor_table
 ; Four decoded graphic pairs selected by room-entity type at $1FB9. The fourth
 ; jellyfish pair is present but no six-byte room record selects it.
 .enemy_graphic_descriptor_table_source
+.bat_graphic_descriptor
     EQUW runtime_bat_wings_raised_frame, runtime_bat_wings_lowered_frame
+.small_bouncing_robot_graphic_descriptor
     EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
+.moth_graphic_descriptor
     EQUW runtime_moth_and_hazard_frame_0, runtime_moth_and_hazard_frame_1
+.jellyfish_graphic_descriptor
     EQUW runtime_jellyfish_frame_0, runtime_jellyfish_frame_1 ; unselected here
 .enemy_graphic_descriptor_table_source_end
+ASSERT bat_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_BAT*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
+ASSERT small_bouncing_robot_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_SMALL_ROBOT*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
+ASSERT moth_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_MOTH*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
+ASSERT jellyfish_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_JELLYFISH*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
 ASSERT enemy_graphic_descriptor_table_source = enemy_graphic_descriptor_table
 ASSERT enemy_graphic_descriptor_table_source_end = initialise_lifts_and_hazards_from_table
 COPYBLOCK enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_source_end, &37DF
