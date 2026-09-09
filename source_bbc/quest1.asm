@@ -11484,7 +11484,8 @@ ORG cross_room_robot_ghost_record_table
 ; Runtime $0A78-$0A95: ten per-level cross-room robot/ghost records, one per level.
 ; These are separate from the room-enemy table. Levels 0-7 select the small
 ; bouncing robot frames; levels 8-9 select the ghost frames. Only those two
-; enemy classes use this cross-room subsystem.
+; enemy classes use this cross-room subsystem. Bats, moths, jellyfish, fish,
+; mice and caterpillars never use it.
 .cross_room_robot_ghost_record_table_source
     EQUB &51, &8D, &0F
     EQUB &1D, &46, &07
