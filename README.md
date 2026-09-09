@@ -15,6 +15,10 @@ declared in the two maintained source files:
 The assembly does not include binary fragments and does not require an
 original disk image or an authority payload to build.
 
+## Community
+
+Join the project discussion on [Discord](https://discord.gg/QjARJ67V9U).
+
 ## Requirements
 
 - PowerShell 7 or Windows PowerShell 5.1
