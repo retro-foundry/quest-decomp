@@ -7200,7 +7200,9 @@ CLEAR draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_r
 
 ORG draw_two_13_two_beam_two_13_two_pattern
 
-; room-cell type $1C. Draw two selector-$13 tiles, two mirrored diagonal-beam tiles, another two selector-$13 tiles, then two alternating tiles. The internal $16D2 entry draws exactly two selector-$13 tiles.
+; ROOM_CELL_13_BEAM_PATTERN. Draw two narrow vertical bars, two mirrored
+; diagonal beams, another two narrow bars, then two alternating tiles. The
+; internal draw_two_13_tiles entry draws exactly two narrow bars.
 .draw_two_13_two_beam_two_13_two_pattern_source
     JSR draw_two_13_tiles
     LDX #TWO_TILE_RUN_COUNT
@@ -7222,13 +7224,13 @@ ORG draw_two_13_two_beam_two_13_two_pattern
 
 ASSERT draw_two_13_two_beam_two_13_two_pattern_source = draw_two_13_two_beam_two_13_two_pattern
 ASSERT draw_two_13_two_beam_two_13_two_pattern_source_end = &16DD
-; The adjacent cell-$1D entry is assembled next; both are copied together
+; The adjacent ROOM_CELL_LEFT_SEQUENCE_OR_BEAM entry is assembled next; both are copied together
 ; after the cross-room robot/ghost routines that occupy their loaded destination.
 
 ORG draw_left_half_sequence_twice_or_13_beam_pattern
-; room-cell type $1D. Columns zero through three draw
+; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM. Columns zero through three draw
 ; their four-selector record from left_half_four_tile_graphic_sequences twice.
-; Columns four through seven reuse the cell-$1C selector-$13/beam pattern.
+; Columns four through seven reuse ROOM_CELL_13_BEAM_PATTERN.
 ; This entry has not appeared in committed traces; its dispatch-table target
 ; and direct shared-tail structure establish the dataflow contract.
 .draw_left_half_sequence_twice_or_13_beam_pattern_source
@@ -7246,9 +7248,11 @@ ORG advance_cross_room_robot_ghost_offset_and_display_pointer
 
 ; Move a cross-room ghost vertically by signed step +2/-2.
 ; Ordinary steps are delegated through apply_signed_vertical_step_to_pointer.
-; At offset $10 while moving upward, decrement secondary row and wrap to $C0;
-; at $C0 while moving downward, increment the row and wrap to $10. The display
-; pointer high byte follows either wrap by +/-$37. Rows 8 and 9 are endpoints:
+; At CROSS_ROOM_GHOST_TOP_OFFSET while moving upward, decrement the secondary
+; room reference and wrap to CROSS_ROOM_GHOST_BOTTOM_OFFSET; at the bottom
+; offset while moving downward, increment the reference and wrap to the top.
+; The display-pointer high byte follows either wrap by the named page delta.
+; CROSS_ROOM_GHOST_TOP_LEVEL and CROSS_ROOM_GHOST_BOTTOM_LEVEL are endpoints:
 ; reaching them reverses the delta instead of crossing the boundary.
 .advance_cross_room_robot_ghost_offset_and_display_pointer_source
     LDA cross_room_robot_ghost_offset_delta_field,X
@@ -8247,9 +8251,9 @@ CLEAR draw_status_panel_divider_source, draw_status_panel_divider_source_end
 
 ORG warp_to_room_3_4
 
-; Select secondary reference 4 and primary reference 3,
-; set the corresponding level-base offset to 4*$78 = $01E0, then tail-dispatch
-; through the $1206 vector to draw_and_initialise_room.
+; Select HORIZONTAL_WARP_TARGET_LEVEL and HORIZONTAL_WARP_TARGET_COLUMN, install
+; their precomputed level-map offset, then tail-dispatch through
+; enter_draw_and_initialise_room.
 .warp_to_room_3_4_source
     LDA #HORIZONTAL_WARP_TARGET_LEVEL
     STA reference_pair_secondary_value
@@ -8273,19 +8277,19 @@ CLEAR warp_to_room_3_4_source, warp_to_room_3_4_source_end
 
 ORG start_saved_display_block_shift_effect
 
-; The unobserved $3175 entry stores the caller's byte two
-; positions beyond the saved cell, restores the saved offset, arms selector $04
-; for 32 ticks, and replaces the saved cell with $39. Static call sites at
-; $2A0D and $2A31 supply this entry from the adjacent interaction branches;
-; no committed scenario takes either branch, so that prefix remains explicitly
-; qualified as static dataflow rather than claimed runtime behavior.
+; The unobserved start entry stores the caller's byte two positions beyond the
+; saved cell, restores the saved offset, arms
+; TIMED_EFFECT_SHIFT_SAVED_DISPLAY_BLOCK for its initial countdown, and replaces
+; the saved cell with ROOM_CELL_ALTERNATING_RIGHT_HALF. Its adjacent interaction
+; callers remain static-only, so this prefix is qualified as dataflow rather
+; than claimed runtime behavior.
 ;
-; The traced $318E entry decrements the timed-effect countdown. At zero, clear the
-; timed-effect selector and room_interaction_code, then return. Otherwise set the working display
-; pointer to the saved display position plus $40, shift its eight-cell by
-; four-row Mode 1 block right by one cell, advance the saved position by eight
-; bytes with page carry, and tail-call the amplitude-1 sound player with duration
-; one and pitch twice the remaining countdown.
+; advance_saved_display_block_shift_effect decrements the countdown. At zero it
+; clears the timed-effect selector and room interaction. Otherwise it derives a
+; working pointer using SAVED_DISPLAY_SHIFT_ROW_OFFSET_LOW, shifts the four-row
+; block right by one Mode 1 cell, advances the saved position with page carry,
+; and tail-calls the sound player using the named amplitude and duration with
+; pitch twice the remaining countdown.
 ; display_shift_expiry proves the zero branch; display_shift_pointer_carry
 ; proves the saved-pointer page carry; game_tick_22_state_4 supplies the natural
 ; active path. All authority/rebuild boundaries, complete effects, PC sequences,
@@ -8331,7 +8335,7 @@ ORG start_saved_display_block_shift_effect
     LDA timed_effect_countdown
     ASL A
     STA sound_block_pitch
-    LDA #SAVED_DISPLAY_SHIFT_SOUND_DURATION
+    LDA #SAVED_DISPLAY_SHIFT_SOUND_DURATION_AND_AMPLITUDE
     STA sound_block_duration
     JMP play_sound_with_amplitude
 .start_saved_display_block_shift_effect_source_end
