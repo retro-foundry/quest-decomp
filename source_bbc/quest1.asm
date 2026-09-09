@@ -287,16 +287,16 @@ INCLUDE "source_bbc/memory_map.inc"
 ; transport location only after all relocated routines have been assembled.
 ORG &9000
 .player_enemy_and_lift_xor_sprite_frames_source
-.small_bouncing_robot_direction_frame_0
+.caterpillar_direction_frame_0
     EQUB &00, &00, &00, &00, &06, &6F, &6F, &06, &00, &00, &00, &06, &6F, &6F, &6F, &06
     EQUB &00, &00, &06, &6F, &7F, &7F, &6F, &06, &77, &88, &0E, &6F, &69, &0F, &08, &0E
-.small_bouncing_robot_direction_frame_1
+.caterpillar_direction_frame_1
     EQUB &EE, &11, &07, &69, &6F, &0F, &01, &07, &00, &00, &06, &6F, &EF, &EF, &6F, &06
     EQUB &00, &00, &00, &06, &6F, &6F, &6F, &06, &00, &00, &00, &00, &06, &6F, &6F, &06
-.small_bouncing_robot_direction_frame_2
+.caterpillar_direction_frame_2
     EQUB &00, &00, &00, &00, &07, &6F, &6F, &06, &00, &06, &6F, &6F, &6F, &0E, &00, &00
     EQUB &33, &06, &6F, &6F, &6F, &06, &00, &00, &88, &44, &0E, &69, &6F, &0F, &08, &0E
-.small_bouncing_robot_direction_frame_3
+.caterpillar_direction_frame_3
     EQUB &11, &22, &07, &6F, &69, &0F, &01, &07, &CC, &06, &6F, &6F, &6F, &06, &00, &00
     EQUB &00, &06, &6F, &6F, &6F, &07, &00, &00, &00, &00, &00, &00, &0E, &6F, &6F, &06
 .unidentified_flying_creature_frame_0
@@ -341,10 +341,10 @@ ORG &9000
 .jellyfish_frame_0
     EQUB &03, &07, &0F, &0F, &99, &04, &22, &02, &08, &0F, &0F, &0F, &33, &0A, &AA, &0A
     EQUB &01, &0F, &0F, &0F, &99, &0A, &AA, &0A, &0C, &0E, &0F, &0E, &22, &04, &88, &08
-.striped_lift_platform_frame_0
+.small_bouncing_robot_frame_0
     EQUB &57, &57, &00, &30, &0F, &0F, &30, &00, &5F, &5F, &30, &F0, &FF, &FF, &F0, &30
     EQUB &5F, &5F, &C0, &F0, &0F, &0F, &F0, &C0, &4E, &4E, &00, &C0, &FF, &FF, &C0, &00
-.striped_lift_platform_frame_1
+.small_bouncing_robot_frame_1
     EQUB &00, &00, &00, &30, &FF, &FF, &30, &00, &07, &07, &30, &F0, &0F, &0F, &F0, &30
     EQUB &0E, &0E, &C0, &F0, &FF, &FF, &F0, &C0, &00, &00, &00, &C0, &0F, &0F, &C0, &00
 .mouse_direction_frame
@@ -2679,7 +2679,7 @@ ORG initialise_room_entity_from_table
 ; $1221 selects the four-byte graphic descriptor copied from $1FDF. The three
 ; selected graphic pairs and their rooms are
 ;   unidentified flying form B5 D0 A1 G2 E3 D6
-;   striped lift/platform     C3 F1 C1 B3 B6 E2 A2 C7
+;   small bouncing robot      C3 F1 C1 B3 B6 E2 A2 C7
 ;   moth/hazard               C5 E5 F4 E4 H7 D7
 ; See analysis/room_map.md for the rooms alongside what the account says of
 ; them. These are decoded graphic identities; the shared state machine means a
@@ -11059,7 +11059,8 @@ COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_des
 CLEAR lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end
 
 ORG unused_graphic_frame_pointer_words
-; Runtime $0B6F-$0B76: lift-frame 0/1 and ghost-frame 0/3 pointers. No known
+; Runtime $0B6F-$0B76: small-bouncing-robot frame 0/1 and ghost-frame 0/3
+; pointers. No known
 ; runtime selector reaches these four words: the adjacent player renderer's
 ; minimum selector X=$18 starts at runtime $0B77. Their graphic identities are
 ; nevertheless established by decoding the complete sprite bank.
@@ -11428,7 +11429,7 @@ CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
 ORG indexed_xor_graphic_pointer_sets
 ; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
-; the four-direction small robot; fish alternating with item-graphic record
+; the four-direction caterpillar; fish alternating with item-graphic record
 ; $33; mouse alternating with the herring's record $35; and a background-only
 ; set. These roaming/puzzle graphics are separate from the room-entity pairs
 ; selected by the descriptor table at $1FDF.
@@ -11635,7 +11636,7 @@ ORG enemy_graphic_descriptor_table
 ; jellyfish pair is present but no six-byte room record selects it.
 .enemy_graphic_descriptor_table_source
     EQUW &0480, &04A0 ; unidentified_flying_creature_frame_0/1
-    EQUW &0640, &0660 ; striped_lift_platform_frame_0/1
+    EQUW &0640, &0660 ; small_bouncing_robot_frame_0/1
     EQUW &04C0, &04E0 ; moth_and_hazard_frame_0/1
     EQUW &0620, &0600 ; jellyfish_frame_0/1 (unselected here)
 .enemy_graphic_descriptor_table_source_end
