@@ -2928,14 +2928,13 @@ ORG run_terminal_interaction
 
 ; Runtime $20B3-$213B. Draw the terminal room using temporary reference and
 ; room-pointer values, then restore the caller's four bytes and interpret the
-; control-marked stream at $2196. Ordinary bytes go to OSWRCH. $FF submits the
-; result sound, waits for SPACE release, redraws the caller's room and returns;
-; $FE tests for access card $32; $FD/$FC dispatch into the still-original
-; password and password-list continuations at $2146/$216B.
+; control-marked terminal text stream. Ordinary bytes go to OSWRCH. Its named
+; command bytes end the interaction, test for the access card, process password
+; input, or display the collected-password list.
 .run_terminal_interaction_source
     LDA reference_pair_primary_value
     CLC
-    ADC #&31
+    ADC #TERMINAL_NUMBER_CHARACTER_BIAS
     STA terminal_number_character
     LDA reference_pair_primary_value
     PHA
@@ -2945,13 +2944,13 @@ ORG run_terminal_interaction
     PHA
     LDA level_room_map_offset_high
     PHA
-    LDA #&07
+    LDA #TERMINAL_DISPLAY_ROOM_COLUMN
     STA reference_pair_primary_value
-    LDA #&09
+    LDA #TERMINAL_DISPLAY_ROOM_LEVEL
     STA reference_pair_secondary_value
-    LDA #&38
+    LDA #LO(TERMINAL_DISPLAY_LEVEL_MAP_OFFSET)
     STA level_room_map_offset_low
-    LDA #&04
+    LDA #HI(TERMINAL_DISPLAY_LEVEL_MAP_OFFSET)
     STA level_room_map_offset_high
     JSR draw_and_initialise_room
     PLA
@@ -2962,25 +2961,25 @@ ORG run_terminal_interaction
     STA reference_pair_secondary_value
     PLA
     STA reference_pair_primary_value
-    LDX #&00
+    LDX #TERMINAL_RESULT_NONE
     STX terminal_interaction_result
 
 .terminal_stream_next_byte
     LDA terminal_interaction_text_stream,X
-    CMP #&FF
+    CMP #TERMINAL_STREAM_END
     BEQ terminal_stream_end
-    CMP #&FE
+    CMP #TERMINAL_STREAM_ACCESS_CARD_TEST
     BEQ terminal_stream_access_card_marker
-    CMP #&FD
+    CMP #TERMINAL_STREAM_PASSWORD_INPUT
     BEQ process_terminal_password_markers
-    CMP #&FC
+    CMP #TERMINAL_STREAM_PASSWORD_LIST
     BEQ terminal_password_list_marker
     JSR OSWRCH
     INX
     JMP terminal_stream_next_byte
 
 .terminal_stream_end
-    LDX #&0A
+    LDX #TERMINAL_RESULT_SOUND_PARAMETER
     STX sound_block_duration
     STX sound_block_pitch
     LDA terminal_interaction_result
@@ -2989,7 +2988,7 @@ ORG run_terminal_interaction
 .wait_for_terminal_space_release
     LDX #INKEY_SPACE
     LDA #OSBYTE_INKEY
-    LDY #&FF
+    LDY #OSBYTE_INKEY_KEYBOARD_SCAN_Y
     JSR OSBYTE
     BCC wait_for_terminal_space_release
     JSR draw_and_initialise_room
@@ -3006,7 +3005,7 @@ ORG run_terminal_interaction
     LDA #ITEM_CODE_ACCESS_CARD
     JSR test_item_code_matches_either_slot
     BCS terminal_access_card_present
-    LDX #&3A
+    LDX #TERMINAL_ACCESS_DENIED_STREAM_OFFSET
     JMP terminal_stream_next_byte
 
 .terminal_access_card_present
@@ -3309,7 +3308,7 @@ ORG osbyte_81_inkey
 ; function $81 with Y=$FF, then tail-call the MOS so its key result returns
 ; directly to the original caller.
 .osbyte_81_inkey_source
-    LDY #&FF
+    LDY #OSBYTE_INKEY_KEYBOARD_SCAN_Y
     LDA #OSBYTE_INKEY
     JMP OSBYTE
 .osbyte_81_inkey_source_end
@@ -4395,8 +4394,8 @@ ORG run_startup_room_sequence_until_space
 .update_startup_room
     JSR write_system_clock_via_osword_02
     JSR enter_dispatch_game_tick_updates
-    LDA #&81
-    LDY #&FF
+    LDA #OSBYTE_INKEY
+    LDY #OSBYTE_INKEY_KEYBOARD_SCAN_Y
     LDX #INKEY_SPACE
     JSR OSBYTE
     BCS discard_two_stack_bytes_and_return
