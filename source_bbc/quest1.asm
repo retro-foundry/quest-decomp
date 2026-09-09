@@ -1204,21 +1204,20 @@ CLEAR evntv_read_interval_timer_source, evntv_read_interval_timer_source_end
 
 ORG main_gameplay_loop
 
-; Runtime $252F-$25C3. Initialize the remaining status/gameplay presentation,
-; then run one clock/input/update/difference cycle repeatedly until $62 becomes
-; nonzero. A positive exit performs the death/ending transition. When the
-; last-chance chord has set $3D and the sequence count is below five, an inline
+; Complete the twelve-icon status row, initialise the gameplay presentation,
+; then run one clock/input/update/difference cycle repeatedly until
+; main_loop_exit_flag becomes nonzero. A positive exit performs the death/ending
+; transition. When the last-chance chord has enabled reincarnation and the
+; sequence count is below REINCARNATION_SEQUENCE_LIMIT, an inline
 ; REINCARNATE prompt polls Y/N: Y re-enters gameplay setup, while N continues
 ; polling. Otherwise an inline GAME OVER message is printed, the interval
-; target is set to $80, and the OSWORD wait is entered.
+; target is set to GAME_OVER_WAIT_TICK_TARGET, and the OSWORD wait is entered.
 ; A negative exit (the Golden Dragon path) skips directly to the crystal/XOR
-; completion dispatcher. Its return path waits for key -$63 to be released.
-; The active loop through $254D-$255B is traced thousands of times; everything
-; from the reincarnation eligibility test at $256F onward remains static-only.
+; completion dispatcher. Its return path waits for Space to be released.
 .main_gameplay_loop_source
-    LDA #&04
+    LDA #GAMEPLAY_INITIAL_COLLECTED_ICON_COUNT
     STA collected_icon_count
-    LDX #&08
+    LDX #GAMEPLAY_INITIAL_ICON_ADD_COUNT
 .add_remaining_initial_icons
     JSR enter_add_collected_icon
     DEX
@@ -1240,7 +1239,7 @@ ORG main_gameplay_loop
     LDA main_loop_exit_flag
     BEQ main_gameplay_tick
     BMI completed_game_exit
-    LDA #&00
+    LDA #MAIN_LOOP_EXIT_RUNNING
     STA main_loop_exit_flag
     INC main_loop_sequence_counter
     JSR walk_player_toward_target_position
@@ -1248,14 +1247,14 @@ ORG main_gameplay_loop
     LDA reincarnation_cheat_flag
     BEQ show_game_over
     LDA main_loop_sequence_counter
-    CMP #&05
+    CMP #REINCARNATION_SEQUENCE_LIMIT
     BPL show_game_over
     JSR print_inline_vdu_stream
 
 .reincarnate_prompt_vdu_stream
-    EQUB VDU_TEXT_AT, &0A, &0F
+    EQUB VDU_TEXT_AT, REINCARNATE_PROMPT_CURSOR_X, REINCARNATE_PROMPT_CURSOR_Y
     EQUS "REINCARNATE? (Y or N)"
-    EQUB &00
+    EQUB INLINE_VDU_STREAM_END
 
 .poll_reincarnation_choice
     LDX #INKEY_Y                       ; BBC Y key, OSBYTE $81 negative key number
@@ -1268,11 +1267,11 @@ ORG main_gameplay_loop
 .show_game_over
     JSR print_inline_vdu_stream
 .game_over_vdu_stream
-    EQUB VDU_TEXT_AT, &10, &11
+    EQUB VDU_TEXT_AT, GAME_OVER_CURSOR_X, GAME_OVER_CURSOR_Y
     EQUS "GAME OVER"
-    EQUB &00
+    EQUB INLINE_VDU_STREAM_END
     JSR write_system_clock_via_osword_02
-    LDA #&80
+    LDA #GAME_OVER_WAIT_TICK_TARGET
     STA bounded_tick_target_value
     JMP wait_osword_block_value_reaches_target
 
