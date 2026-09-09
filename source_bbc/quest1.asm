@@ -5675,7 +5675,7 @@ ORG draw_room_row_cells
 ; draw_and_initialise_room calls this once per cell position as it walks a room,
 ; 697 times across 29 rooms.
 .draw_room_row_cells_source
-    LDA shared_workspace_09
+    LDA room_graphics_column
     STA tile_pair_source_selector
     LDY #&00
 
@@ -5689,7 +5689,7 @@ ORG draw_room_row_cells
     STY current_room_cell_offset
     JSR dispatch_room_cell
     LDA tile_pair_source_selector
-    STA shared_workspace_09
+    STA room_graphics_column
     LDY current_room_cell_offset
     INY
     CPY #ROOM_CELLS_PER_DRAW_ROW
@@ -5805,13 +5805,13 @@ ORG dispatch_room_cell
 .mirror_cell_direction
     LDA #ROOM_COLUMN_LAST
     SEC
-    SBC shared_workspace_09
-    STA shared_workspace_09
+    SBC room_graphics_column
+    STA room_graphics_column
     LDA #&FF
     STA indexed_xor_display_pointer_low
 
 .return_column_counter
-    LDA shared_workspace_09
+    LDA room_graphics_column
     RTS
 
 ; One handler-minus-one word for each six-bit room-cell type. The code above
@@ -6270,12 +6270,12 @@ ORG draw_curved_bowl_before_alternating_suffix
     TAX
     LDA #ROOM_COLUMN_LAST
     SEC
-    SBC shared_workspace_09
+    SBC room_graphics_column
     TAX
     JSR draw_blank_tile_run
     LDA temporary_display_byte_7ffb
     JSR apply_mirror_flag_then_copy_graphic
-    LDX shared_workspace_09
+    LDX room_graphics_column
     JMP draw_alternating_tile_run
 
 
@@ -6293,7 +6293,7 @@ ORG draw_curved_bowl_after_alternating_prefix
     JSR apply_mirror_flag_then_copy_graphic
     LDA #ROOM_COLUMN_LAST
     SEC
-    SBC shared_workspace_09
+    SBC room_graphics_column
     TAX
     JMP draw_blank_tile_run
 
@@ -6664,7 +6664,7 @@ ORG draw_bordered_horizontal_bar_row
     BPL draw_column_sensitive_room_patterns
     LDX #&03
     JSR draw_blank_tile_run
-    LDA shared_workspace_09
+    LDA room_graphics_column
     CMP #&04
     BNE draw_mirrored_centered_slope_pair
     JSR save_display_pointer_and_cell_reference
@@ -6812,7 +6812,7 @@ ORG draw_graphic_selector_sequence
 
 ; Runtime $157E-$158E. Multiply the selector index in $09 by two Y-controlled shifts, then draw X consecutive graphic selectors through the pointer at $7E/$7F, applying the mirror flag to every tile.
 .draw_graphic_selector_sequence_source
-    LDA shared_workspace_09
+    LDA room_graphics_column
 
 .scale_graphic_sequence_index
     ASL A
@@ -7070,14 +7070,14 @@ ORG draw_narrow_bar_fixture_row
 .draw_narrow_bar_middle_right_column
     SEC
     LDA #&07
-    SBC shared_workspace_09
+    SBC room_graphics_column
     TAX
     JSR draw_next_13_07_pair
     LDA #GRAPHIC_WIDE_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
-    LDA shared_workspace_09
+    LDA room_graphics_column
     CMP #&04
     BEQ return_from_narrow_bar_fixture
     SEC
@@ -7230,16 +7230,16 @@ COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pai
 CLEAR draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end
 
 ORG draw_state_selected_13_center_row
-; Runtime $1650-$1675, room-cell type $17. State $04 values $1F and $07 draw
+; Runtime $1650-$1675, room-cell type $17. The first and final room graphics Y coordinates draw
 ; alternating tiles. Other values draw two blanks, selector $13, the two-tile
 ; $04/$03 centre run at $1531, another $13 and two trailing blanks. Only the
 ; alternating outcome is present in committed traces; the dispatch entry and
 ; static flow establish the alternate layout without assigning gameplay lore.
 .draw_state_selected_13_center_row_source
-    LDX shared_workspace_04
-    CPX #&1F
+    LDX room_graphics_y_low
+    CPX #ROOM_GRAPHICS_Y_FINAL_ROW
     BEQ draw_cell_17_alternating_row
-    CPX #&07
+    CPX #ROOM_GRAPHICS_Y_BEFORE_FIRST_ROW
     BNE draw_cell_17_framed_center
 .draw_cell_17_alternating_row
     JMP draw_eight_alternating_tiles
@@ -7582,7 +7582,7 @@ ORG draw_room_sign_or_collect_password
     SEC
     SBC #&01
     JSR OSWRCH
-    LDA shared_workspace_09
+    LDA room_graphics_column
     ASL A
     ASL A
     ASL A
@@ -7691,7 +7691,7 @@ ORG draw_table_selected_left_half_row
 .draw_cell_1b_right_half_layout
     SEC
     SBC #&04
-    STA shared_workspace_09
+    STA room_graphics_column
     JSR load_left_half_graphic_sequence_pointer
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
@@ -8706,7 +8706,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 .require_dynamic_object_selector_seven
     CMP #&07
     BNE draw_blank_dynamic_object_row
-    CMP shared_workspace_09
+    CMP room_graphics_column
     BNE configure_dynamic_object_outside_column_seven
     LDA #&D0
     STA lift_or_hazard_lower_position
@@ -8757,7 +8757,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     LDA #WATER_ENVIRONMENT_ACTIVE
     STA water_environment_flag
     LDA tile_pair_source_selector
-    CMP shared_workspace_09
+    CMP room_graphics_column
     BNE draw_alternating_in_right_half
 
 .draw_blank_selected_pattern_column
@@ -8768,12 +8768,12 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     BEQ draw_blank_selected_pattern_column
     SEC
     LDA #&07
-    SBC shared_workspace_09
+    SBC room_graphics_column
     LSR A
     STA indexed_xor_graphic_selector_state
     TAX
     JSR draw_blank_tile_run
-    LDA shared_workspace_09
+    LDA room_graphics_column
     AND #ROOM_EVEN_COLUMN_MASK
     TAX
     INX
@@ -9174,8 +9174,8 @@ ORG draw_cell_3c_transition_row_by_column
     STA graphic_sequence_pointer_low
     LDA #HI(cell_3c_graphic_sequence_table)
     STA graphic_sequence_pointer_high
-    DEC shared_workspace_09
-    DEC shared_workspace_09
+    DEC room_graphics_column
+    DEC room_graphics_column
     LDX #&04
     LDY #&02
     JMP draw_graphic_selector_sequence
@@ -9347,7 +9347,7 @@ ORG draw_table_selected_eight_tiles_in_columns_four_five
     BPL draw_cell_3c_alternating_row
     SEC
     SBC #&04
-    STA shared_workspace_09
+    STA room_graphics_column
     LDA #LO(cell_3d_graphic_sequence_table)
     STA graphic_sequence_pointer_low
     LDA #HI(cell_3d_graphic_sequence_table)
@@ -9507,7 +9507,7 @@ ORG draw_character_row_as_tiles
     LDY #HI(character_definition_block)
     LDA #OSWORD_DEFINE_CHARACTER
     JSR OSWORD
-    LDX shared_workspace_09
+    LDX room_graphics_column
     INX
     LDA character_definition_block,X
     STA character_definition_block
@@ -9897,9 +9897,9 @@ ORG draw_and_initialise_room
     STA room_cell_level_base_low
     LDA level_room_map_offset_high
     STA room_cell_level_base_high
-    LDA #&07
-    STA shared_workspace_04
-    STA shared_workspace_09
+    LDA #ROOM_GRAPHICS_Y_BEFORE_FIRST_ROW
+    STA room_graphics_y_low
+    STA room_graphics_column
     JSR set_room_data_pointer
     LDA room_data_pointer_low
     SEC
@@ -9943,18 +9943,18 @@ ORG draw_and_initialise_room
 
 .start_next_room_row
     LDA #&00
-    STA shared_workspace_09
+    STA room_graphics_column
     JSR advance_76_77_pointer_by_40
 
 .draw_next_row_cell
-    INC shared_workspace_04
+    INC room_graphics_y_low
     JSR draw_room_row_cells
-    INC shared_workspace_09
-    LDA shared_workspace_09
+    INC room_graphics_column
+    LDA room_graphics_column
     CMP #&08
     BNE draw_next_row_cell
-    LDA shared_workspace_04
-    CMP #&1F
+    LDA room_graphics_y_low
+    CMP #ROOM_GRAPHICS_Y_FINAL_ROW
     BNE start_next_room_row
     JSR draw_matching_records_from_table
     JSR initialise_room_moving_objects

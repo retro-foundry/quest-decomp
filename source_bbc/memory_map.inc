@@ -10,8 +10,7 @@
 ; Canonical names for bytes reused as scratch/state by several unrelated
 ; routines. More specific aliases below document roles where dataflow proves
 ; one; source operands use these shared names when no single role is universal.
-shared_workspace_04 = &0004
-shared_workspace_09 = &0009
+room_graphics_column           = &0009 ; behavioral: current zero-based display column, temporarily mirrored or rebased by column-sensitive cell handlers
 shared_workspace_0a = &000A
 shared_workspace_0b = &000B
 shared_workspace_47 = &0047
@@ -114,6 +113,8 @@ inventory_slot_index            = &0003 ; dataflow alias: descending carried-ite
 current_room_cell_offset        = &0003 ; dataflow alias: saved Y offset of the current cell within a five-byte room row
 room_graphics_x_high           = &0003 ; dataflow alias: high byte of the room-cell graphics X coordinate used in VDU streams
 room_graphics_y_low            = &0004 ; dataflow alias: low byte of the room-cell graphics Y coordinate used in VDU streams
+ROOM_GRAPHICS_Y_BEFORE_FIRST_ROW = &07 ; behavioral: initial coordinate advanced before the first rendered room cell
+ROOM_GRAPHICS_Y_FINAL_ROW      = &1F ; behavioral: final room graphics Y coordinate before entity setup begins
 player_vertical_velocity        = &000E ; behavioral: jet boots add the step, gravity subtracts it, vertical movement consumes it
 player_vertical_position        = &002C ; behavioral: the row the vertical exits test, (character row - 5) * 8; enter_room_above writes $D0 for row 31 and the start point $B0 for row 27
 player_walk_target_horizontal_position = &002D ; behavioral: target consumed by walk_player_toward_target_position

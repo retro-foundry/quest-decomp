@@ -24,7 +24,7 @@ Where the two disagree the disagreement is recorded rather than resolved.
 | `initial_item_and_goal_record_table` | `$0980` | 12 records of 4 | new-game image copied over the mutable `$0900` records by `$3245` |
 | `room_enemy_record_table` | `$0A00` | 20 records of 6 | bat, small bouncing robot, or moth enemies, per room |
 | `lift_and_hazard_room_record_table` | `$0A96` | 20 records of 5 | three lift records and seventeen moth-shaped damaging-hazard records, per room |
-| `indexed_pair_record_table` | `$0A78` | 10 records of 3, by `$8F` | one roaming pair per level |
+| `cross_room_robot_ghost_record_table` | `$0A78` | 10 records of 3, by `$8F` | two cross-room small robots on levels 0-7 or two ghosts on levels 8-9 |
 | `across_to_password_number` | `$18AA` | 8 bytes, by `$90` | which password a column carries |
 
 A record's room comes from the packed pair `match_packed_record_against_references`
@@ -148,7 +148,7 @@ C0 G8 F0 E8 E5 G8 G5 H7 H4 E3 C2 E6 B8 D5. This is the class whose renderer
 carries the player. It contains C2, reported as an acid-vat platform room, and
 the Ghost Maze rooms B8 and E8. G8 appears twice, so a room can hold two.
 
-`indexed_pair_record_table` at `$0A78` is different in kind: one three-byte
+`cross_room_robot_ghost_record_table` at `$0A78` is different in kind: one three-byte
 record per level, not per room. `initialise_indexed_pair_from_record` reads it
 at `$8F * 3` and writes every unpacked field twice, initialising two parallel
 objects, and `advance_indexed_pair_value_and_display_pointer` **carries them

@@ -275,7 +275,7 @@
       ]
     },
     {
-      "name": "roaming_enemy_graphic_frame_pointer_table",
+      "name": "cross_room_robot_ghost_frame_pointer_table",
       "runtime_start": 2927,
       "runtime_end_exclusive": 2935,
       "loaded_start": 9327,
@@ -514,7 +514,7 @@
       ]
     },
     {
-      "name": "indexed_pair_record_table",
+      "name": "cross_room_robot_ghost_record_table",
       "runtime_start": 2680,
       "runtime_end_exclusive": 2710,
       "loaded_start": 9080,
