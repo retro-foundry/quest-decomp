@@ -392,6 +392,7 @@ ENEMY_SPECIES_MOTH              = &02 ; behavioral: descriptor pair for moth_win
 ENEMY_SPECIES_JELLYFISH         = &03 ; structural: descriptor pair for the two jellyfish animation phases; no room record selects it
 ROOM_ENEMY_RECORD_COUNT         = &14 ; behavioral: twenty ROOM_ENEMY_RECORD_BYTES records in room_enemy_record_table
 ROOM_ENEMY_RECORD_BYTES         = &06 ; behavioral: packed room/species fields followed by two row/column positions
+PACKED_RECORD_TYPE_SCALE        = &10 ; dataflow: moves a room-object, enemy-species or lift/hazard class into the packed record's high nibble
 ROOM_ENEMY_FIRST_RECORD_INDEX   = &00 ; dataflow: room-enemy table scan begins at record zero
 ROOM_ENEMY_ACTIVE               = &01 ; behavioral: enables the room-enemy tick update path
 ROOM_ENEMY_DEFAULT_CHARACTER_ROWS = &01 ; behavioral: ordinary enemy frames occupy one character row

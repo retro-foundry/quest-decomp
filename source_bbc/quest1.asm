@@ -11035,15 +11035,15 @@ ORG room_moving_object_record_table
     EQUB &C4, &02, &13, &10, &2B ; C4 caterpillar
     EQUB &01, &02, &0A, &2C, &3C ; C1 caterpillar
     EQUB &42, &01, &18, &23, &4A ; B2 caterpillar
-    EQUB &81, &26, &19, &1A, &33 ; G1 mouse
+    EQUB &81, ROOM_MOVING_OBJECT_MOUSE*PACKED_RECORD_TYPE_SCALE+&06, &19, &1A, &33 ; G1 mouse
     EQUB &00, &05, &10, &1D, &2F ; F0 caterpillar
-    EQUB &02, &32, &0F, &14, &3F ; C2 lift
-    EQUB &03, &33, &0E, &04, &18 ; D3 lift
+    EQUB &02, ROOM_MOVING_OBJECT_LIFT*PACKED_RECORD_TYPE_SCALE+&02, &0F, &14, &3F ; C2 lift
+    EQUB &03, ROOM_MOVING_OBJECT_LIFT*PACKED_RECORD_TYPE_SCALE+&03, &0E, &04, &18 ; D3 lift
     EQUB &03, &06, &0A, &0E, &2D ; G3 caterpillar
-    EQUB &04, &36, &0C, &1C, &40 ; G4 lift
+    EQUB &04, ROOM_MOVING_OBJECT_LIFT*PACKED_RECORD_TYPE_SCALE+&06, &0C, &1C, &40 ; G4 lift
     EQUB &05, &06, &12, &20, &3B ; G5 caterpillar
-    EQUB &09, &26, &19, &1A, &33 ; G9 mouse
-    EQUB &07, &14, &16, &00, &2F ; E7 fish
+    EQUB &09, ROOM_MOVING_OBJECT_MOUSE*PACKED_RECORD_TYPE_SCALE+&06, &19, &1A, &33 ; G9 mouse
+    EQUB &07, ROOM_MOVING_OBJECT_FISH*PACKED_RECORD_TYPE_SCALE+&04, &16, &00, &2F ; E7 fish
     EQUB &06, &04, &10, &24, &45 ; E6 caterpillar
 .room_moving_object_record_table_source_end
 ASSERT room_moving_object_record_table_source = room_moving_object_record_table
@@ -11099,25 +11099,25 @@ ORG room_enemy_record_table
 ; positions and limits.
 .room_enemy_record_table_source
     EQUB &05, &01, &06, &11, &18, &1C ; B5 bat
-    EQUB &03, &12, &05, &04, &1A, &1E ; C3 small bouncing robot
-    EQUB &41, &15, &02, &00, &0C, &4A ; F1 small bouncing robot
+    EQUB &03, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&02, &05, &04, &1A, &1E ; C3 small bouncing robot
+    EQUB &41, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&05, &02, &00, &0C, &4A ; F1 small bouncing robot
     EQUB &40, &03, &06, &11, &11, &3C ; D0 bat
     EQUB &41, &00, &03, &21, &18, &2C ; A1 bat
-    EQUB &01, &12, &03, &18, &0B, &49 ; C1 small bouncing robot
-    EQUB &43, &11, &07, &14, &17, &43 ; B3 small bouncing robot
-    EQUB &06, &11, &04, &06, &0B, &3E ; B6 small bouncing robot
-    EQUB &45, &22, &04, &00, &11, &2B ; C5 moth
-    EQUB &02, &06, &06, &1D, &08, &28 ; E5 moth
-    EQUB &45, &24, &04, &00, &14, &40 ; F4 moth
-    EQUB &42, &14, &06, &34, &18, &4B ; E4 moth
-    EQUB &02, &10, &17, &15, &18, &4B ; G2 bat
+    EQUB &01, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&02, &03, &18, &0B, &49 ; C1 small bouncing robot
+    EQUB &43, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&01, &07, &14, &17, &43 ; B3 small bouncing robot
+    EQUB &06, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&01, &04, &06, &0B, &3E ; B6 small bouncing robot
+    EQUB &45, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&02, &04, &00, &11, &2B ; C5 moth
+    EQUB &02, &06, &06, &1D, &08, &28 ; E5 bat
+    EQUB &45, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&04, &04, &00, &14, &40 ; F4 moth
+    EQUB &42, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&04, &06, &34, &18, &4B ; E4 small bouncing robot
+    EQUB &02, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE, &17, &15, &18, &4B ; G2 small bouncing robot
     EQUB &03, &04, &04, &00, &13, &3E ; E3 bat
-    EQUB &44, &25, &04, &15, &14, &32 ; H7 moth
-    EQUB &04, &24, &04, &08, &19, &2E ; D6 bat
-    EQUB &47, &27, &06, &0A, &18, &42 ; D7 moth
-    EQUB &06, &03, &0C, &10, &12, &3B ; C7 small bouncing robot
-    EQUB &47, &12, &05, &07, &12, &49 ; A2 small bouncing robot
-    EQUB &47, &23, &04, &00, &19, &41 ; E2 small bouncing robot
+    EQUB &44, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&05, &04, &15, &14, &32 ; H7 moth
+    EQUB &04, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&04, &04, &08, &19, &2E ; D6 moth
+    EQUB &47, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&07, &06, &0A, &18, &42 ; D7 moth
+    EQUB &06, &03, &0C, &10, &12, &3B ; C7 bat
+    EQUB &47, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&02, &05, &07, &12, &49 ; A2 small bouncing robot
+    EQUB &47, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&03, &04, &00, &19, &41 ; E2 moth
 .room_enemy_record_table_source_end
 ASSERT room_enemy_record_table_source = room_enemy_record_table
 ASSERT room_enemy_record_table_source_end-room_enemy_record_table_source = ROOM_ENEMY_RECORD_COUNT*ROOM_ENEMY_RECORD_BYTES
