@@ -1,4 +1,4 @@
-"""Render Quest's complete runtime $0400-$087F XOR sprite bank."""
+"""Render Quest's XOR sprites, lift, item pairs, and status/object graphics."""
 
 from pathlib import Path
 import re
@@ -11,7 +11,7 @@ SOURCE = ROOT / "source_bbc" / "quest1.asm"
 OUTPUT = ROOT / "analysis" / "reconstruction" / "all_sprite_sheet.png"
 
 
-def read_block(source: str, start_label: str, end_label: str, base_address: int):
+def read_block(source: str, start_label: str, end_label: str, base_address: int, record_size: int):
     start = re.search(rf"(?m)^\.{re.escape(start_label)}\s*$", source)
     end = re.search(rf"(?m)^\.{re.escape(end_label)}\s*$", source)
     if start is None or end is None or end.start() <= start.end():
@@ -27,8 +27,8 @@ def read_block(source: str, start_label: str, end_label: str, base_address: int)
         if "EQUB" not in line:
             continue
         record.extend(int(value, 16) for value in re.findall(r"&([0-9A-Fa-f]{2})", line))
-        if len(record) == 32:
-            result.append((base_address + len(result) * 0x20, label, record))
+        if len(record) == record_size:
+            result.append((base_address + len(result) * record_size, label, record))
             record = []
     if record:
         raise ValueError(f"partial sprite record in {start_label}: {len(record)} bytes")
@@ -48,19 +48,75 @@ records = read_block(
     "player_enemy_and_lift_xor_sprite_frames_source",
     "player_enemy_and_lift_xor_sprite_frames_end",
     0x0400,
+    32,
 )
 records += read_block(
     source,
     "unused_xor_sprite_frames_0800_087f_source",
     "unused_xor_sprite_frames_0800_087f_end",
     0x0800,
+    32,
 )
 
-columns = 2
-scale = 10
-cell_width = 430
-cell_height = 125
-sheet = Image.new("RGB", (columns * cell_width, ((len(records) + 1) // 2) * cell_height), (224, 224, 224))
+room_records = read_block(
+    source,
+    "room_and_item_graphic_records_source",
+    "room_and_item_graphic_records_source_end",
+    0x0E10,
+    16,
+)
+status_records = read_block(
+    source,
+    "status_icon_graphics_source",
+    "unused_status_figure_graphics_source_end",
+    0x0880,
+    16,
+)
+
+# The lift renderer uses $0EA0 as a 32-byte XOR source, thereby combining room
+# graphic records $0A and $0B into the complete 16x8 lift image.
+lift_first = room_records[0x0A - 1]
+lift_second = room_records[0x0B - 1]
+records.append((0x0EA0, "vertical_lift_graphic_records_0a_0b", lift_first[2] + lift_second[2]))
+
+item_names = (
+    "key_item_1",
+    "key_item_2",
+    "key_item_3",
+    "salt_item",
+    "worm_item",
+    "access_card_item",
+    "herring_item",
+    "mouse_item",
+    "cheese_item",
+    "cross_item",
+    "eye_item",
+    "bottle_item",
+)
+for pair_index, name in enumerate(item_names):
+    record_index = 0x28 + pair_index * 2
+    first = room_records[record_index - 1]
+    second = room_records[record_index]
+    records.append((0x0E00 + record_index * 0x10, name, first[2] + second[2]))
+
+status_names = (
+    "remaining_power_crystal_icon",
+    "collected_power_crystal_icon",
+    "initial_status_marker_icon",
+    "blank_status_icon",
+    "status_figure_fragment_4",
+    "status_figure_fragment_5",
+    "status_figure_fragment_6",
+    "status_figure_fragment_7",
+)
+for (address, _label, record), name in zip(status_records, status_names):
+    records.append((address, name, record))
+
+columns = 3
+scale = 8
+cell_width = 390
+cell_height = 108
+sheet = Image.new("RGB", (columns * cell_width, ((len(records) + columns - 1) // columns) * cell_height), (224, 224, 224))
 draw = ImageDraw.Draw(sheet)
 
 for index, (runtime_address, label, record) in enumerate(records):
@@ -71,8 +127,9 @@ for index, (runtime_address, label, record) in enumerate(records):
     draw.text((ox + 8, oy + 6), f"${runtime_address:04X}  {label}", fill=(0, 0, 0))
     sprite_x = ox + 8
     sprite_y = oy + 28
+    byte_columns = len(record) // 8
     for y in range(8):
-        for byte_column in range(4):
+        for byte_column in range(byte_columns):
             value = record[y + byte_column * 8]
             for packed_pixel in range(4):
                 x = byte_column * 4 + packed_pixel
@@ -85,7 +142,7 @@ for index, (runtime_address, label, record) in enumerate(records):
                     ),
                     fill=colour(value, packed_pixel),
                 )
-    draw.rectangle((sprite_x - 1, sprite_y - 1, sprite_x + 16 * scale, sprite_y + 8 * scale), outline=(96, 96, 96))
+    draw.rectangle((sprite_x - 1, sprite_y - 1, sprite_x + byte_columns * 4 * scale, sprite_y + 8 * scale), outline=(96, 96, 96))
 
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 temporary_output = OUTPUT.with_name(f"{OUTPUT.stem}.new{OUTPUT.suffix}")
