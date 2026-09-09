@@ -1004,7 +1004,7 @@ CLEAR initial_mode1_display_image_source, initial_mode1_display_image_source_end
 ; loaded $.QUEST1 transport image.
 ORG irq1v_handler
 
-; Runtime $0383-$03DE. The installed IRQ1V handler. It changes the Video ULA
+; The installed IRQ1V handler. It changes the Video ULA
 ; palette twice per frame and passes every interrupt down the chain.
 ; On a System VIA vertical sync interrupt it arms User VIA timer 2 with $10E0
 ; so that timer expires part-way down the frame, then writes the twelve
@@ -1084,7 +1084,7 @@ CLEAR irq1v_handler_source, irq1v_handler_source_end
 
 ORG draw_record_row_pairs
 
-; Runtime $2496-$24B2. Draw X rows of two graphic records each, stepping down one
+; Draw X rows of two graphic records each, stepping down one
 ; Mode 1 character row between rows.
 ; Each iteration draws record_row_graphic_index twice through the blitter vector, which
 ; advances the display pointer by $10 per call, then adds $0260. The two
@@ -1123,7 +1123,7 @@ CLEAR draw_record_row_pairs_source, draw_record_row_pairs_source_end
 
 ORG remove_last_icon_and_stamp_room_cell
 
-; Runtime $2471-$2495. Erase the icon that power_crystals_remaining no longer needs, then
+; Erase the icon that power_crystals_remaining no longer needs, then
 ; mark the room cell the count was spent on.
 ; The icon address is status_icon_row_base plus the count times sixteen, so the icons sit
 ; sixteen bytes apart in one row near the top of the display; record 3 from the
@@ -1167,7 +1167,7 @@ CLEAR remove_last_icon_and_stamp_room_cell_source, remove_last_icon_and_stamp_ro
 
 ORG evntv_read_interval_timer
 
-; Runtime $0B83-$0B9A. Read the MOS interval timer into interval_timer_block
+; Read the MOS interval timer into interval_timer_block
 ; and keep the returned low byte in game_clock_tick_pending.
 ; Everything is preserved across the call, the processor status included, which
 ; is what an installed event handler has to do: EVNTV is reached from an
@@ -1296,7 +1296,7 @@ CLEAR main_gameplay_loop_source, main_gameplay_loop_source_end
 
 ORG add_collected_icon
 
-; Runtime $0C43-$0C6D. Add one icon to the collected row, unless it is already
+; Add one icon to the collected row, unless it is already
 ; full.
 ; The count at $A1 is capped at twelve and returns unchanged when it is already
 ; there; otherwise it is incremented and the new icon drawn at $3F60 plus the
@@ -1357,7 +1357,7 @@ CLEAR add_collected_icon_source, add_collected_icon_source_end
 
 ORG process_player_cell_interactions
 
-; Runtime $29B9-$2A34. Tail target of both horizontal movement routines. Test
+; Tail target of both horizontal movement routines. Test
 ; the display pattern under/around the newly positioned player and dispatch the
 ; corresponding crystal, carried-item, redraw, damage, or room-effect action.
 ; Pattern $11 collects a power crystal. Pattern $25 consumes the item selected
@@ -1450,7 +1450,7 @@ CLEAR process_player_cell_interactions_source, process_player_cell_interactions_
 
 ORG display_action_jump_table
 
-; Runtime $1200-$1215. Six vectors into the display routines, giving callers a
+; Six vectors into the display routines, giving callers a
 ; stable entry for each regardless of where the target moves.
 ; The last two entries are five bytes rather than three: they adjust the
 ; reference value at $90 by one, downwards then upwards, before dispatching to
@@ -1490,7 +1490,7 @@ CLEAR display_action_jump_table_source, display_action_jump_table_source_end
 
 ORG room_moving_object_graphic_state
 
-; Runtime $121D-$1225. Mutable room-render and entity setup state. The initial
+; Mutable room-render and entity setup state. The initial
 ; image is all zero. $121D-$1220 is written as an indexed four-byte state set;
 ; the middle two bytes are also the proved lower/upper selector limits. The
 ; remaining fields are populated from room records before their render/update
@@ -1516,7 +1516,7 @@ CLEAR room_render_state_source, room_render_state_source_end
 
 ORG &1216
 
-; Runtime $1216-$121C. Six unreachable zero alignment bytes and one NOP byte
+; Six unreachable zero alignment bytes and one NOP byte
 ; separate the display-action vectors from the mutable room-render state. No
 ; committed static reference or trace treats this span as executable.
 .display_action_state_alignment_source
@@ -1628,7 +1628,7 @@ CLEAR store_byte_and_advance_source_pointer_source, store_byte_and_advance_sourc
 
 ORG enter_copy_16_byte_graphic_to_display
 
-; Runtime $1226-$1228. A single JMP vector into the 16-byte graphic blitter,
+; A single JMP vector into the 16-byte graphic blitter,
 ; sitting between named runtime variables rather than in the table at $1200.
 ; The bytes either side are data: $1225 is read by the character renderer and
 ; the IRQ handler, and room_moving_object_graphic_selector_delta holds the first room-object selector step.
@@ -1739,7 +1739,7 @@ CLEAR draw_room_enemy_with_xor_graphic_source, draw_room_enemy_with_xor_graphic_
 
 ORG apply_signed_vertical_step_to_pointer
 
-; Runtime $34F1-$3531. Add the signed step in $40 to the vertical position at $3C
+; Add the signed step in $40 to the vertical position at $3C
 ; and walk the pointer at $3E/$3F to match, two display scanlines per step.
 ; Within a Mode 1 character cell the eight scanlines are consecutive bytes, so a
 ; step of two is two increments or two decrements of the low byte. Crossing a
@@ -1806,7 +1806,7 @@ CLEAR apply_signed_vertical_step_to_pointer_source, apply_signed_vertical_step_t
 
 ORG print_item_slot_label
 
-; Runtime $34BB-$34F0. Position the VDU cursor at row Y, column X, then print
+; Position the VDU cursor at row Y, column X, then print
 ; six bytes from the item-label table. Zero selects offset zero; other ordinary
 ; codes select 3*(code-$26). Code $3E with nonzero $A0 takes the explicit
 ; offset-$18 path, which is byte-output-equivalent but preserves original flow.
@@ -1950,7 +1950,7 @@ COPYBLOCK copy_16_byte_graphic_to_display_source, copy_16_byte_graphic_to_displa
 
 ORG test_player_in_range_and_set_direction
 
-; Runtime $2B9E-$2BFD. Test whether the player is within range of the indexed
+; Test whether the player is within range of the indexed
 ; candidate and, if so, report which way the player lies.
 ; The ordinary entry presets the named horizontal, above and below extents;
 ; test_range_with_supplied_box is the entry for callers supplying their own.
@@ -2044,7 +2044,7 @@ CLEAR test_player_in_range_and_set_direction_source, test_player_in_range_and_se
 
 ORG draw_fixed_pair_tile_run
 
-; Runtime $13D4-$13F7. The third run painter, alongside the blank and the
+; The third run painter, alongside the blank and the
 ; configurable alternating run. It writes the fixed pair $01 and $02 into the
 ; working tile pair and then alternates between them for X tiles, entering
 ; through the mirror-flag selector so each tile can be drawn reversed.
@@ -2082,7 +2082,7 @@ ORG draw_fixed_pair_tile_run
 
 ORG load_room_enemy_display_pointer
 
-; Runtime $3558-$3562. Load the display pointer from the Y-indexed little-endian pair at room_enemy_display_pointer_low/high. The high byte is read first, so the two loads are not interchangeable with respect to Y. X and A are not preserved.
+; Load the display pointer from the Y-indexed little-endian pair at room_enemy_display_pointer_low/high. The high byte is read first, so the two loads are not interchangeable with respect to Y. X and A are not preserved.
 .load_room_enemy_display_pointer_source
     LDA room_enemy_display_pointer_high,Y
     STA display_pointer_high
@@ -2102,7 +2102,7 @@ CLEAR load_room_enemy_display_pointer_source, load_room_enemy_display_pointer_so
 
 ORG advance_secondary_reference_and_pointer
 
-; Runtime $1CC7-$1CD6. Increment the secondary reference value at $8F, advance
+; Increment the secondary reference value at $8F, advance
 ; the pointer at level_room_map_offset_low/high by $78, and dispatch to $1B98.
 ; This is one of the actions reachable through display_action_jump_table, whose
 ; $1209 vector transfers here. The two five-byte table entries adjust the
@@ -2132,7 +2132,7 @@ CLEAR advance_secondary_reference_and_pointer_source, advance_secondary_referenc
 
 ORG update_and_draw_room_enemies
 
-; Runtime $3563-$35C1. Iterate backward over the active room-enemy slots,
+; Iterate backward over the active room-enemy slots,
 ; optionally erase each old XOR image, and dispatch by species. Bats use the
 ; direct player-range test; moths use collision-aware movement and both limit
 ; clamps; the small robot (and the unselected jellyfish descriptor) use the
@@ -2241,7 +2241,7 @@ CLEAR copy_16_byte_graphic_to_display_source, copy_graphic_byte_to_display_sourc
 
 ORG run_game_tick_with_player_contact_flag_cleared
 
-; Runtime $2237-$223A. Clear player_contact_or_damage_flag, then fall through
+; Clear player_contact_or_damage_flag, then fall through
 ; directly into dispatch_game_tick_updates. The dispatcher retains the JSR
 ; return address established by the gameplay loop.
 .run_game_tick_with_player_contact_flag_cleared_source
@@ -2259,7 +2259,7 @@ CLEAR run_game_tick_with_player_contact_flag_cleared_source, run_game_tick_with_
 
 ORG dispatch_game_tick_updates
 
-; Runtime $223B-$22D5. Dispatch one gameplay tick after the wrapper has cleared
+; Dispatch one gameplay tick after the wrapper has cleared
 ; player_contact_or_damage_flag. Optional update groups are gated by their state bytes, while
 ; named timed-effect selectors and Teleport, Armoury and Time Warp sign states
 ; select their dedicated handlers. The Armoury path also adds a collected icon,
@@ -2378,7 +2378,7 @@ CLEAR dispatch_game_tick_updates_source, dispatch_game_tick_updates_source_end
 
 ORG apply_mirror_flag_then_copy_graphic
 
-; Runtime $1CD8-$1CE3. An alternate entry to the 16-byte graphic blitter that
+; An alternate entry to the 16-byte graphic blitter that
 ; first decides whether the record is drawn mirrored. Bit 7 of $43 is rotated
 ; into carry without disturbing A; when it is set, $40 is added to the record
 ; index and the result masked to seven bits, which sets bit 6, the flag the
@@ -2410,7 +2410,7 @@ CLEAR apply_mirror_flag_then_copy_graphic_source, apply_mirror_flag_then_copy_gr
 
 ORG match_packed_record_against_references
 
-; Runtime $208A-$20B1. Match the two-byte packed record at
+; Match the two-byte packed record at
 ; packed_record_pointer
 ; against the two reference values, extracting the rest of it only on success.
 ; Each byte carries two fields. The first is matched on its low six bits
@@ -2464,7 +2464,7 @@ CLEAR match_packed_record_against_references_source, match_packed_record_against
 
 ORG load_room_palette_and_tile_pair
 
-; Runtime $1D69-$1D8F. Set the palette and the tile pairs for the current room
+; Set the palette and the tile pairs for the current room
 ; from one appearance byte.
 ; The room is addressed as the level at $8F times eight plus the sector at $90,
 ; which indexes the table at $09B0: eight rooms to a level, matching the sector
@@ -2654,7 +2654,7 @@ CLEAR shift_four_row_display_block_right_source, shift_four_row_display_block_ri
 
 ORG initialise_room_enemy_from_table
 
-; Runtime $1F2F-$1FDE. Find the entity record for the current room and unpack it
+; Find the entity record for the current room and unpack it
 ; into every field the entity system reads.
 ; room_enemy_record_table holds ROOM_ENEMY_RECORD_COUNT records of
 ; ROOM_ENEMY_RECORD_BYTES. The first two bytes are decoded by
@@ -2801,7 +2801,7 @@ CLEAR initialise_room_enemy_from_table_source, initialise_room_enemy_from_table_
 
 ORG initialise_lifts_and_hazards_from_table
 
-; Runtime $1FEF-$2081. Initialise the room's vertical lifts or moth-shaped
+; Initialise the room's vertical lifts or moth-shaped
 ; hazards from their dedicated table and state fields.
 ; lift_and_hazard_room_record_table holds LIFT_HAZARD_RECORD_COUNT records of
 ; LIFT_HAZARD_RECORD_BYTES. The packed match supplies the slot limit and class;
@@ -2925,7 +2925,7 @@ CLEAR initialise_lifts_and_hazards_from_table_source, initialise_lifts_and_hazar
 
 ORG run_terminal_interaction
 
-; Runtime $20B3-$213B. Draw the terminal room using temporary reference and
+; Draw the terminal room using temporary reference and
 ; room-pointer values, then restore the caller's four bytes and interpret the
 ; control-marked terminal text stream. Ordinary bytes go to OSWRCH. Its named
 ; command bytes end the interaction, test for the access card, process password
@@ -3268,7 +3268,7 @@ CLEAR place_initial_map_objects_source, place_initial_map_objects_source_end
 
 ORG apply_player_energy_delta_to_budget
 
-; Runtime $25C4-$25DB. Compare the saved and live player energy. If unchanged,
+; Compare the saved and live player energy. If unchanged,
 ; reset player_energy_delta_budget to twelve. Otherwise synchronise the snapshot
 ; and subtract the observed change from that budget. A non-negative result
 ; returns to the gameplay loop; a negative result also seeds
@@ -3298,7 +3298,7 @@ CLEAR apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_b
 
 ORG osbyte_81_inkey
 
-; Runtime $2790-$2796. X supplies the negative BBC key number. Select OSBYTE
+; X supplies the negative BBC key number. Select OSBYTE
 ; function $81 with Y=$FF, then tail-call the MOS so its key result returns
 ; directly to the original caller.
 .osbyte_81_inkey_source
@@ -3317,7 +3317,7 @@ CLEAR osbyte_81_inkey_source, osbyte_81_inkey_source_end
 
 ORG advance_record_counter_then_dispatch
 
-; Runtime $23F6-$2400. Increment lift_hazard_secondary_record_counter, copy it
+; Increment lift_hazard_secondary_record_counter, copy it
 ; into lift_hazard_update_schedule_mask, preset the final indexed slot, and dispatch
 ; through update_lift_or_hazard_from_preselected_slot. Successive calls therefore
 ; step through consecutive records.
@@ -3340,7 +3340,7 @@ CLEAR advance_record_counter_then_dispatch_source, advance_record_counter_then_d
 
 ORG store_byte_through_saved_pointer
 
-; Runtime $244E-$2452. Write A through indirect_write_pointer, indexed by
+; Write A through indirect_write_pointer, indexed by
 ; saved_cell_write_offset. save_display_pointer_and_cell_reference captures
 ; both values from the current room-cell traversal before this write is used.
 .store_byte_through_saved_pointer_source
@@ -3360,7 +3360,7 @@ CLEAR store_byte_through_saved_pointer_source, store_byte_through_saved_pointer_
 
 ORG game_entry_jump_table
 
-; Runtime $2200-$2221. A fixed-address table of three-byte JMP vectors, giving
+; A fixed-address table of three-byte JMP vectors, giving
 ; callers a stable entry for each gameplay routine regardless of where that
 ; routine moves. Seven of the eleven vectors are observed being taken, and four
 ; of them dispatch into routines this source already owns. The $221E NOP is
@@ -3402,7 +3402,7 @@ CLEAR game_entry_jump_table_source, game_entry_jump_table_source_end
 
 ORG update_lift_and_hazard_slots
 
-; Runtime $22D6-$22FD. Update the lift/hazard slots on a schedule driven
+; Update the lift/hazard slots on a schedule driven
 ; by a rolling counter.
 ; lift_hazard_primary_record_counter is incremented once per call and copied
 ; into lift_hazard_update_schedule_mask: after the first three slots are updated
@@ -3449,7 +3449,7 @@ CLEAR update_lift_and_hazard_slots_source, update_lift_and_hazard_slots_source_e
 
 ORG update_one_lift_or_hazard
 
-; Runtime $22FE-$230C. Update one lift or moth-shaped hazard: erase, clamp, act on the
+; Update one lift or moth-shaped hazard: erase, clamp, act on the
 ; player, step, redraw.
 ; The order matters. The entity is drawn once before it moves and once after,
 ; and because the renderer is XOR the first call erases it from where it was.
@@ -3476,7 +3476,7 @@ CLEAR update_one_lift_or_hazard_source, update_one_lift_or_hazard_source_end
 
 ORG apply_moving_entity_to_player
 
-; Runtime $230D-$235B. Let one moving entity act on the player, in whichever
+; Let one moving entity act on the player, in whichever
 ; direction it is travelling.
 ; The entity delta at $18 selects the case. A delta of $FE means it is rising:
 ; its display pointer at $51/$52 is scanned for markers directly, and if $235C
@@ -3552,7 +3552,7 @@ CLEAR apply_moving_entity_to_player_source, apply_moving_entity_to_player_source
 
 ORG reverse_lift_or_hazard_delta_at_limits
 
-; Runtime $2375-$2393. Keep a lift or moth-shaped hazard inside its range by reversing
+; Keep a lift or moth-shaped hazard inside its range by reversing
 ; its delta at either limit, and flag that the check ran.
 ; lift_hazard_limit_check_active is set on entry. The entity position is masked to an even value and tested
 ; against the two limits at $1246 and $1247: matching the first stores +2 into
@@ -3598,7 +3598,7 @@ CLEAR reverse_lift_or_hazard_delta_at_limits_source, reverse_lift_or_hazard_delt
 
 ORG advance_lift_or_hazard_vertical_position
 
-; Runtime $2394-$23BE. Apply one signed vertical step to the Y-indexed lift or
+; Apply one signed vertical step to the Y-indexed lift or
 ; moth-shaped hazard, then clear lift_hazard_limit_check_active.
 ; The state is copied into the shared scratch fields, stepped by
 ; apply_signed_vertical_step_to_pointer and copied back, exactly as
@@ -3642,7 +3642,7 @@ CLEAR advance_lift_or_hazard_vertical_position_source, advance_lift_or_hazard_ve
 
 ORG xor_draw_lift_or_hazard
 
-; Runtime $23BF-$23F5. XOR-draw the Y-indexed lift or moth-shaped hazard.
+; XOR-draw the Y-indexed lift or moth-shaped hazard.
 ; The $23BF entry skips slots 0 and 8 through the shared RTS at $23BE; $23C7 is
 ; the entry for callers that have already decided the slot is drawable, and is
 ; used far more often.
@@ -3706,7 +3706,7 @@ CLEAR xor_draw_lift_or_hazard_source, xor_draw_lift_or_hazard_source_end
 
 ORG test_lift_or_hazard_hit_player
 
-; Runtime $235C-$2374. Read and clear the collision flag at $0B, and charge energy
+; Read and clear the collision flag at $0B, and charge energy
 ; for it when this room entity class is the one that hurts.
 ; The flag is taken into X and reset in the same breath, so each collision is
 ; counted once no matter how many callers ask. Energy is only spent when the
@@ -3748,7 +3748,7 @@ CLEAR test_lift_or_hazard_hit_player_source, test_lift_or_hazard_hit_player_sour
 
 ORG prepare_player_relative_display_scan
 
-; Runtime $2893-$2898. First derive the display pointer three Mode 1 character
+; First derive the display pointer three Mode 1 character
 ; rows below the player, then tail-transfer to the four-byte display scanner.
 .prepare_player_relative_display_scan_source
     JSR set_display_pointer_three_mode1_rows_below_player
@@ -3765,7 +3765,7 @@ CLEAR prepare_player_relative_display_scan_source, prepare_player_relative_displ
 
 ORG draw_record_three_from_alternate_bank
 
-; Runtime $24C2-$24D1. Draw graphic record 3 from the alternate source bank,
+; Draw graphic record 3 from the alternate source bank,
 ; leaving the bank selector as it was found.
 ; $1224 chooses which of the two pointers in the table at $1D34 the blitter
 ; reads its records from. This sets it to 2, draws record 3 through the blitter
@@ -3791,7 +3791,7 @@ CLEAR draw_record_three_from_alternate_bank_source, draw_record_three_from_alter
 
 ORG erase_collected_icon
 
-; Runtime $24B3-$24C1. Blank one icon in the collected row, at the index in A.
+; Blank one icon in the collected row, at the index in A.
 ; The address is A times sixteen plus $3F70, one slot past the $3F60 base
 ; add_collected_icon draws to, so this erases the icon above the given index.
 ; There is no terminator: the block runs off its last instruction into
@@ -3860,7 +3860,7 @@ CLEAR write_system_clock_via_osword_02_source, write_system_clock_via_osword_02_
 
 ORG enter_add_collected_icon
 
-; Runtime $0BBD-$0BBF. A three-byte JMP vector into add_collected_icon, giving
+; A three-byte JMP vector into add_collected_icon, giving
 ; callers a fixed entry independent of where that routine sits.
 .enter_add_collected_icon_source
     JMP add_collected_icon
@@ -3877,7 +3877,7 @@ CLEAR enter_add_collected_icon_source, enter_add_collected_icon_source_end
 
 ORG update_lift_and_hazard_group
 
-; Runtime $2401-$2422. Walk the lift/hazard slots, drawing each one either
+; Walk the lift/hazard slots, drawing each one either
 ; side of its update.
 ; Y starts at 8 and advances by two per slot until it reaches the count at
 ; $124A, so the slots are two-byte pairs and the record decides how many exist.
@@ -3924,7 +3924,7 @@ CLEAR update_lift_and_hazard_group_source, update_lift_and_hazard_group_source_e
 
 ORG update_lift_or_hazard_by_class
 
-; Runtime $2423-$244D. Update one lift or moth-shaped hazard, choosing between two
+; Update one lift or moth-shaped hazard, choosing between two
 ; behaviours according to its class byte, then step it.
 ; The slot index is turned into a scaled offset by subtracting 8 from Y and
 ; doubling, and the range clamp runs first. A class byte of 1 then takes the
@@ -3975,7 +3975,7 @@ CLEAR update_lift_or_hazard_by_class_source, update_lift_or_hazard_by_class_sour
 
 ORG refill_energy_in_28_steps
 
-; Runtime $24D2-$24E6. Raise the stored energy by up to twenty-eight, redrawing the bar at every step.
+; Raise the stored energy by up to twenty-eight, redrawing the bar at every step.
 ; X counts PLAYER_ENERGY_REFILL_STEPS iterations. Each one increments
 ; player_energy_snapshot, clamps it at PLAYER_ENERGY_MAX, copies it into
 ; player_energy, and
@@ -4016,7 +4016,7 @@ CLEAR refill_energy_in_28_steps_source, refill_energy_in_28_steps_source_end
 
 ORG set_velocity_step_from_horizontal_band
 
-; Runtime $24E7-$24F3. Set the vertical velocity step from which horizontal band
+; Set the vertical velocity step from which horizontal band
 ; of the room the player is standing in.
 ; The shadow horizontal position at $16 is shifted right four times, so the room
 ; splits into bands sixteen units wide, and the result indexes the table that
@@ -4108,7 +4108,7 @@ CLEAR advance_bounded_tick_target_source, advance_bounded_tick_target_source_end
 
 ORG collect_power_crystal_and_refill_energy
 
-; Runtime $2453-$2470. Handle a collected power crystal: decrement the
+; Handle a collected power crystal: decrement the
 ; twelve-diamond status count; decrement progress_pattern_pair_count when the final crystal takes that
 ; count to zero; configure and play the collection sound; refill energy; remove
 ; the corresponding status diamond and stamp the collected room cell; then
@@ -4141,7 +4141,7 @@ CLEAR collect_power_crystal_and_refill_energy_source, collect_power_crystal_and_
 
 ORG initialise_new_game
 
-; Runtime $0BC8-$0BFF. Set up a new game.
+; Set up a new game.
 ; Three subroutines run first, then the primary and secondary room references
 ; select B0. The special-item flag and level-map offset are cleared, the packed
 ; BCD clock is seeded, and the graphic bank selector chooses status graphics.
@@ -4234,7 +4234,7 @@ CLEAR initialise_new_game_source, initialise_new_game_source_end
 
 ORG walk_player_toward_target_position
 
-; Runtime $25DC-$262F. Walk the player to a target position, one step per frame,
+; Walk the player to a target position, one step per frame,
 ; without returning until it arrives. The target is $2D horizontally and $2E
 ; vertically.
 ; Each iteration halves both the current and target vertical positions before
@@ -4312,7 +4312,7 @@ CLEAR walk_player_toward_target_position_source, walk_player_toward_target_posit
 
 ORG run_startup_room_sequence_until_space
 
-; Runtime $0C6E-$0CEC. Show a repeating sixteen-room startup sequence until
+; Show a repeating sixteen-room startup sequence until
 ; Space is pressed. Each complete restart clears zero page $01-$9F and seeds
 ; $A2, $89 and the XOR renderer row count. The table at $0CED is read backwards
 ; through the byte-before base $0CEC, from indexes sixteen through one; its low
@@ -4417,7 +4417,7 @@ CLEAR run_startup_room_sequence_until_space_source, run_startup_room_sequence_un
 
 ORG wait_vsync_then_call_display_helpers
 
-; Runtime $2782-$278F. The per-frame display update. OSBYTE $13 waits for
+; The per-frame display update. OSBYTE $13 waits for
 ; vertical sync, then the player is XOR-drawn, $2ABA runs, and the player is
 ; XOR-drawn again through a tail jump.
 ; Drawing the same XOR sprite twice erases and redraws it: the first call
@@ -4444,7 +4444,7 @@ CLEAR wait_vsync_then_call_display_helpers_source, wait_vsync_then_call_display_
 
 ORG redraw_energy_bar_segment
 
-; Runtime $2630-$2653. Redraw the one cell of the energy bar that the current
+; Redraw the one cell of the energy bar that the current
 ; energy value partially fills.
 ; player_energy selects both the cell and the fill. Its top five bits
 ; address the cell, $4071 plus the value masked to $F8, and its low three bits
@@ -4491,7 +4491,7 @@ CLEAR redraw_energy_bar_segment_source, redraw_energy_bar_segment_source_end
 
 ORG set_display_pointer_three_mode1_rows_below_player
 
-; Runtime $2899-$28A6. A Mode 1 character row occupies $0280 bytes, so $0780
+; A Mode 1 character row occupies $0280 bytes, so $0780
 ; advances three such rows. The low-byte ADC carry is deliberately propagated
 ; into the high byte. Committed no-input and X traces exercise both carry
 ; states and produce $7460->$7BE0 and $42C0->$4A40 respectively.
@@ -4516,7 +4516,7 @@ CLEAR set_display_pointer_three_mode1_rows_below_player_source, set_display_poin
 
 ORG move_player_right_with_collision
 
-; Runtime $2797-$27D5. Move the player one cell right unless something stops it.
+; Move the player one cell right unless something stops it.
 ; A horizontal position of $4C is the right edge of the room and transfers to
 ; $2ACF instead of moving. Otherwise the display pointer is set $20 ahead of the
 ; player and a column of $18 rows is scanned for a blocking byte. A blocked
@@ -4574,7 +4574,7 @@ CLEAR move_player_right_with_collision_source, move_player_right_with_collision_
 
 ORG move_player_left_with_collision
 
-; Runtime $27D6-$2812. The mirror of move_player_right_with_collision. A
+; The mirror of move_player_right_with_collision. A
 ; horizontal position of zero is the left edge of the room and transfers to
 ; $2AE6 instead of moving; otherwise a column of $18 rows is scanned one cell
 ; to the left of the player and a blocking byte diverts to $29B9 after
@@ -4635,7 +4635,7 @@ CLEAR move_player_left_with_collision_source, move_player_left_with_collision_so
 
 ORG advance_player_vertical_position_and_display_pointer
 
-; Runtime $28EF-$290A. Copy the player's vertical position and display pointer
+; Copy the player's vertical position and display pointer
 ; from $2C/$38/$39 into the candidate state at $3C/$3E/$3F, let the original
 ; $34F1 helper apply the signed step in $40, then copy the result back. The
 ; wrapper itself is straight-line and preserves X/Y around the nested call.
@@ -4666,7 +4666,7 @@ CLEAR advance_player_vertical_position_and_display_pointer_source, advance_playe
 
 ORG move_player_down_by_velocity
 
-; Runtime $2813-$2892. Move the player downwards by however far the vertical
+; Move the player downwards by however far the vertical
 ; velocity has carried them, and decide what happens on landing.
 ; player_vertical_steps_remaining is derived from the signed velocity and each
 ; iteration tests the room edge before testing the cells under the player. A
@@ -4773,7 +4773,7 @@ CLEAR move_player_down_by_velocity_source, move_player_down_by_velocity_source_e
 
 ORG poll_controls_and_apply_gameplay_actions
 
-; Runtime $265A-$2781. Poll documented movement, action, thrust, pause, exit and
+; Poll documented movement, action, thrust, pause, exit and
 ; sound controls through osbyte_81_inkey; apply horizontal/vertical movement;
 ; update the slow-damage countdown; run stable-position actions; scan the
 ; six-key last-chance chord; clear transient input state; and subtract one
@@ -4977,7 +4977,7 @@ CLEAR poll_controls_and_apply_gameplay_actions_source, poll_controls_and_apply_g
 
 ORG scan_display_column_for_blocking_byte
 
-; Runtime $290B-$293E. Scan down a display-byte column for at most the count
+; Scan down a display-byte column for at most the count
 ; in $41. Out-of-window pointers, zero bytes, and $C0 bytes advance without a
 ; hit. Another in-window nonzero byte returns carry set at its pointer. Each
 ; successful step follows the BBC interleaved display layout: increment within
@@ -5034,7 +5034,7 @@ CLEAR scan_display_column_for_blocking_byte_source, scan_display_column_for_bloc
 
 ORG adjust_display_pointer_then_scan_markers
 
-; Runtime $293F-$2956. If the display-pointer low byte is not eight-byte
+; If the display-pointer low byte is not eight-byte
 ; aligned, decrement only that byte. Otherwise subtract $0279 from the full
 ; little-endian pointer. Both paths continue directly into the four-byte
 ; marker scanner at $2957, preserving the outer caller's stack frame.
@@ -5065,7 +5065,7 @@ CLEAR adjust_display_pointer_then_scan_markers_source, adjust_display_pointer_th
 
 ORG move_player_up_by_velocity
 
-; Runtime $28A7-$28EE. Move the player upwards by however much vertical velocity
+; Move the player upwards by however much vertical velocity
 ; the jet boots have built up.
 ; player_vertical_steps_remaining is the velocity plus four, shifted right
 ; twice, so four velocity units buy one step. step_up_by_count is the secondary
@@ -5141,7 +5141,7 @@ CLEAR move_player_up_by_velocity_source, move_player_up_by_velocity_source_end
 
 ORG scan_four_display_bytes_for_markers
 
-; Runtime $2957-$29A1. Inspect DISPLAY_MARKER_SCAN_COUNT bytes separated by
+; Inspect DISPLAY_MARKER_SCAN_COUNT bytes separated by
 ; DISPLAY_MARKER_SCAN_STRIDE. Zero bytes are skipped. DISPLAY_MARKER_WATER
 ; enables the water environment; either deferred-damage byte requests damage after the
 ; scan; and DISPLAY_MARKER_IMMEDIATE_DAMAGE applies it immediately. Any other
@@ -5210,7 +5210,7 @@ CLEAR scan_four_display_bytes_for_markers_source, scan_four_display_bytes_for_ma
 
 ORG check_player_relative_display_pattern_15
 
-; Runtime $2A35-$2A4D. Align the player pointer low byte, add $0795 into the
+; Align the player pointer low byte, add $0795 into the
 ; display pointer, and test pattern selector $15. A carry-clear result returns
 ; through the shared RTS at $2A34; carry set tail-transfers to $337B.
 .check_player_relative_display_pattern_15_source
@@ -5238,7 +5238,7 @@ CLEAR check_player_relative_display_pattern_15_source, check_player_relative_dis
 
 ORG room_moving_object_graphic_state_block
 
-; Runtime $1229-$124A. Zero-initialised mutable workspace used by the indexed
+; Zero-initialised mutable workspace used by the indexed
 ; XOR renderer, the two room-entity update clusters and the timed room effect.
 ; Even offsets $122A/$122C/$122E/$1230 form the four selector-delta slots;
 ; $1231-$123D are interleaved entity state, $1239 is also the tick dispatcher
@@ -5268,7 +5268,7 @@ CLEAR room_entity_and_effect_state_source, room_entity_and_effect_state_source_e
 
 ORG enter_run_terminal_interaction
 
-; Runtime $124B-$124D. A three-byte JMP vector to $20B3, giving its caller a
+; A three-byte JMP vector to $20B3, giving its caller a
 ; fixed entry independent of where that routine sits.
 ; Like enter_copy_16_byte_graphic_to_display at $1226, it is wedged into the
 ; runtime variable block rather than sitting in the table at $1200: $124A before
@@ -5290,7 +5290,7 @@ CLEAR enter_run_terminal_interaction_source, enter_run_terminal_interaction_sour
 
 ORG test_item_code_matches_either_slot
 
-; Runtime $213C-$2145. Compare the item code in A with the two carried-item
+; Compare the item code in A with the two carried-item
 ; slots. Return carry set through the local exit on either match; if neither
 ; matches, branch to the enclosing routine's shared CLC/RTS at $212A.
 .test_item_code_matches_either_slot_source
@@ -5314,7 +5314,7 @@ CLEAR test_item_code_matches_either_slot_source, test_item_code_matches_either_s
 
 ORG process_terminal_password_markers
 
-; Runtime $2146-$2179. Continue the terminal stream's $FD password marker and
+; Continue the terminal stream's $FD password marker and
 ; $FC collected-password-list marker. A collected current password sets the
 ; result, applies its indexed activation record, and index 5 additionally
 ; writes $0A to $397C. An absent password jumps to the denial text at offset
@@ -5385,7 +5385,7 @@ COPYBLOCK process_terminal_password_markers_source, process_terminal_password_ma
 CLEAR process_terminal_password_markers_source, process_terminal_password_markers_source_end
 
 ORG terminal_interaction_text_stream
-; Runtime $2196-$21EC. Control-marked stream consumed by run_terminal_interaction:
+; Control-marked stream consumed by run_terminal_interaction:
 ; zero ends the stream; $FC inserts the collected-password list; $FD tests the
 ; current password; $FE selects the granted continuation; $FF skips to the next
 ; message alternative.
@@ -5428,7 +5428,7 @@ CLEAR terminal_interaction_text_padding_source, terminal_interaction_text_paddin
 
 ORG check_player_candidate_bounds_overlap
 
-; Runtime $2B57-$2B87. Reject non-overlapping horizontal and vertical bounds
+; Reject non-overlapping horizontal and vertical bounds
 ; through the shared carry-clear return at $2B35. Nonzero $6C selects a fixed
 ; $17 vertical extent and advances the candidate coordinate at $3C by six.
 ; If all four comparisons overlap, execution falls through to the original
@@ -5479,7 +5479,7 @@ CLEAR check_player_candidate_bounds_overlap_source, check_player_candidate_bound
 
 ORG apply_player_damage_and_redraw_energy
 
-; Runtime $2B88-$2B9B. Mark this tick's damage, play pitch 6, subtract
+; Mark this tick's damage, play pitch 6, subtract
 ; one from the stored energy, and set the main-loop exit flag only when the
 ; decrement reaches zero. Redraw the affected energy-bar segment either way
 ; and return carry set. The separately lifted $2B8F entry deliberately skips
@@ -5513,13 +5513,13 @@ CLEAR apply_player_damage_and_redraw_energy_source, apply_player_damage_and_redr
 
 ; The two tile-run painters are assembled here rather than in runtime order.
 ; Their COPYBLOCK destinations, loaded $2B61-$2BB1, are the same image bytes as
-; runtime $2B61-$2BB1, which lie inside the region
+; which lie inside the region
 ; check_player_candidate_bounds_overlap assembles at runtime $2B57-$2B87. The
 ; CLEAR above releases that region, so these blocks must follow it.
 
 ORG tile_run_shared_rts
 
-; Runtime $1361-$1370. The blank-tile run painter and the two entries that
+; The blank-tile run painter and the two entries that
 ; share it. $1361 is the zero-length RTS both run painters branch to. $1362
 ; presets a run of eight tiles and falls through; the initial-render trace
 ; reaches it 14 times through JMP $1362. $1364 is the general entry, taking
@@ -5558,7 +5558,7 @@ CLEAR draw_blank_tile_run_source, draw_blank_tile_run_source_end
 
 ORG test_marker_below_player
 
-; Runtime $29A2-$29B8. Report whether an $FF marker sits three Mode 1 character
+; Report whether an $FF marker sits three Mode 1 character
 ; rows below the player.
 ; $29A2 is the shared carry-set exit, reached both by falling in from elsewhere
 ; and by the two tests below it. $29A4 is the test proper: two bytes are sampled
@@ -5595,7 +5595,7 @@ CLEAR test_marker_below_player_source, test_marker_below_player_source_end
 
 ORG xor_draw_player_two_parts
 
-; Runtime $2A89-$2AB9. Draw the player as two XOR parts, called from the vsync
+; Draw the player as two XOR parts, called from the vsync
 ; display helpers so it runs once per frame.
 ; The sign of player_horizontal_input_snapshot selects the left- or right-facing
 ; upper and lower pointer pair. The upper body is two character rows drawn at
@@ -5648,7 +5648,7 @@ CLEAR xor_draw_player_two_parts_source, xor_draw_player_two_parts_source_end
 
 ORG draw_room_row_cells
 
-; Runtime $1284-$12A7. Draw one row of room cells.
+; Draw one row of room cells.
 ; room_graphics_column is copied into tile_pair_source_selector, which
 ; is what makes alternating tiles line up across a row. Five cells are then read
 ; through the room data pointer, Y counting 0 to 4, and each is drawn by the
@@ -5693,7 +5693,7 @@ CLEAR draw_room_row_cells_source, draw_room_row_cells_source_end
 
 ORG enter_room_to_the_right
 
-; Runtime $2ACF-$2AE5. The right-edge transition, entered when
+; The right-edge transition, entered when
 ; move_player_right_with_collision finds the horizontal position already at $4C.
 ; The player is placed at zero, the left edge, and the display pointer moved
 ; back by $0260. The reference at $90 is then incremented through the $1211
@@ -5727,7 +5727,7 @@ CLEAR enter_room_to_the_right_source, enter_room_to_the_right_source_end
 
 ORG capture_player_state_for_redraw
 
-; Runtime $2ABA-$2ACE. Copy the live player state into the shadow copies the
+; Copy the live player state into the shadow copies the
 ; sprite renderer draws from: display pointer, horizontal input, ground-contact
 ; state and horizontal position.
 ; wait_vsync_then_call_display_helpers calls this between its two XOR draws, so
@@ -5760,7 +5760,7 @@ CLEAR capture_player_state_for_redraw_source, capture_player_state_for_redraw_so
 
 ORG dispatch_room_cell
 
-; Runtime $12A8-$12D1. Decide what one room cell byte draws.
+; Decide what one room cell byte draws.
 ; Bit 7 sends the cell to the character renderer, so a set high bit means the
 ; cell is text and its low six bits are a character index. Otherwise the low six
 ; bits are doubled and used to index the vector table at $12D2, whose entry is
@@ -5893,7 +5893,7 @@ ASSERT dispatch_room_cell_source_end = tile_run_shared_rts
 
 ORG enter_room_to_the_left
 
-; Runtime $2AE6-$2AFC. The left-edge room transition, entered when
+; The left-edge room transition, entered when
 ; move_player_left_with_collision finds the horizontal position already zero.
 ; The player is placed at $4C, the right edge, and the display pointer advanced
 ; by $0260. The reference value at $90 is then decremented through the
@@ -5924,7 +5924,7 @@ CLEAR enter_room_to_the_left_source, enter_room_to_the_left_source_end
 
 ORG enter_room_below
 
-; Runtime $2AFD-$2B23. The downward room transition, reached from the vertical
+; The downward room transition, reached from the vertical
 ; mover when the halved vertical position is from $60 through $6B, beyond the
 ; bottom of the room. As in enter_room_above, shifting
 ; vertical_room_transition_cell_flag abandons the transition when its low bit is set.
@@ -5966,7 +5966,7 @@ CLEAR enter_room_below_source, enter_room_below_source_end
 
 ORG enter_room_above
 
-; Runtime $2B37-$2B56. The upward room transition, reached from the vertical
+; The upward room transition, reached from the vertical
 ; mover when the halved vertical position falls below 9, the top of the room.
 ; vertical_room_transition_cell_flag is shifted and a set carry abandons the
 ; transition through the shared carry-clear exit. It is a cell attribute, not a room one: the room decoder clears
@@ -6009,7 +6009,7 @@ CLEAR enter_room_above_source, enter_room_above_source_end
 
 ORG set_player_pointer_from_horizontal_position
 
-; Runtime $2B24-$2B36. Set the player display pointer to the horizontal position
+; Set the player display pointer to the horizontal position
 ; multiplied by eight, by three shifts of the sixteen-bit pair.
 ; Eight is one Mode 1 character cell, the same stride the one-cell steps apply,
 ; so this recomputes the pointer from scratch rather than adjusting it. The
@@ -6042,7 +6042,7 @@ CLEAR set_player_pointer_from_horizontal_position_source, set_player_pointer_fro
 
 ORG draw_eight_alternating_tiles
 
-; Runtime $1371-$13B1. The $1371 entry supplies a count of eight, then $1373
+; The $1371 entry supplies a count of eight, then $1373
 ; draws a run of X tiles alternating between two graphic
 ; indices. Bit 0 of $F8 selects which stored pair is copied into the working
 ; pair at $7FF9/$7FFA: clear takes $7FFC/$7FFD, set takes $7FFE/$7FFF. Each
@@ -6123,7 +6123,7 @@ ASSERT draw_alternating_tile_run_source_end = draw_fixed_pair_tile_run
 
 ORG set_display_pointer_three_rows_below_player_cell
 
-; Runtime $2BFE-$2C0D. Set the display pointer three Mode 1 character rows below
+; Set the display pointer three Mode 1 character rows below
 ; the player, first aligning the player pointer down to its cell boundary.
 ; MODE1_THREE_ROWS_BELOW_ALIGNED_OFFSET includes three character rows plus the
 ; correction required after applying MODE1_CELL_ALIGNMENT_MASK, making this the
@@ -6152,7 +6152,7 @@ CLEAR set_display_pointer_three_rows_below_player_cell_source, set_display_point
 
 ORG draw_mirrored_diagonal_beam_tile_run
 
-; Runtime $13F8-$1404. Select the diagonal-beam graphic and its mirrored form,
+; Select the diagonal-beam graphic and its mirrored form,
 ; then enter the fixed-pair painter for X tiles.
 .draw_mirrored_diagonal_beam_tile_run_source
     LDA #GRAPHIC_DIAGONAL_BEAM
@@ -6164,7 +6164,7 @@ ORG draw_mirrored_diagonal_beam_tile_run
 
 ORG pick_up_item_below_player
 
-; Runtime $2C0E-$2C6D. Scan the known even-numbered item graphic codes
+; Scan the known even-numbered item graphic codes
 ; against the cell three rows below the player. A match is placed in the first
 ; empty carried-item slot and its room record is marked inactive,
 ; then execution falls through to draw_two_item_slots. With no match, or with
@@ -6246,7 +6246,7 @@ CLEAR pick_up_item_below_player_source, pick_up_item_below_player_source_end
 
 ORG draw_curved_bowl_before_alternating_suffix
 
-; Runtime $141D-$1436, room-cell type $06. Draw blank tiles up to the selected
+; room-cell type $06. Draw blank tiles up to the selected
 ; column, one curved-bowl tile, then alternating room tiles. This mirrors the
 ; prefix layout below.
 .draw_curved_bowl_before_alternating_suffix_source
@@ -6267,7 +6267,7 @@ ORG draw_curved_bowl_before_alternating_suffix
 
 ORG draw_curved_bowl_after_alternating_prefix
 
-; Runtime $1405-$141C, room-cell type $05. Draw alternating room tiles up to the
+; room-cell type $05. Draw alternating room tiles up to the
 ; selected column, one curved-bowl tile, then the remaining blank tiles.
 .draw_curved_bowl_after_alternating_prefix_source
     LDY #GRAPHIC_CURVED_BOWL
@@ -6291,7 +6291,7 @@ CLEAR draw_fixed_pair_tile_run_source, draw_fixed_pair_tile_run_source_end
 
 ORG draw_two_item_slots
 
-; Runtime $2C6E-$2CE5. Draw the two-slot item display.
+; Draw the two-slot item display.
 ; The first entry renders the accumulator-selected record from
 ; room_and_item_graphic_bank, then XOR-draws it at the fixed backtrack from the
 ; aligned item probe pointer. draw_item_slots walks the two carried-item slots
@@ -6391,7 +6391,7 @@ CLEAR draw_two_item_slots_source, draw_two_item_slots_source_end
 
 ORG drop_carried_item
 
-; Runtime $2CE6-$2D80. The D-control action first requires an enabled state,
+; The D-control action first requires an enabled state,
 ; a marker found by the player-relative scan, clear placement samples three
 ; rows below, and a player position inside the room. It chooses the second
 ; occupied carried-item slot before the first, moves the player upward by
@@ -6503,7 +6503,7 @@ CLEAR drop_carried_item_source, drop_carried_item_source_end
 
 ORG draw_column_sensitive_room_patterns
 
-; Runtime $14F0-$154F. Shared room-cell entries select complete blank or
+; Shared room-cell entries select complete blank or
 ; alternating rows, a blank gap between alternating flanks, fixed rounded/
 ; diagonal motifs, and curved-bowl rows according to room_graphics_column.
 .draw_column_sensitive_room_patterns_source
@@ -6571,7 +6571,7 @@ ORG draw_column_sensitive_room_patterns
 
 
 ORG draw_bordered_horizontal_bar_row
-; Runtime $1437-$14D8. Draw bordered bars, key-selected column motifs and the
+; Draw bordered bars, key-selected column motifs and the
 ; centred patterned-slope pair. The motif handlers save either no item, one of
 ; the two key codes, or COLUMN_MOTIF_OUTER_ONLY. Outer columns draw alternating
 ; edge pairs; middle columns frame the selected two-tile motif with blanks; the
@@ -6731,7 +6731,7 @@ CLEAR right_half_four_tile_graphic_sequences_source, right_half_four_tile_graphi
 
 ORG save_display_pointer_and_cell_reference
 
-; Runtime $14D9-$14EF. Save the current display pointer and build the indirect
+; Save the current display pointer and build the indirect
 ; room-cell pointer used by later writes, including the current cell offset.
 ; Both halves are consumed elsewhere in this source:
 ; replace_saved_cell_then_play_sound restores the saved display position, and
@@ -6758,7 +6758,7 @@ CLEAR save_display_pointer_and_cell_reference_source, save_display_pointer_and_c
 
 ORG consume_matching_item_from_slots
 
-; Runtime $2D81-$2D97. Search the two slots at $0C and $0D for the code in A,
+; Search the two slots at $0C and $0D for the code in A,
 ; second slot first. A match clears that slot, redraws the slot display through
 ; its $2CA1 entry, calls $24D2, and returns carry set; no match returns carry
 ; clear leaving both slots untouched.
@@ -6799,7 +6799,7 @@ CLEAR consume_matching_item_from_slots_source, consume_matching_item_from_slots_
 
 ORG draw_graphic_selector_sequence
 
-; Runtime $157E-$158E. Multiply room_graphics_column by two Y-controlled shifts,
+; Multiply room_graphics_column by two Y-controlled shifts,
 ; then draw X consecutive graphic selectors through graphic_sequence_pointer,
 ; applying the mirror flag to every tile.
 .draw_graphic_selector_sequence_source
@@ -6831,7 +6831,7 @@ CLEAR draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_sour
 
 ORG replace_saved_cell_with_14_then_play_sound
 
-; Runtime $2D98-$2DA2. Select GRAPHIC_UNIFORM_PATTERN for the redraw and save
+; Select GRAPHIC_UNIFORM_PATTERN for the redraw and save
 ; it as the interaction item code, then enter the shared replacement tail with
 ; ROOM_CELL_FF_STATE_MOTIF. Unlike the ordinary entry, this prefix skips the
 ; ROOM_CELL_BLANK_STATE_MOTIF setup before the common write/redraw/sound tail.
@@ -6854,7 +6854,7 @@ CLEAR replace_saved_cell_with_14_then_play_sound_source, replace_saved_cell_with
 
 ORG replace_saved_cell_then_play_sound
 
-; Runtime $2DA3-$2DD3. Replace the saved room cell with
+; Replace the saved room cell with
 ; ROOM_CELL_BLANK_STATE_MOTIF, redraw the area, and play its completion sound.
 ; The redraw uses the blank record, clears timed_effect_selector, and starts at
 ; SAVED_CELL_REDRAW_POINTER_OFFSET from the saved display position. It draws
@@ -6895,7 +6895,7 @@ CLEAR replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_so
 
 ORG draw_repeated_87_blank_pairs_by_state
 
-; Runtime $158F-$15B0, room-cell type $09. A zero column enters the adjacent
+; room-cell type $09. A zero column enters the adjacent
 ; edge-pattern handler. Other columns draw leading blanks for removed progress
 ; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
 .draw_repeated_87_blank_pairs_by_state_source
@@ -6932,7 +6932,7 @@ CLEAR draw_repeated_87_blank_pairs_by_state_source, draw_repeated_87_blank_pairs
 
 ORG initialise_cross_room_robot_ghost_from_record
 
-; Runtime $2DD4-$2E43. Initialise the two cross-room robots or ghosts from the packed record for the current level.
+; Initialise the two cross-room robots or ghosts from the packed record for the current level.
 ; reference_pair_secondary_value selects one CROSS_ROOM_ROBOT_GHOST_RECORD_BYTES
 ; record from cross_room_robot_ghost_record_table. The first byte carries two fields:
 ; its low three bits become the primary field, and the byte shifted right and
@@ -7027,7 +7027,7 @@ CLEAR initialise_cross_room_robot_ghost_from_record_source, initialise_cross_roo
 
 ORG draw_narrow_bar_fixture_row
 
-; Runtime $15DF-$1638, room-cell type $15. Column zero draws four selector-$15/blank pairs; columns one through three draw repeated $13/$07 pairs; column seven draws selector $14 then seven blanks; middle-right columns combine the repeated pair, selector $14/blank and a computed blank suffix.
+; room-cell type $15. Column zero draws four selector-$15/blank pairs; columns one through three draw repeated $13/$07 pairs; column seven draws selector $14 then seven blanks; middle-right columns combine the repeated pair, selector $14/blank and a computed blank suffix.
 .draw_narrow_bar_fixture_row_source
     CMP #&00
     BNE select_narrow_bar_column_group
@@ -7145,7 +7145,7 @@ CLEAR draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_
 
 ORG update_and_draw_two_cross_room_robot_ghosts
 
-; Runtime $2E44-$2E7B. Process the two cross-room robot/ghost states. Robot levels use
+; Process the two cross-room robot/ghost states. Robot levels use
 ; this loop; ghost levels tail-transfer to ghost_countdown_steering_update.
 ; Each robot iteration selects
 ; repeated-source drawing, optionally erases the current graphic and advances
@@ -7197,7 +7197,7 @@ CLEAR update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cr
 
 ORG draw_last_column_special_pair_row
 
-; Runtime $1639-$164F, room-cell type $16. Columns zero through six reuse the cell-$13 edge-pattern row. Column seven draws that row, sets the dynamic-object VDU vertical step to two, changes the active selector to $84, then enters the dynamic-object VDU setup at $19F7.
+; room-cell type $16. Columns zero through six reuse the cell-$13 edge-pattern row. Column seven draws that row, sets the dynamic-object VDU vertical step to two, changes the active selector to $84, then enters the dynamic-object VDU setup at $19F7.
 .draw_last_column_special_pair_row_source
     CMP #&07
     BEQ draw_last_column_pair_before_special_setup
@@ -7221,7 +7221,7 @@ COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pai
 CLEAR draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end
 
 ORG draw_state_selected_13_center_row
-; Runtime $1650-$1675, room-cell type $17. The first and final room graphics Y coordinates draw
+; room-cell type $17. The first and final room graphics Y coordinates draw
 ; alternating tiles. Other values draw two blanks, selector $13, the two-tile
 ; $04/$03 centre run at $1531, another $13 and two trailing blanks. Only the
 ; alternating outcome is present in committed traces; the dispatch entry and
@@ -7254,7 +7254,7 @@ CLEAR draw_state_selected_13_center_row_source, draw_state_selected_13_center_ro
 
 ORG handle_matching_cross_room_robot_ghost
 
-; Runtime $2E7C-$2E91. A failed pair comparison returns carry clear through
+; A failed pair comparison returns carry clear through
 ; the shared exit at $2E7A. A match copies one indexed field to $11, transforms
 ; the adjacent field into $3C, and tail-transfers to the sourced $2B57 guard.
 .handle_matching_cross_room_robot_ghost_source
@@ -7280,7 +7280,7 @@ CLEAR handle_matching_cross_room_robot_ghost_source, handle_matching_cross_room_
 
 ORG draw_room_flag_then_fixed_pair_row
 
-; Runtime $1676-$1684, room-cell type $1A. Column zero enables the room-local jet-boots flag. Every column preserves its number on the stack, draws four repetitions of the active tile pair, then enters the dynamic-room-object VDU continuation.
+; room-cell type $1A. Column zero enables the room-local jet-boots flag. Every column preserves its number on the stack, draws four repetitions of the active tile pair, then enters the dynamic-room-object VDU continuation.
 .draw_room_flag_then_fixed_pair_row_source
     CMP #&00
     BNE draw_fixed_pair_then_configure_object
@@ -7304,7 +7304,7 @@ CLEAR draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_pair_
 
 ORG draw_directional_ghost_if_reference_matches
 
-; Runtime $2E92-$2EA9. Preserve the ghost selector twice for the shared
+; Preserve the ghost selector twice for the shared
 ; drawing tail, choose ghost graphic-pointer offset $14 for a non-negative
 ; value delta or $16 for a negative one, and configure three character rows before entering the
 ; common predicate-and-XOR path at $2EBC. The alternate updater at $3009 calls
@@ -7342,7 +7342,7 @@ CLEAR draw_directional_ghost_if_reference_matches_source, draw_directional_ghost
 
 ORG draw_cross_room_robot_ghost_if_reference_matches
 
-; Runtime $2EAA-$2EDC. Select small-bouncing-robot graphic-pointer offset
+; Select small-bouncing-robot graphic-pointer offset
 ; $10/$12 from bit 1 of the indexed value, configure two renderer rows, and draw only when the indexed
 ; pair matches the reference fields. A mismatch branches to the original
 ; shared PLA/TAX/RTS exit at $2EA7. The $74-controlled state clear is retained
@@ -7397,7 +7397,7 @@ CLEAR draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_r
 
 ORG draw_two_13_two_beam_two_13_two_pattern
 
-; Runtime $16C2-$16DC, room-cell type $1C. Draw two selector-$13 tiles, two mirrored diagonal-beam tiles, another two selector-$13 tiles, then two alternating tiles. The internal $16D2 entry draws exactly two selector-$13 tiles.
+; room-cell type $1C. Draw two selector-$13 tiles, two mirrored diagonal-beam tiles, another two selector-$13 tiles, then two alternating tiles. The internal $16D2 entry draws exactly two selector-$13 tiles.
 .draw_two_13_two_beam_two_13_two_pattern_source
     JSR draw_two_13_tiles
     LDX #&02
@@ -7423,7 +7423,7 @@ ASSERT draw_two_13_two_beam_two_13_two_pattern_source_end = &16DD
 ; after the cross-room robot/ghost routines that occupy their loaded destination.
 
 ORG draw_left_half_sequence_twice_or_13_beam_pattern
-; Runtime $16DD-$16E9, room-cell type $1D. Columns zero through three draw
+; room-cell type $1D. Columns zero through three draw
 ; their four-selector record from left_half_four_tile_graphic_sequences twice.
 ; Columns four through seven reuse the cell-$1C selector-$13/beam pattern.
 ; This entry has not appeared in committed traces; its dispatch-table target
@@ -7441,7 +7441,7 @@ ASSERT draw_left_half_sequence_twice_or_13_beam_pattern_source_end = draw_room_s
 
 ORG advance_cross_room_robot_ghost_offset_and_display_pointer
 
-; Runtime $2F8F-$3008. Move a cross-room ghost vertically by signed step +2/-2.
+; Move a cross-room ghost vertically by signed step +2/-2.
 ; Ordinary steps are delegated through apply_signed_vertical_step_to_pointer.
 ; At offset $10 while moving upward, decrement secondary row and wrap to $C0;
 ; at $C0 while moving downward, increment the row and wrap to $10. The display
@@ -7721,7 +7721,7 @@ CLEAR left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_
 
 ORG test_cross_room_robot_ghost_matches_reference
 
-; Runtime $2EDD-$2EED. X selects two fields. Return carry set only when both
+; X selects two fields. Return carry set only when both
 ; match their respective reference bytes; otherwise return carry clear at the
 ; first mismatch. X/Y and memory are preserved.
 .test_cross_room_robot_ghost_matches_reference_source
@@ -7749,7 +7749,7 @@ CLEAR test_cross_room_robot_ghost_matches_reference_source, test_cross_room_robo
 
 ORG return_carry_clear_2b9c
 
-; Runtime $2B9C-$2B9D. Shared no-overlap exit for the player range test: clear carry and return.
+; Shared no-overlap exit for the player range test: clear carry and return.
 .return_carry_clear_2b9c_source
     CLC
     RTS
@@ -7766,7 +7766,7 @@ CLEAR return_carry_clear_2b9c_source, return_carry_clear_2b9c_source_end
 
 ORG set_cross_room_robot_ghost_value_delta_at_thresholds
 
-; Runtime $2EEE-$2F11. Select one of two value thresholds from the indexed
+; Select one of two value thresholds from the indexed
 ; primary field. Store +1 below the positive threshold or -1 at/above the
 ; negative threshold; otherwise return with the last comparison flags.
 .set_cross_room_robot_ghost_value_delta_at_thresholds_source
@@ -7898,7 +7898,7 @@ CLEAR draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_passw
 
 ORG test_display_pointer_in_xor_draw_window
 
-; Runtime $32A7-$32BE. Return carry clear exactly when the little-endian
+; Return carry clear exactly when the little-endian
 ; display pointer at $7C/$7D is in $4180-$7FFF. The high-byte path used by all
 ; 485 committed no-input calls exits at the first full display page; the $41 low-byte boundary
 ; and carry-set rejection paths are byte-proven but not trace-observed.
@@ -7957,7 +7957,7 @@ CLEAR enter_submit_osword_07_sound_block_source, enter_submit_osword_07_sound_bl
 
 ORG select_graphic_then_xor_draw
 
-; Runtime $32C5-$32D0. X indexes a run-time little-endian pointer table whose
+; X indexes a run-time little-endian pointer table whose
 ; low byte starts at $0B5F and high byte is the following entry. A contains
 ; the display-pointer low byte needed by the fall-through XOR renderer. The
 ; push/pop preserves A while $7A/$7B receive the selected graphic pointer;
@@ -7981,7 +7981,7 @@ CLEAR select_graphic_then_xor_draw_source, select_graphic_then_xor_draw_source_e
 
 ORG play_descending_flash_sequence
 
-; Runtime $3142-$314E. Flash the background twenty-one times, sweeping X from $14
+; Flash the background twenty-one times, sweeping X from $14
 ; down to zero and preserving it across each call.
 ; flash_background_colour_with_sound takes X as both the physical colour and the
 ; sound pitch, so a single descending sweep drives colour and note together: the
@@ -8013,7 +8013,7 @@ CLEAR play_descending_flash_sequence_source, play_descending_flash_sequence_sour
 
 ORG flash_background_colour_with_sound
 
-; Runtime $314F-$3170. Flash the background by redefining logical colour 0, with
+; Flash the background by redefining logical colour 0, with
 ; a sound, then wait for the next frame.
 ; VDU 19 takes five parameters. The first three, 19, 0 and X, are written before
 ; the sound is submitted with the same X as its pitch; the remaining three zeros
@@ -8050,7 +8050,7 @@ CLEAR flash_background_colour_with_sound_source, flash_background_colour_with_so
 
 ORG ghost_countdown_steering_update
 
-; Runtime $3009-$3034. Process indexed entries X=$00/$02 for high-secondary
+; Process indexed entries X=$00/$02 for high-secondary
 ; rooms. Countdown values zero or two take the original preceding erase/step
 ; block at $3003; other values decrement here. On expiry, optionally erase the
 ; directional graphic, steer the pair relative to the player, toggle the first
@@ -8097,7 +8097,7 @@ CLEAR ghost_countdown_steering_update_source, ghost_countdown_steering_update_so
 
 ORG handle_matching_ghost
 
-; Runtime $3035-$304E. A mismatch returns through the preceding $3034 RTS. A
+; A mismatch returns through the preceding $3034 RTS. A
 ; match copies the indexed horizontal value to candidate_horizontal_position,
 ; converts the even vertical offset to the collision coordinate, selects the
 ; ghost's tall overlap extent, and tail-enters the player/candidate guard.
@@ -8127,7 +8127,7 @@ CLEAR handle_matching_ghost_source, handle_matching_ghost_source_end
 
 ORG set_ghost_steps_toward_player
 
-; Runtime $304F-$3081, the first body range of Ghidra function $304F. Matching
+; the first body range of Ghidra function $304F. Matching
 ; secondary fields set the signed ghost vertical step from the player/pair
 ; half-offset comparison. Matching primary fields set a signed horizontal step. Control then
 ; enters the separately sourced mode block at $3083/$3085/$3088. The external
@@ -8177,7 +8177,7 @@ CLEAR set_ghost_steps_toward_player_source, set_ghost_steps_toward_player_source
 
 ORG apply_ghost_player_axis_mode
 
-; Runtime $3083-$30AB, the second body range of Ghidra function $304F. The
+; the second body range of Ghidra function $304F. The
 ; entry supplies the negative horizontal step. Vertical mode advances until the
 ; ghost reaches player Y, then selects horizontal mode; horizontal mode advances
 ; until player X is reached, then selects vertical mode.
@@ -8221,7 +8221,7 @@ CLEAR apply_ghost_player_axis_mode_source, apply_ghost_player_axis_mode_source_e
 
 ORG toggle_first_ghost_axis_mode_when_positions_match
 
-; Runtime $30AC-$30CD. Compare the value and offset fields of ghost 0
+; Compare the value and offset fields of ghost 0
 ; with pair 1 (the same arrays at index 2). A mismatch returns through the
 ; preceding shared RTS at $30AB. When both fields match, change the first pair's
 ; mode between the named horizontal and vertical modes. The alternate updater calls
@@ -8259,7 +8259,7 @@ CLEAR toggle_first_ghost_axis_mode_when_positions_match_source, toggle_first_gho
 
 ORG run_energy_bar_sweep
 
-; Runtime $30CE-$30E4. Sweep the energy value from 0 to $FE, redrawing the bar at
+; Sweep the energy value from 0 to $FE, redrawing the bar at
 ; every step, with a delay between them.
 ; X counts the energy level and is written to both the snapshot and live energy before each
 ; redraw, so the stored value and the displayed value stay together. The inner
@@ -8297,7 +8297,7 @@ CLEAR run_energy_bar_sweep_source, run_energy_bar_sweep_source_end
 
 ORG submit_channel_one_sound_with_x_pitch
 
-; Runtime $30E5-$30EC. Supply X as the pitch for an OSWORD $07 sound on
+; Supply X as the pitch for an OSWORD $07 sound on
 ; channel byte $11, then tail-enter the common fixed-amplitude submission.
 .submit_channel_one_sound_with_x_pitch_source
     STX sound_block_pitch
@@ -8315,7 +8315,7 @@ CLEAR submit_channel_one_sound_with_x_pitch_source, submit_channel_one_sound_wit
 
 ORG consume_collected_icon_and_apply_effect
 
-; Runtime $30ED-$3141. Consume one collected status icon unless the count is
+; Consume one collected status icon unless the count is
 ; exactly four, then run the common descending flash effect.
 ; ROOM_INTERACTION_LONG_ICON_EFFECT selects the longer cleanup path: remove a second icon, restore the saved
 ; cell with $53, clear the selected room-appearance byte and effect state, flash
@@ -8374,7 +8374,7 @@ CLEAR consume_collected_icon_and_apply_effect_source, consume_collected_icon_and
 
 ORG run_horizontal_16_warp_sequence
 
-; Runtime $31C8-$31EA. Return through the shared $3199 RTS unless the player
+; Return through the shared $3199 RTS unless the player
 ; horizontal position is HORIZONTAL_WARP_TRIGGER_POSITION. On a match, count X
 ; from HORIZONTAL_WARP_STEP_COUNT to zero; each step preserves X, XOR-draws the
 ; player, waits for two vertical syncs, and submits a channel-one sound whose pitch is X.
@@ -8411,7 +8411,7 @@ CLEAR run_horizontal_16_warp_sequence_source, run_horizontal_16_warp_sequence_so
 
 ORG draw_status_panel_divider
 
-; Runtime $31EB-$31FE. Draw a horizontal rule across the status area by writing
+; Draw a horizontal rule across the status area by writing
 ; $F0 into the same scanline of 66 consecutive character cells, starting at
 ; $3CE0.
 ; store_byte_and_advance_source_pointer does the work, writing one byte and
@@ -8445,7 +8445,7 @@ CLEAR draw_status_panel_divider_source, draw_status_panel_divider_source_end
 
 ORG warp_to_room_3_4
 
-; Runtime $3200-$3212. Select secondary reference 4 and primary reference 3,
+; Select secondary reference 4 and primary reference 3,
 ; set the corresponding level-base offset to 4*$78 = $01E0, then tail-dispatch
 ; through the $1206 vector to draw_and_initialise_room.
 .warp_to_room_3_4_source
@@ -8471,7 +8471,7 @@ CLEAR warp_to_room_3_4_source, warp_to_room_3_4_source_end
 
 ORG start_saved_display_block_shift_effect
 
-; Runtime $3175-$31C7. The unobserved $3175 entry stores the caller's byte two
+; The unobserved $3175 entry stores the caller's byte two
 ; positions beyond the saved cell, restores the saved offset, arms selector $04
 ; for 32 ticks, and replaces the saved cell with $39. Static call sites at
 ; $2A0D and $2A31 supply this entry from the adjacent interaction branches;
@@ -8546,7 +8546,7 @@ CLEAR start_saved_display_block_shift_effect_source, start_saved_display_block_s
 
 ORG draw_blank_marker_and_column_gated_rows
 
-; Runtime $19AA-$19E7. This contiguous room-cell handler cluster contains the two mirrored blank-marker layouts and cell types $36-$3A. Cells $36/$37 draw alternating rows only in columns three-or-seven / column three; $38 uses only column seven; $39 uses columns four-seven. Cell $3A optionally saves the cell/display pointers in column four, draws a blank row, then leaves A stacked for the shared $19E8 continuation. Natural room traces cover the marker, $38-$3A and shared alternating tails; focused real-dispatch fixtures cover every $36/$37 comparison and outcome with exact authority/rebuild parity.
+; This contiguous room-cell handler cluster contains the two mirrored blank-marker layouts and cell types $36-$3A. Cells $36/$37 draw alternating rows only in columns three-or-seven / column three; $38 uses only column seven; $39 uses columns four-seven. Cell $3A optionally saves the cell/display pointers in column four, draws a blank row, then leaves A stacked for the shared $19E8 continuation. Natural room traces cover the marker, $38-$3A and shared alternating tails; focused real-dispatch fixtures cover every $36/$37 comparison and outcome with exact authority/rebuild parity.
 .draw_blank_marker_and_column_gated_rows_source
     LDY #&00
     STY temporary_display_byte_7ffb
@@ -8610,7 +8610,7 @@ CLEAR draw_blank_marker_and_column_gated_rows_source, draw_blank_marker_and_colu
 
 ORG draw_fixed_pair_gap_and_bordered_rows
 
-; Runtime $18B2-$19A9. The cell-$31 entry draws two fixed-pair tiles, four
+; The cell-$31 entry draws two fixed-pair tiles, four
 ; blanks, then two fixed-pair tiles. Cell $32 loads graphic selector $09 and
 ; enters the shared bordered-row painter at $18C5. Both presets are fully
 ; traced through the room-cell dispatcher. The remaining cluster contains
@@ -8807,7 +8807,7 @@ CLEAR draw_fixed_pair_gap_and_bordered_rows_source, draw_fixed_pair_gap_and_bord
 
 ORG write_indexed_terminal_activation_value
 
-; Runtime $3214-$322C. Select a three-byte record with X = $90 * 3. The first
+; Select a three-byte record with X = $90 * 3. The first
 ; two bytes are a little-endian destination pointer and the third is stored
 ; through it. The accepted-password path calls this with its current reference.
 .write_indexed_terminal_activation_value_source
@@ -8837,7 +8837,7 @@ CLEAR write_indexed_terminal_activation_value_source, write_indexed_terminal_act
 
 ORG restore_item_and_goal_records
 
-; Runtime $3245-$3254. Restore all twelve four-byte item/goal records from the
+; Restore all twelve four-byte item/goal records from the
 ; initial image at $0980, then supply $59 to stamp_map_bytes_and_store by tail
 ; call. The natural startup call copies exactly 48 bytes and returns directly
 ; from the tail target to the caller at $0BCE. The padding NOP at $3255 is not
@@ -8865,7 +8865,7 @@ CLEAR restore_item_and_goal_records_source, restore_item_and_goal_records_source
 
 ORG print_inline_vdu_stream
 
-; Runtime $3256-$327D. Consume the JSR return address as a little-endian pointer
+; Consume the JSR return address as a little-endian pointer
 ; to the inline VDU stream. Each nonzero byte following the call is sent to
 ; OSWRCH. On the terminator, restore Y and push the terminator's address so RTS
 ; resumes at the byte after it. The $17FD page-end checkpoint proves the pointer
@@ -8914,7 +8914,7 @@ CLEAR print_inline_vdu_stream_source, print_inline_vdu_stream_source_end
 
 ORG configure_and_emit_dynamic_room_object_vdu_stream
 
-; Runtime $19E8-$1A56. Pops the saved room column and returns through the shared
+; Pops the saved room column and returns through the shared
 ; cell-handler RTS unless it is column seven. Column seven patches the dynamic
 ; room-object VDU stream from the active tile pair and named graphics coordinates,
 ; reverses its signed step when the cell is mirrored, converts the coordinate
@@ -8992,7 +8992,7 @@ CLEAR configure_and_emit_dynamic_room_object_vdu_stream_source, configure_and_em
 
 ORG dynamic_room_object_vdu_stream
 
-; Runtime $1A57-$1A6B. A complete MOS VDU command stream: GCOL followed by
+; A complete MOS VDU command stream: GCOL followed by
 ; three PLOT commands. configure_and_emit_dynamic_room_object_vdu_stream
 ; patches the GCOL action, the first absolute PLOT coordinates and the signed
 ; high byte of the final relative vertical displacement before sending all 21
@@ -9030,7 +9030,7 @@ CLEAR dynamic_room_object_vdu_stream_source, dynamic_room_object_vdu_stream_sour
 
 ORG stamp_map_bytes_and_store
 
-; Runtime $3280-$328E. Store the accumulator at $37FE, then write $69 into three
+; Store the accumulator at $37FE, then write $69 into three
 ; fixed addresses at $09D3, $09E2 and $09E8.
 ; The three destinations are not contiguous and are outside the record tables
 ; that begin at $0900, so this stamps three specific map or state bytes rather
@@ -9056,7 +9056,7 @@ CLEAR stamp_map_bytes_and_store_source, stamp_map_bytes_and_store_source_end
 
 ORG dispatch_completed_crystal_message
 
-; Runtime $328F-$329F. Completed-game main-loop exit helper. It chooses decoder
+; Completed-game main-loop exit helper. It chooses decoder
 ; offset zero normally or $36 when the sequence counter is zero. If crystals
 ; remain, the exact original PLA/RTS exit is retained; if none remain it
 ; tail-jumps to the transient stack-page XOR/OSWRCH decoder at $0100.
@@ -9301,7 +9301,7 @@ CLEAR middle_columns_transition_graphic_sequences_source, middle_columns_transit
 
 ORG draw_pillar_framed_or_pattern_row
 
-; Runtime $1B01-$1B22, room-cell type $01. Column zero draws selector $02, six mirrored selector-$27 pillar tiles and selector $01. Column one draws the fixed tile pair four times; columns two through seven draw alternating tiles.
+; room-cell type $01. Column zero draws selector $02, six mirrored selector-$27 pillar tiles and selector $01. Column one draws the fixed tile pair four times; columns two through seven draw alternating tiles.
 .draw_pillar_framed_or_pattern_row_source
     CMP #&00
     BEQ draw_pillar_framed_first_column
@@ -9390,7 +9390,7 @@ CLEAR middle_columns_eight_tile_graphic_sequences_source, middle_columns_eight_t
 
 ORG play_sound_with_amplitude
 
-; Runtime $3333-$3342. Play a sound on channel 2 with the amplitude in A.
+; Play a sound on channel 2 with the amplitude in A.
 ; $32A0 to $32A7 is an OSWORD $07 SOUND parameter block: channel, amplitude,
 ; pitch and duration as four little-endian words. This writes A as the amplitude
 ; low byte with a zero high byte, sets the channel word low byte to $12, which
@@ -9417,7 +9417,7 @@ CLEAR play_sound_with_amplitude_source, play_sound_with_amplitude_source_end
 
 ORG configure_two_row_repeated_xor_graphic
 
-; Runtime $3343-$334B. Configure the adjacent XOR renderer to draw two
+; Configure the adjacent XOR renderer to draw two
 ; eight-scanline character rows while repeating each source scanline twice.
 ; A returns $02; X, Y, and all flags except N/Z are unchanged. The routine
 ; does not touch the stack before its normal RTS.
@@ -9439,7 +9439,7 @@ CLEAR configure_two_row_repeated_xor_graphic_source, configure_two_row_repeated_
 
 ORG submit_sound_block_with_pitch
 
-; Runtime $334C-$337A. Play a sound with the pitch in A, or submit an
+; Play a sound with the pitch in A, or submit an
 ; already-filled block.
 ; The $334C entry writes A as the pitch and fills the rest of the OSWORD $07
 ; block with fixed values: channel $10, which is flush plus channel 0, amplitude
@@ -9491,7 +9491,7 @@ CLEAR submit_sound_block_with_pitch_source, submit_sound_block_with_pitch_source
 
 ORG draw_character_row_as_tiles
 
-; Runtime $1B23-$1B56. Render one scanline row of a MOS character
+; Render one scanline row of a MOS character
 ; definition as eight tiles. The character code combines the cell's character
 ; bit and room_cell_type_index, then adds MOS_CHARACTER_CODE_BIAS before the
 ; OSWORD definition call fills character_definition_block with the eight rows.
@@ -9544,7 +9544,7 @@ CLEAR draw_character_row_as_tiles_source, draw_character_row_as_tiles_source_end
 
 ORG reverse_room_moving_object_delta_at_limits
 
-; Runtime $343A-$3452. Keep the selected room-moving-object graphic state moving between the
+; Keep the selected room-moving-object graphic state moving between the
 ; inclusive selector limits. A lower-limit match selects the positive movement
 ; step; an upper-limit match selects the negative step; an interior value leaves the delta
 ; unchanged. X and Y are preserved.
@@ -9577,7 +9577,7 @@ CLEAR reverse_room_moving_object_delta_at_limits_source, reverse_room_moving_obj
 
 ORG play_note_for_position_and_test_tune
 
-; Runtime $337B-$33C0. Play the note for wherever the player is standing, then
+; Play the note for wherever the player is standing, then
 ; judge whether the tune is being played correctly.
 ; The player horizontal position less $0E and divided by four selects a note
 ; from the pitch table at $0BC0, which is submitted on channel with amplitude
@@ -9645,7 +9645,7 @@ CLEAR play_note_for_position_and_test_tune_source, play_note_for_position_and_te
 
 ORG update_and_draw_room_moving_objects
 
-; Runtime $33C1-$3439. Update the room's active caterpillar, fish, mouse or
+; Update the room's active caterpillar, fish, mouse or
 ; lift graphics. Each instance occupies an even Y index because its display pointer is a two-byte
 ; zero-page entry. When erase_previous_xor_sprite_flag is nonzero the old image
 ; is XOR-erased first; the
@@ -9744,7 +9744,7 @@ CLEAR update_and_draw_room_moving_objects_source, update_and_draw_room_moving_ob
 
 ORG initialise_four_dynamic_room_object_slots
 
-; Runtime $1B58-$1B97. Called by the dynamic-room-object setup at $1943 with an even slot offset in Y. It preserves the display pointer, initialises four circular even-indexed slots with display addresses spaced $20 bytes apart and paired $FE/$00 state bytes at $18/$19, restores the pointer, then writes $FE to $1247.
+; Called by the dynamic-room-object setup at $1943 with an even slot offset in Y. It preserves the display pointer, initialises four circular even-indexed slots with display addresses spaced $20 bytes apart and paired $FE/$00 state bytes at $18/$19, restores the pointer, then writes $FE to $1247.
 .initialise_four_dynamic_room_object_slots_source
     LDX #&00
     LDA display_pointer_low
@@ -9799,7 +9799,7 @@ CLEAR initialise_four_dynamic_room_object_slots_source, initialise_four_dynamic_
 
 ORG draw_room_moving_object
 
-; Runtime $3453-$3487. Y indexes selector inputs and a display pointer. X is
+; Y indexes selector inputs and a display pointer. X is
 ; built from whether the signed delta is $FF and whether selector-state bit 2
 ; is clear, giving the even graphic-table indices $00/$02/$04/$06. The common
 ; observed globals select the repeated-source/two-row setup; the bypass leaves
@@ -9850,7 +9850,7 @@ CLEAR draw_room_moving_object_source, draw_room_moving_object_source_end
 
 ORG draw_and_initialise_room
 
-; Runtime $1B98-$1C86. Draw the current room and set up everything in it.
+; Draw the current room and set up everything in it.
 ; The per-room state is cleared first: a dozen flags and counters, the music
 ; tune progress, the vertical velocity step set to 1 and the game speed at $4F
 ; to 8.
@@ -10013,7 +10013,7 @@ CLEAR draw_and_initialise_room_source, draw_and_initialise_room_source_end
 
 ORG advance_room_moving_object_state_and_pointer
 
-; Runtime $3488-$34BA. Add the Y-indexed signed delta to selector state, then
+; Add the Y-indexed signed delta to selector state, then
 ; move the paired display pointer by one Mode 1 byte column (eight bytes).
 ; Delta sign alone chooses +8 or -8. X and Y are preserved; A returns the
 ; updated display-pointer high byte.
@@ -10056,7 +10056,7 @@ CLEAR advance_room_moving_object_state_and_pointer_source, advance_room_moving_o
 
 ORG set_room_data_pointer
 
-; Runtime $1C87-$1CA8. Build the pointer to the current room cell data.
+; Build the pointer to the current room cell data.
 ; The horizontal reference at $90 is multiplied by five and added to the level
 ; base in room_cell_level_base_low/high, then adds room_cell_map to form
 ; room_data_pointer_low/high. A room occupies five bytes and the saved level
@@ -10096,7 +10096,7 @@ CLEAR set_room_data_pointer_source, set_room_data_pointer_source_end
 
 ORG retreat_secondary_reference_and_pointer
 
-; Runtime $1CB5-$1CC6. Decrement the secondary reference at $8F, move the pointer
+; Decrement the secondary reference at $8F, move the pointer
 ; at $70/$71 back by $78, and dispatch to $1B98.
 ; This is the exact mirror of advance_secondary_reference_and_pointer, SEC/SBC
 ; against CLC/ADC, and the two are reached through adjacent
@@ -10126,7 +10126,7 @@ CLEAR retreat_secondary_reference_and_pointer_source, retreat_secondary_referenc
 
 ORG advance_76_77_pointer_by_40
 
-; Runtime $1CA9-$1CB4. Add $28 to the little-endian pointer at $76/$77, carrying into the high byte. A clear carry branches backward to the shared RTS at $1CA8 rather than falling through to the INC, so the high byte is touched only on a low-byte wrap.
+; Add $28 to the little-endian pointer at $76/$77, carrying into the high byte. A clear carry branches backward to the shared RTS at $1CA8 rather than falling through to the INC, so the high byte is touched only on a low-byte wrap.
 .advance_76_77_pointer_by_40_source
     CLC
     LDA room_data_pointer_low
@@ -10148,7 +10148,7 @@ CLEAR advance_76_77_pointer_by_40_source, advance_76_77_pointer_by_40_source_end
 
 ORG reflect_room_enemy_at_obstacles
 
-; Runtime $35C2-$35F9. Probe around the Y-selected room enemy and reverse its movement
+; Probe around the Y-selected room enemy and reverse its movement
 ; deltas wherever it is blocked, then set up its graphic and dispatch.
 ; The four probes come in two opposed pairs. The first pair drives the delta at
 ; $123A to +1 or -1, the second drives the adjacent delta at $123B to +2 or -2,
@@ -10203,7 +10203,7 @@ CLEAR reflect_room_enemy_at_obstacles_source, reflect_room_enemy_at_obstacles_so
 
 ORG draw_matching_records_from_table
 
-; Runtime $1DC4-$1DEF. Walk the record table at $0900 from the last entry to the
+; Walk the record table at $0900 from the last entry to the
 ; first, drawing every record that matches the current references.
 ; The table holds twelve four-byte item/goal records: X counts down from $0B
 ; and is multiplied by four to index them. The first two bytes are the packed match,
@@ -10265,7 +10265,7 @@ CLEAR draw_matching_records_from_table_source, draw_matching_records_from_table_
 
 ORG advance_room_enemy_with_collision_checks
 
-; Runtime $35FA-$362D. Probe the Y-selected room enemy along its vertical direction
+; Probe the Y-selected room enemy along its vertical direction
 ; and tail-transfer to the vertical mover when clear. When blocked, probe along
 ; its signed horizontal direction, reverse that direction if the next column is
 ; also blocked, and tail-transfer to the horizontal mover.
@@ -10311,7 +10311,7 @@ CLEAR advance_room_enemy_with_collision_checks_source, advance_room_enemy_with_c
 
 ORG set_display_pointer_from_grid_position
 
-; Runtime $1DF0-$1E28. Convert a grid position into a display address.
+; Convert a grid position into a display address.
 ; $0A is multiplied by 5 and then by 128, which is $0280, one Mode 1 character
 ; row, so $0A is the row. $0B is multiplied by 8, one character cell, so $0B is
 ; the column. The two are added and biased by the grid origin, giving
@@ -10377,7 +10377,7 @@ CLEAR set_display_pointer_from_grid_position_source, set_display_pointer_from_gr
 
 ORG scan_column_behind_room_enemy
 
-; Runtime $362E-$363D. Place the display pointer 8 bytes before the Y-indexed
+; Place the display pointer 8 bytes before the Y-indexed
 ; entry pointer, one Mode 1 character cell back, then tail-jump into
 ; scan_column_below_room_enemy.
 ; It is the opposed member of the probe pair with
@@ -10405,7 +10405,7 @@ CLEAR scan_column_behind_room_enemy_source, scan_column_behind_room_enemy_source
 
 ORG scan_column_ahead_of_room_enemy
 
-; Runtime $363E-$364D. Place the display pointer $20 past the Y-room enemy
+; Place the display pointer $20 past the Y-room enemy
 ; pointer at $47/$48, two Mode 1 character cells ahead, then tail-jump into
 ; scan_column_below_room_enemy to scan eight rows there.
 ; Sharing that tail is what makes this a probe variant rather than a routine of
@@ -10432,7 +10432,7 @@ CLEAR scan_column_ahead_of_room_enemy_source, scan_column_ahead_of_room_enemy_so
 
 ORG draw_item_graphic_pair
 
-; Runtime $1E29-$1E3E. Draw the two consecutive graphic records selected by
+; Draw the two consecutive graphic records selected by
 ; item/goal-table index X. Index 3 first calls the Golden Dragon ending sequence
 ; at $1E3F. The graphic pair itself is always $28 + 2X and the following index.
 .draw_item_graphic_pair_source
@@ -10463,7 +10463,7 @@ CLEAR draw_item_graphic_pair_source, draw_item_graphic_pair_source_end
 
 ORG load_room_enemy_display_pointer_then_scan_markers
 
-; Runtime $364E-$3658. Load the display pointer for the Y-room enemy, then
+; Load the display pointer for the Y-room enemy, then
 ; run the marker scan through the $220F jump-table vector, preserving Y across
 ; the call by saving it on the stack. The scan itself does not preserve Y, so
 ; the save is what lets the caller keep iterating over entries.
@@ -10488,7 +10488,7 @@ CLEAR load_room_enemy_display_pointer_then_scan_markers_source, load_room_enemy_
 
 ORG scan_markers_below_room_enemy
 
-; Runtime $3659-$367E. Place the display pointer one or two Mode 1 character rows
+; Place the display pointer one or two Mode 1 character rows
 ; below the Y-room enemy pointer at $47/$48, then run the four-byte marker
 ; scan through its jump-table vector, preserving Y across the call.
 ; A character row is $0280 bytes. When the repeated-scanline flag at $6C is
@@ -10534,7 +10534,7 @@ CLEAR scan_markers_below_room_enemy_source, scan_markers_below_room_enemy_source
 
 ORG load_room_enemy_collision_coordinates
 
-; Runtime $367F-$368A. Load the selected room enemy's horizontal position and
+; Load the selected room enemy's horizontal position and
 ; half-resolution vertical position into the shared candidate coordinates used
 ; by player-overlap and pursuit tests.
 .load_room_enemy_collision_coordinates_source
@@ -10557,7 +10557,7 @@ CLEAR load_room_enemy_collision_coordinates_source, load_room_enemy_collision_co
 
 ORG scan_column_below_room_enemy
 
-; Runtime $368B-$36A0. Scan a column of eight character rows for the selected
+; Scan a column of eight character rows for the selected
 ; room enemy and report whether it is blocked. A is the display pointer high byte on
 ; entry, the low byte having already been set by the caller.
 ; Y is preserved across the scan, which does not preserve it. A blocking byte
@@ -10592,7 +10592,7 @@ CLEAR scan_column_below_room_enemy_source, scan_column_below_room_enemy_source_e
 
 ORG clamp_room_enemy_horizontal_delta_at_limits
 
-; Runtime $36A1-$36B9. Keep the Y-selected room enemy inside a range by reversing its
+; Keep the Y-selected room enemy inside a range by reversing its
 ; movement delta at either limit. moving_entity_horizontal_position is compared
 ; against enemy_horizontal_lower_limit and enemy_horizontal_upper_limit: below
 ; the lower limit it selects a positive step, at or above the upper it selects
@@ -10633,7 +10633,7 @@ CLEAR clamp_room_enemy_horizontal_delta_at_limits_source, clamp_room_enemy_horiz
 
 ORG advance_room_enemy_horizontal_position
 
-; Runtime $36BA-$36EC. Move the Y-selected room enemy horizontally by its signed delta
+; Move the Y-selected room enemy horizontally by its signed delta
 ; and carry its display pointer with it.
 ; moving_entity_horizontal_position gains room_enemy_horizontal_delta, which
 ; the two clamps drive to +1
@@ -10682,7 +10682,7 @@ CLEAR advance_room_enemy_horizontal_position_source, advance_room_enemy_horizont
 
 ORG reverse_room_enemy_vertical_delta_at_limits
 
-; Runtime $36ED-$3707. Keep the Y-selected room enemy inside its second range by
+; Keep the Y-selected room enemy inside its second range by
 ; reversing enemy_vertical_delta. room_enemy_vertical_position is masked to
 ; ENEMY_EVEN_VERTICAL_POSITION_MASK, dropping its low bit, and tested for
 ; equality against the vertical patrol limits:
@@ -10724,7 +10724,7 @@ CLEAR reverse_room_enemy_vertical_delta_at_limits_source, reverse_room_enemy_ver
 
 ORG advance_room_enemy_vertical_position
 
-; Runtime $3708-$372E. Apply one signed vertical step to the Y-selected room enemy.
+; Apply one signed vertical step to the Y-selected room enemy.
 ; The entity state is copied into the scratch fields the shared step helper
 ; works on: room_enemy_vertical_position, enemy_vertical_delta and the room
 ; enemy display pointer. apply_signed_vertical_step_to_pointer then moves both
@@ -10766,7 +10766,7 @@ CLEAR advance_room_enemy_vertical_position_source, advance_room_enemy_vertical_p
 
 ORG show_golden_dragon_ending
 
-; Runtime $1E3F-$1E6B. Print the inline VDU stream that lays out the words
+; Print the inline VDU stream that lays out the words
 ; "THE GOLDEN DRAGON", then set the gameplay-loop exit flag to $FF. The printer
 ; at $3256 consumes its own stacked return address, emits bytes until the zero
 ; terminator, and replaces that address so its RTS resumes at $1E67 rather than
@@ -10805,7 +10805,7 @@ CLEAR show_golden_dragon_ending_source, show_golden_dragon_ending_source_end
 
 ORG initialise_room_moving_objects
 
-; Runtime $1E6C-$1F0E. Scan room_moving_object_record_table for the
+; Scan room_moving_object_record_table for the
 ; current room. No match returns without changing the room-moving-object
 ; configuration. A match saves the record type and a selector derived from the
 ; packed room bytes; fish and mouse records return early when the existing
@@ -11724,7 +11724,7 @@ COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_
 CLEAR lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end
 
 ORG unused_runtime_low_tail_bytes
-; Runtime $0AFA-$0AFF, loaded $23FA-$23FF. These six bytes lie after the exact
+; loaded $23FA-$23FF. These six bytes lie after the exact
 ; twenty-record entity table and before the independent JMP entry at $0B00.
 ; No static or committed dynamic reference reads or executes them, so they are
 ; retained as proved-unused boundary data rather than invented as a twenty-first
