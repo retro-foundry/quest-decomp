@@ -4236,37 +4236,37 @@ CLEAR initialise_new_game_source, initialise_new_game_source_end
 ORG walk_player_toward_target_position
 
 ; Walk the player to a target position, one step per frame,
-; without returning until it arrives. The target is $2D horizontally and $2E
-; vertically.
+; without returning until it arrives. The target coordinates are supplied in
+; player_walk_target_horizontal_position and player_walk_target_vertical_position.
 ; Each iteration halves both the current and target vertical positions before
 ; comparing, so the match is at half resolution. A difference stores a signed
-; step of +2 or -2 in $40 and calls the vertical mover; the horizontal
+; two-unit signed step in vertical_step_delta and calls the vertical mover; the horizontal
 ; difference then selects the one-cell left or right step. Every iteration ends
 ; by waiting for vertical sync through the display helpers, which is what paces
 ; the walk to one step per frame.
 ; Arrival requires both axes to match, at which point the energy-delta budget is
 ; reset. That shared tail is also reached independently when energy is unchanged.
 .walk_player_toward_target_position_source
-    LDX #&09
+    LDX #SCRIPTED_WALK_START_FLASH_COUNT
     JSR flash_background_colour_with_sound
-    LDA #&0F
+    LDA #SCRIPTED_WALK_SOUND_DURATION_AND_PITCH
     STA sound_block_duration
     STA sound_block_pitch
-    LDA #&04
+    LDA #SCRIPTED_WALK_SOUND_AMPLITUDE
     JSR play_sound_with_amplitude
 
 .walk_one_step_toward_target
     LDA player_walk_target_vertical_position
     LSR A
     STA player_walk_target_half_vertical_position
-    LDX #&02
+    LDX #SCRIPTED_WALK_VERTICAL_STEP_DOWN
     LDA player_vertical_position
     LSR A
     CMP player_walk_target_half_vertical_position
     CLC
     BEQ test_horizontal_difference
     BMI apply_vertical_step
-    LDX #&FE
+    LDX #SCRIPTED_WALK_VERTICAL_STEP_UP
 
 .apply_vertical_step
     STX vertical_step_delta
@@ -4278,7 +4278,7 @@ ORG walk_player_toward_target_position
     LDA player_horizontal_position
     CMP player_walk_target_horizontal_position
     BNE step_horizontally_toward_target
-    LDX #&00
+    LDX #SCRIPTED_WALK_ARRIVAL_FLASH_COUNT
     JSR flash_background_colour_with_sound
 
 .reset_energy_delta_budget_on_arrival
@@ -4314,20 +4314,22 @@ CLEAR walk_player_toward_target_position_source, walk_player_toward_target_posit
 ORG run_startup_room_sequence_until_space
 
 ; Show a repeating sixteen-room startup sequence until
-; Space is pressed. Each complete restart clears zero page $01-$9F and seeds
-; $A2, $89 and the XOR renderer row count. The table at $0CED is read backwards
-; through the byte-before base $0CEC, from indexes sixteen through one; its low
+; Space is pressed. Each complete restart clears the startup zero-page workspace
+; and seeds progress_pattern_pair_count, collected_icon_erase_index and the XOR
+; renderer row count. startup_room_sequence_table is read backwards, from
+; indexes sixteen through one; its low
 ; nibble becomes the primary room reference and its high nibble the secondary.
-; The repeated-add loop also forms high nibble times $78 in $70/$71 before the
+; The repeated-add loop also forms the high nibble times ROOM_LEVEL_MAP_BYTES in
+; level_room_map_offset_low/high before the
 ; the room-draw vector and cross-room robot/ghost initialiser run. Each room is then
-; ticked seventy times. At count $28 the inline VDU stream positions the cursor
+; ticked STARTUP_ROOM_TICK_COUNT times. At STARTUP_PROMPT_TICK the inline VDU stream positions the cursor
 ; and prints " PRESS SPACE "; OSBYTE $81 polls Space after every tick.
-; A pressed key branches to the shared $0C6B exit, which removes the saved X
+; A pressed key branches to discard_two_stack_bytes_and_return, which removes the saved X
 ; and Y values before returning to initialise_new_game. Expiring X advances to
 ; the next packed room; expiring Y restarts the entire sequence.
 .run_startup_room_sequence_until_space_source
-    LDX #&9F
-    LDA #&00
+    LDX #STARTUP_ZERO_PAGE_LAST_OFFSET
+    LDA #STARTUP_ZERO_PAGE_CLEAR_VALUE
 
 .clear_next_startup_zero_page_byte
     STA startup_zero_page_clear_base,X
@@ -4337,14 +4339,14 @@ ORG run_startup_room_sequence_until_space
     STX progress_pattern_pair_count
     DEX
     STX collected_icon_erase_index
-    LDA #&01
+    LDA #STARTUP_XOR_GRAPHIC_ROWS
     STA xor_graphic_character_rows_remaining
-    LDY #&10
+    LDY #STARTUP_ROOM_SEQUENCE_COUNT
 
 .select_next_startup_room
     LDA startup_room_sequence_table-1,Y
     STA startup_packed_room_reference
-    AND #&0F
+    AND #PACKED_ROOM_PRIMARY_MASK
     STA reference_pair_primary_value
     LDA startup_packed_room_reference
     LSR A
@@ -4352,10 +4354,10 @@ ORG run_startup_room_sequence_until_space
     LSR A
     LSR A
     STA reference_pair_secondary_value
-    LDA #&00
+    LDA #STARTUP_ZERO_PAGE_CLEAR_VALUE
     STA level_room_map_offset_low
     STA level_room_map_offset_high
-    LDX #&78
+    LDX #ROOM_LEVEL_MAP_BYTES
 
 .multiply_secondary_reference_by_120
     CLC
@@ -4372,19 +4374,19 @@ ORG run_startup_room_sequence_until_space
     PHA
     JSR enter_draw_and_initialise_room
     JSR enter_initialise_cross_room_robot_ghost_from_record
-    LDX #&46
+    LDX #STARTUP_ROOM_TICK_COUNT
 
 .tick_startup_room
     TXA
     PHA
-    CPX #&28
+    CPX #STARTUP_PROMPT_TICK
     BNE update_startup_room
     JSR print_inline_vdu_stream
 
 .startup_press_space_vdu_stream
-    EQUB VDU_TEXT_AT, &0E, &07
+    EQUB VDU_TEXT_AT, STARTUP_PROMPT_CURSOR_X, STARTUP_PROMPT_CURSOR_Y
     EQUS " PRESS SPACE "
-    EQUB &00
+    EQUB INLINE_VDU_STREAM_TERMINATOR
 
 .update_startup_room
     JSR write_system_clock_via_osword_02
