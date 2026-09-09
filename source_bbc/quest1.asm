@@ -6150,17 +6150,18 @@ ORG set_display_pointer_three_rows_below_player_cell
 
 ; Runtime $2BFE-$2C0D. Set the display pointer three Mode 1 character rows below
 ; the player, first aligning the player pointer down to its cell boundary.
-; $0780 is three character rows; the extra 5 and the AND #&F8 make this the
+; MODE1_THREE_ROWS_BELOW_ALIGNED_OFFSET includes three character rows plus the
+; correction required after applying MODE1_CELL_ALIGNMENT_MASK, making this the
 ; cell-aligned variant of set_display_pointer_three_mode1_rows_below_player,
-; which applies the same $0780 offset without aligning first.
+; which applies the three-row offset without aligning first.
 .set_display_pointer_three_rows_below_player_cell_source
     CLC
     LDA player_display_pointer_low
-    AND #&F8
-    ADC #&85
+    AND #MODE1_CELL_ALIGNMENT_MASK
+    ADC #LO(MODE1_THREE_ROWS_BELOW_ALIGNED_OFFSET)
     STA display_pointer_low
     LDA player_display_pointer_high
-    ADC #&07
+    ADC #HI(MODE1_THREE_ROWS_BELOW_ALIGNED_OFFSET)
     STA display_pointer_high
     RTS
 .set_display_pointer_three_rows_below_player_cell_source_end
@@ -6270,13 +6271,15 @@ CLEAR pick_up_item_below_player_source, pick_up_item_below_player_source_end
 
 ORG draw_curved_bowl_before_alternating_suffix
 
-; Runtime $141D-$1436, room-cell type $06. Draw 7-column blank tiles, one record-$08 tile, then column alternating room tiles, the mirrored layout counterpart of cell type $05.
+; Runtime $141D-$1436, room-cell type $06. Draw blank tiles up to the selected
+; column, one curved-bowl tile, then alternating room tiles. This mirrors the
+; prefix layout below.
 .draw_curved_bowl_before_alternating_suffix_source
-    LDY #&08
+    LDY #GRAPHIC_CURVED_BOWL
     STY temporary_display_byte_7ffb
 .draw_curved_bowl_before_alternating_suffix_body
     TAX
-    LDA #&07
+    LDA #ROOM_COLUMN_LAST
     SEC
     SBC shared_workspace_09
     TAX
@@ -6289,16 +6292,17 @@ ORG draw_curved_bowl_before_alternating_suffix
 
 ORG draw_curved_bowl_after_alternating_prefix
 
-; Runtime $1405-$141C, room-cell type $05. Draw A alternating room tiles, one record-$08 tile, then 7-column blank tiles, placing record $08 at the current room column.
+; Runtime $1405-$141C, room-cell type $05. Draw alternating room tiles up to the
+; selected column, one curved-bowl tile, then the remaining blank tiles.
 .draw_curved_bowl_after_alternating_prefix_source
-    LDY #&08
+    LDY #GRAPHIC_CURVED_BOWL
     STY temporary_display_byte_7ffb
 .draw_curved_bowl_after_alternating_prefix_body
     TAX
     JSR draw_alternating_tile_run
     LDA temporary_display_byte_7ffb
     JSR apply_mirror_flag_then_copy_graphic
-    LDA #&07
+    LDA #ROOM_COLUMN_LAST
     SEC
     SBC shared_workspace_09
     TAX
@@ -6313,17 +6317,13 @@ CLEAR draw_fixed_pair_tile_run_source, draw_fixed_pair_tile_run_source_end
 ORG draw_two_item_slots
 
 ; Runtime $2C6E-$2CE5. Draw the two-slot item display.
-; The $2C6E entry first renders one graphic whose record is selected by the
-; accumulator: the index is shifted left four times and biased by $0E00, which
-; is the sixteen-byte record stride the blitter uses, then XOR-drawn as a single
-; character row five bytes back from the current pointer.
-; The $2CA1 entry walks the two slots at $0C and $0D from the second to the
-; first, drawing each at a fixed screen position, $30 then $D0 in the pointer
-; low byte. A nonzero slot draws two consecutive records through the blitter
-; vector; an empty slot calls $2496 instead. Y is preserved across the whole
-; walk and the routine leaves through $31EB.
-; $2CD8 is a separate three-instruction entry embedded between the two halves,
-; converting a code to an index by subtracting $28 and doubling.
+; The first entry renders the accumulator-selected record from
+; room_and_item_graphic_bank, then XOR-draws it at the fixed backtrack from the
+; aligned item probe pointer. draw_item_slots walks the two carried-item slots
+; from second to first at their fixed status-panel positions. A nonzero slot
+; draws its two-record item graphic; an empty slot draws one blank row. Y is
+; preserved across the whole walk. convert_item_code_to_index is the embedded
+; code-to-record-index entry.
 ; The two slots are compared against by $213C and $342A, and the title program
 ; states that carried objects are shown at the top-right of the screen with a
 ; description. The source-owned pickup routine now proves that matching codes
@@ -6335,9 +6335,9 @@ ORG draw_two_item_slots
     JSR set_display_pointer_three_rows_below_player_cell
     LDA display_pointer_low
     SEC
-    SBC #&05
+    SBC #ITEM_GRAPHIC_POINTER_BACKTRACK
     STA display_pointer_low
-    LDX #&04
+    LDX #ITEM_GRAPHIC_RECORD_SHIFT
 
 .shift_index_to_record_offset
     ASL graphic_source_pointer_low
@@ -6346,31 +6346,31 @@ ORG draw_two_item_slots
     BNE shift_index_to_record_offset
     CLC
     LDA graphic_source_pointer_high
-    ADC #&0E
+    ADC #HI(room_and_item_graphic_bank)
     STA graphic_source_pointer_high
-    LDA #&01
+    LDA #ITEM_GRAPHIC_ROW_COUNT
     STA xor_graphic_character_rows_remaining
     LDA display_pointer_low
     JSR xor_graphic_into_display
-    LDA #&05
+    LDA #ITEM_ACTION_SOUND_DURATION
     STA sound_block_duration
-    LDA #&01
+    LDA #ITEM_ACTION_SOUND_AMPLITUDE
     JSR play_sound_with_amplitude
 
 .draw_item_slots
     TYA
     PHA
-    LDA #&30
+    LDA #ITEM_SLOT_SECOND_DISPLAY_LOW
     STA display_pointer_low
     LDX #ITEM_SLOT_LAST_INDEX
     STX inventory_slot_index
-    LDY #&14
+    LDY #ITEM_SLOT_SECOND_LABEL_CURSOR_Y
 
 .draw_next_item_slot
     LDA item_slot_first,X
-    LDX #&04
+    LDX #ITEM_SLOT_LABEL_CURSOR_X
     JSR print_item_slot_label
-    LDA #&3E
+    LDA #ITEM_SLOT_DISPLAY_HIGH
     STA display_pointer_high
     LDX inventory_slot_index
     LDA item_slot_first,X
@@ -6382,8 +6382,8 @@ ORG draw_two_item_slots
     JSR enter_copy_16_byte_graphic_to_display
 
 .move_to_next_slot_position
-    LDY #&1E
-    LDA #&D0
+    LDY #ITEM_SLOT_FIRST_LABEL_CURSOR_Y
+    LDA #ITEM_SLOT_FIRST_DISPLAY_LOW
     STA display_pointer_low
     DEC inventory_slot_index
     LDX inventory_slot_index
@@ -6419,14 +6419,14 @@ ORG drop_carried_item
 ; Runtime $2CE6-$2D80. The D-control action first requires an enabled state,
 ; a marker found by the player-relative scan, clear placement samples three
 ; rows below, and a player position inside the room. It chooses the second
-; occupied carried-item slot before the first, moves the player upward by the
-; fixed velocity $0C, clears the slot, writes the current room and resulting
+; occupied carried-item slot before the first, moves the player upward by
+; ITEM_DROP_UPWARD_VELOCITY, clears the slot, writes the current room and resulting
 ; player position into that item's four-byte record, and redraws the slots.
-; Items $3A/$3E have the exact additional state gates retained below.
+; The cross and bottle have the additional state gates retained below.
 .drop_carried_item_source
     LDA player_contact_or_damage_flag
     BNE drop_carried_item_unavailable_exit
-    LDA #&32
+    LDA #ITEM_DROP_SOUND_PITCH
     STA sound_block_pitch
     JSR prepare_player_relative_display_scan
     LDA display_grid_column
@@ -6435,7 +6435,7 @@ ORG drop_carried_item
     BCS drop_carried_item_unavailable_exit
     LDA player_vertical_position
     LSR A
-    CMP #&09
+    CMP #ITEM_DROP_MIN_HALF_VERTICAL_POSITION
     BMI drop_carried_item_unavailable_exit
     LDX #ITEM_SLOT_LAST_INDEX
 
@@ -6450,7 +6450,7 @@ ORG drop_carried_item
     STA shared_workspace_34
     TXA
     PHA
-    LDA #&0C
+    LDA #ITEM_DROP_UPWARD_VELOCITY
     STA player_vertical_velocity
     JSR move_player_up_by_velocity
     LDA #&00
@@ -6483,7 +6483,7 @@ ORG drop_carried_item
     LSR A
     LSR A
     CLC
-    ADC #&04
+    ADC #ITEM_RECORD_ROW_BIAS
     STA item_and_goal_record_table,Y
     INY
     LDA player_horizontal_position
@@ -6498,21 +6498,21 @@ ORG drop_carried_item
     CMP #ITEM_CODE_KEY_3
     BNE write_dropped_item_record
     LDA player_vertical_position
-    CMP #&80
+    CMP #CROSS_DROP_REQUIRED_VERTICAL_POSITION
     BNE write_dropped_item_record
-    LDA #&09
+    LDA #CROSS_DROP_EFFECT_COUNTDOWN
     STA timed_effect_countdown
-    LDA #&04
+    LDA #CROSS_DROP_EFFECT_SELECTOR
     STA timed_effect_selector
     JMP write_dropped_item_record
 
 .apply_dropped_item_3e_state
     LDA shared_workspace_4e
-    CMP #&25
+    CMP #ROOM_CELL_HYDROCHLORIC_ACID_SIGN
     BNE write_dropped_item_record
     LDA shared_workspace_9f
     BEQ write_dropped_item_record
-    LDA #&01
+    LDA #SPECIAL_ITEM_ACTIVATED
     STA special_item_3e_activation_flag
     JMP write_dropped_item_record
 .drop_carried_item_source_end
