@@ -1194,7 +1194,7 @@ ORG process_player_cell_interactions
     CMP #ROOM_CELL_HYDROPONICS_SIGN
     BNE player_cell_interactions_rts
     JSR apply_player_damage_and_redraw_energy
-    LDA special_item_3e_activation_flag
+    LDA salt_bottle_activation_flag
     BEQ player_cell_interactions_rts
     LDA #ITEM_CODE_BOTTLE
     JSR consume_matching_item_from_slots
@@ -1570,8 +1570,8 @@ ORG print_item_slot_label
 
 ; Position the VDU cursor at row Y, column X, then print
 ; six bytes from the item-label table. Zero selects offset zero; other ordinary
-; codes use the named item-code bias. The bottle code with an active special-item
-; flag takes the explicit special-label path, which is byte-output-equivalent
+; codes use the named item-code bias. A bottle with salt_bottle_activation_flag
+; set takes the explicit salt-label path, which is byte-output-equivalent
 ; but preserves original flow.
 .print_item_slot_label_source
     PHA
@@ -1585,10 +1585,10 @@ ORG print_item_slot_label
     BEQ print_item_slot_label_zero_code
     CMP #ITEM_CODE_BOTTLE
     BNE print_item_slot_label_ordinary_code
-    LDX special_item_3e_activation_flag
-    CPX #SPECIAL_ITEM_INACTIVE
+    LDX salt_bottle_activation_flag
+    CPX #SALT_BOTTLE_INACTIVE
     BEQ print_item_slot_label_ordinary_code
-    LDY #SPECIAL_ITEM_LABEL_OFFSET
+    LDY #SALT_ITEM_LABEL_OFFSET
     JMP print_item_slot_label_emit
 
 .print_item_slot_label_ordinary_code
@@ -3923,7 +3923,7 @@ ORG initialise_new_game
 
 ; Set up a new game.
 ; Three subroutines run first, then the primary and secondary room references
-; select B0. The special-item flag and level-map offset are cleared, the packed
+; select B0. The salt-bottle activation flag and level-map offset are cleared, the packed
 ; BCD clock is seeded, and the graphic bank selector chooses status graphics.
 ; One load of zero deliberately serves all five adjacent stores; a variant that
 ; displaces part of this sequence must still preserve zero for the remainder.
@@ -3941,7 +3941,7 @@ ORG initialise_new_game
     STA reference_pair_primary_value
     LDA #NEW_GAME_START_LEVEL
     STA reference_pair_secondary_value
-    STA special_item_3e_activation_flag
+    STA salt_bottle_activation_flag
     STA level_room_map_offset_low
     STA level_room_map_offset_high
     LDA #NEW_GAME_CLOCK_LOW_BCD
@@ -6238,7 +6238,7 @@ ORG drop_carried_item
     CMP #ITEM_CODE_CROSS
     BEQ apply_dropped_item_3a_state
     CMP #ITEM_CODE_BOTTLE
-    BEQ apply_dropped_item_3e_state
+    BEQ test_dropped_bottle_salt_activation
 
 .write_dropped_item_record
     PLA
@@ -6278,14 +6278,14 @@ ORG drop_carried_item
     STA timed_effect_selector
     JMP write_dropped_item_record
 
-.apply_dropped_item_3e_state
+.test_dropped_bottle_salt_activation
     LDA room_interaction_code
     CMP #ROOM_CELL_HYDROCHLORIC_ACID_SIGN
     BNE write_dropped_item_record
     LDA slow_damage_countdown
     BEQ write_dropped_item_record
-    LDA #SPECIAL_ITEM_ACTIVATED
-    STA special_item_3e_activation_flag
+    LDA #SALT_BOTTLE_ACTIVATED
+    STA salt_bottle_activation_flag
     JMP write_dropped_item_record
 .drop_carried_item_source_end
 
