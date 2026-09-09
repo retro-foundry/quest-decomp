@@ -2591,31 +2591,34 @@ CLEAR advance_bcd_counter_and_print_source, advance_bcd_counter_and_print_source
 
 ORG shift_four_row_display_block_right
 
-; Runtime $372F-$376E. Across four Mode 1 character rows, shift eight adjacent cells one cell to the right: for each of the eight scanlines copy columns seven down to zero into columns eight down to one, clear column zero, then advance $7C/$7D to the next $0280-byte character row.
+; Across four Mode 1 character rows, shift the eight cells of one room-cell
+; graphic one cell to the right. On each scanline, copy columns seven through
+; zero into columns eight through one, clear column zero, then advance
+; display_pointer by one complete Mode 1 character row.
 .shift_four_row_display_block_right_source
-    LDA #&04
+    LDA #DISPLAY_SHIFT_CHARACTER_ROW_COUNT
     STA display_shift_character_rows_remaining
 
 .shift_next_character_row
-    LDA #&08
+    LDA #MODE1_CHARACTER_SCANLINE_COUNT
     STA display_shift_scanlines_remaining
 
 .shift_next_display_scanline
-    LDX #&08
-    LDY #&38
+    LDX #ROOM_CELL_TILE_COUNT
+    LDY #DISPLAY_SHIFT_LAST_SOURCE_CELL_OFFSET
 
 .copy_next_cell_right
     LDA (display_pointer_low),Y
     PHA
     TYA
     CLC
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     TAY
     PLA
     STA (display_pointer_low),Y
     SEC
     TYA
-    SBC #&10
+    SBC #DISPLAY_SHIFT_REVERSE_CELL_STEP
     TAY
     DEX
     BNE copy_next_cell_right
@@ -2631,10 +2634,10 @@ ORG shift_four_row_display_block_right
     BNE shift_next_display_scanline
     CLC
     LDA display_pointer_low
-    ADC #&78
+    ADC #LO(MODE1_CHARACTER_ROW_BYTES-MODE1_CHARACTER_SCANLINE_COUNT)
     STA display_pointer_low
     LDA display_pointer_high
-    ADC #&02
+    ADC #HI(MODE1_CHARACTER_ROW_BYTES-MODE1_CHARACTER_SCANLINE_COUNT)
     STA display_pointer_high
     DEC display_shift_character_rows_remaining
     BNE shift_next_character_row
@@ -10343,7 +10346,7 @@ ORG set_display_pointer_from_grid_position
     BNE multiply_row_by_character_row
     LDA display_grid_column
     STA display_grid_column_offset_low
-    LDA #&00
+    LDA #ROOM_COLUMN_FIRST
     STA display_grid_column_offset_high
     LDX #&03
 
