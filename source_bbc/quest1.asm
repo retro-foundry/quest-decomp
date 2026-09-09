@@ -1384,9 +1384,9 @@ ORG process_player_cell_interactions
     JSR consume_matching_item_from_slots
     BCS replace_consumed_interaction_cell
     LDA saved_interaction_item_code
-    CMP #&28
+    CMP #ITEM_CODE_KEY_1
     BNE test_pattern_06_interaction
-    LDA #&2C
+    LDA #ITEM_CODE_KEY_3
     JSR consume_matching_item_from_slots
     BCC test_pattern_06_interaction
 
@@ -1407,13 +1407,13 @@ ORG process_player_cell_interactions
     LDA shared_workspace_4e
     CMP #&20
     BNE test_pattern_16_type_21
-    LDA #&36
+    LDA #ITEM_CODE_MOUSE
     JMP consume_pattern_16_required_item
 
 .test_pattern_16_type_21
     CMP #&21
     BNE test_pattern_1a_interaction
-    LDA #&34
+    LDA #ITEM_CODE_HERRING
 
 .consume_pattern_16_required_item
     JSR consume_matching_item_from_slots
@@ -1433,7 +1433,7 @@ ORG process_player_cell_interactions
     JSR apply_player_damage_and_redraw_energy
     LDA special_item_3e_activation_flag
     BEQ player_cell_interactions_rts
-    LDA #&3E
+    LDA #ITEM_CODE_BOTTLE
     JSR consume_matching_item_from_slots
     BCC player_cell_interactions_rts
     LDA #&3C
@@ -1823,7 +1823,7 @@ ORG print_item_slot_label
     JSR OSWRCH
     PLA
     BEQ print_item_slot_label_zero_code
-    CMP #&3E
+    CMP #ITEM_CODE_BOTTLE
     BNE print_item_slot_label_ordinary_code
     LDX special_item_3e_activation_flag
     CPX #&00
@@ -3010,7 +3010,7 @@ ORG run_terminal_interaction
     RTS
 
 .terminal_stream_access_card_marker
-    LDA #&32
+    LDA #ITEM_CODE_ACCESS_CARD
     JSR test_item_code_matches_either_slot
     BCS terminal_access_card_present
     LDX #&3A
@@ -3032,8 +3032,8 @@ CLEAR run_terminal_interaction_source, run_terminal_interaction_source_end
 ORG lift_and_hazard_graphic_descriptor_table
 ; Two pairs of sprite-frame pointers selected by lift/hazard class.
 .lift_and_hazard_graphic_descriptor_table_source
-    EQUW &0EA0, &0EA0 ; LIFT_OR_HAZARD_LIFT: repeated vertical-lift graphic
-    EQUW &04C0, &04E0 ; LIFT_OR_HAZARD_HAZARD: moth-shaped animation frames
+    EQUW vertical_lift_graphic, vertical_lift_graphic ; LIFT_OR_HAZARD_LIFT
+    EQUW runtime_moth_and_hazard_frame_0, runtime_moth_and_hazard_frame_1 ; LIFT_OR_HAZARD_HAZARD
 .lift_and_hazard_graphic_descriptor_table_source_end
 ASSERT lift_and_hazard_graphic_descriptor_table_source = lift_and_hazard_graphic_descriptor_table
 ASSERT lift_and_hazard_graphic_descriptor_table_source_end = match_packed_record_against_references
@@ -3117,21 +3117,21 @@ ORG terminal_activation_records
 ; Eight little-endian destination pointer plus value records. Zero records are
 ; intentional no-op writes through address zero when selected.
 .terminal_activation_records_source
-    EQUW &37FE
+    EQUW room_B0_row_1_cell_1
     EQUB &58
-    EQUW &0000
+    EQUW NULL_POINTER
     EQUB &00
-    EQUW &3C5E
+    EQUW room_B9_row_2_cell_1
     EQUB &3E
-    EQUW &3AAF
+    EQUW room_D6_row_0_cell_0
     EQUB &6E
-    EQUW &0000
+    EQUW NULL_POINTER
     EQUB &00
-    EQUW &397A
+    EQUW room_F3_row_1_cell_1
     EQUB &0A
-    EQUW &0000
+    EQUW NULL_POINTER
     EQUB &00
-    EQUW &0000
+    EQUW NULL_POINTER
     EQUB &00
 .terminal_activation_records_source_end
 ASSERT terminal_activation_records_source = terminal_activation_records
@@ -3256,7 +3256,7 @@ ORG place_initial_map_objects
     STA room_A7_row_2_cell_2
     LDA #&1E
     STA room_E1_row_0_cell_1
-    LDA #&28
+    LDA #ROOM_CELL_ORACLE_SIGN
     STA room_A9_row_1_cell_2
     LDA #&3C
     STA room_F5_row_2_cell_2
@@ -6207,19 +6207,19 @@ ORG pick_up_item_below_player
     INC shared_workspace_03
     INC shared_workspace_03
     LDA shared_workspace_03
-    CMP #&40
+    CMP #ITEM_CODE_END_EXCLUSIVE
     BNE scan_pickup_graphics
     RTS
 
 .pickup_graphic_matched
     LDA shared_workspace_03
     PHA
-    LDX #&38
-    CMP #&36
+    LDX #ITEM_CODE_CHEESE
+    CMP #ITEM_CODE_MOUSE
     BEQ consume_pickup_prerequisite
-    CMP #&34
+    CMP #ITEM_CODE_HERRING
     BNE find_empty_item_slot
-    LDX #&30
+    LDX #ITEM_CODE_WORM
 
 .consume_pickup_prerequisite
     TXA
@@ -6394,7 +6394,7 @@ ORG draw_two_item_slots
 
 .convert_item_code_to_index
     SEC
-    SBC #&28
+    SBC #ITEM_CODE_KEY_1
     ASL A
     TAY
     RTS
@@ -6463,9 +6463,9 @@ ORG drop_carried_item
     STA item_slot_first,X
     LDA shared_workspace_34
     PHA
-    CMP #&3A
+    CMP #ITEM_CODE_CROSS
     BEQ apply_dropped_item_3a_state
-    CMP #&3E
+    CMP #ITEM_CODE_BOTTLE
     BEQ apply_dropped_item_3e_state
 
 .write_dropped_item_record
@@ -6495,7 +6495,7 @@ ORG drop_carried_item
 
 .apply_dropped_item_3a_state
     LDA shared_workspace_4e
-    CMP #&2C
+    CMP #ITEM_CODE_KEY_3
     BNE write_dropped_item_record
     LDA player_vertical_position
     CMP #&80
@@ -7612,11 +7612,11 @@ ORG draw_room_sign_or_collect_password
     STA shared_workspace_4c
 
 .test_password_prompt_cell
-    CMP #&28
+    CMP #ROOM_CELL_ORACLE_SIGN
     BNE select_room_sign_record
-    LDA #&3C
+    LDA #ITEM_CODE_EYE
     JSR test_item_code_matches_either_slot
-    LDA #&28
+    LDA #ROOM_CELL_ORACLE_SIGN
     BCC select_room_sign_record
     LDA #&2D
 
@@ -9699,11 +9699,11 @@ ORG update_and_draw_room_moving_objects
     LDA current_room_cell
     CMP #ROOM_MOVING_OBJECT_FISH
     BNE indexed_xor_require_item_38
-    LDA #&30
+    LDA #ITEM_CODE_WORM
     JMP indexed_xor_test_required_item
 
 .indexed_xor_require_item_38
-    LDA #&38
+    LDA #ITEM_CODE_CHEESE
     JMP indexed_xor_test_required_item
 
 .advance_indexed_xor_graphic
@@ -10140,7 +10140,7 @@ ORG advance_76_77_pointer_by_40
 .advance_76_77_pointer_by_40_source
     CLC
     LDA room_data_pointer_low
-    ADC #&28
+    ADC #ROOM_LEVEL_ROW_PLANE_BYTES
     STA room_data_pointer_low
     BCC &1CA8
     INC room_data_pointer_high
@@ -11070,7 +11070,8 @@ ORG unused_graphic_frame_pointer_words
 ; minimum selector X=$18 starts at runtime $0B77. Their graphic identities are
 ; nevertheless established by decoding the complete sprite bank.
 .unused_graphic_frame_pointer_words_source
-    EQUW &0640, &0660, &06C0, &0720
+    EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
+    EQUW runtime_ghost_frame_0, runtime_ghost_frame_3
 .unused_graphic_frame_pointer_words_source_end
 ASSERT unused_graphic_frame_pointer_words_source = unused_graphic_frame_pointer_words
 
@@ -11079,9 +11080,9 @@ ASSERT unused_graphic_frame_pointer_words_source = unused_graphic_frame_pointer_
 ; renderer advances by $20 and consumes $0520/$0580 as the corresponding middle
 ; record. X=$1C/$1E/$20/$22 selects one of the four single-row lower records.
 .player_graphic_frame_pointer_table_source
-    EQUW &0500, &0560 ; upper records; the following $20 records are the middles
-    EQUW &0540, &05E0 ; player_lower_standing/step_right_frame
-    EQUW &05A0, &05C0 ; player_lower_wide_stride/step_left_frame
+    EQUW runtime_player_upper_facing_right_frame, runtime_player_upper_facing_left_frame
+    EQUW runtime_player_lower_standing_frame, runtime_player_lower_step_right_frame
+    EQUW runtime_player_lower_wide_stride_frame, runtime_player_lower_step_left_frame
 .player_graphic_frame_pointer_table_source_end
 ASSERT player_graphic_frame_pointer_table_source = player_graphic_frame_pointer_table
 ASSERT player_graphic_frame_pointer_table_source_end = &0B83
@@ -11442,10 +11443,13 @@ ORG room_moving_object_pointer_sets
 ; These room-local creature/puzzle graphics are separate from the room-enemy pairs
 ; selected by the descriptor table at $1FDF.
 .room_moving_object_pointer_sets_source
-    EQUW &0400, &0420, &0440, &0460 ; ROOM_MOVING_OBJECT_CATERPILLAR
-    EQUW &06A0, &1140, &06A0, &1140 ; ROOM_MOVING_OBJECT_FISH
-    EQUW &0680, &1160, &0680, &1160 ; ROOM_MOVING_OBJECT_MOUSE
-    EQUW &0EA0, &0EA0, &0EA0, &0EA0 ; ROOM_MOVING_OBJECT_LIFT
+    EQUW runtime_caterpillar_direction_frame_0, runtime_caterpillar_direction_frame_1
+    EQUW runtime_caterpillar_direction_frame_2, runtime_caterpillar_direction_frame_3
+    EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
+    EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
+    EQUW runtime_mouse_facing_right_frame, mouse_facing_left_and_item_graphic_pair
+    EQUW runtime_mouse_facing_right_frame, mouse_facing_left_and_item_graphic_pair
+    EQUW vertical_lift_graphic, vertical_lift_graphic, vertical_lift_graphic, vertical_lift_graphic
 .room_moving_object_pointer_sets_source_end
 ASSERT room_moving_object_pointer_sets_source = room_moving_object_pointer_sets
 ASSERT room_moving_object_pointer_sets_source_end = initialise_room_enemy_from_table
@@ -11650,10 +11654,10 @@ ORG enemy_graphic_descriptor_table
 ; Four decoded graphic pairs selected by room-entity type at $1FB9. The fourth
 ; jellyfish pair is present but no six-byte room record selects it.
 .enemy_graphic_descriptor_table_source
-    EQUW &0480, &04A0 ; bat_wings_raised/lowered_frame
-    EQUW &0640, &0660 ; small_bouncing_robot_frame_0/1
-    EQUW &04C0, &04E0 ; moth_and_hazard_frame_0/1
-    EQUW &0620, &0600 ; jellyfish_frame_0/1 (unselected here)
+    EQUW runtime_bat_wings_raised_frame, runtime_bat_wings_lowered_frame
+    EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
+    EQUW runtime_moth_and_hazard_frame_0, runtime_moth_and_hazard_frame_1
+    EQUW runtime_jellyfish_frame_0, runtime_jellyfish_frame_1 ; unselected here
 .enemy_graphic_descriptor_table_source_end
 ASSERT enemy_graphic_descriptor_table_source = enemy_graphic_descriptor_table
 ASSERT enemy_graphic_descriptor_table_source_end = initialise_lifts_and_hazards_from_table
