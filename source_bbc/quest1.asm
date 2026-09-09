@@ -7573,12 +7573,12 @@ ORG draw_room_sign_or_collect_password
     EQUB VDU_TEXT_COLOUR, &02, VDU_TEXT_COLOUR, &83, VDU_TEXT_AT, &00
 .room_sign_cursor_prefix_end
 
-    LDA shared_workspace_03
+    LDA room_graphics_x_high
     ASL A
     ASL A
     ASL A
     JSR OSWRCH
-    LDA shared_workspace_04
+    LDA room_graphics_y_low
     SEC
     SBC #&01
     JSR OSWRCH
@@ -8915,7 +8915,11 @@ CLEAR print_inline_vdu_stream_source, print_inline_vdu_stream_source_end
 
 ORG configure_and_emit_dynamic_room_object_vdu_stream
 
-; Runtime $19E8-$1A56. Pops the saved room column and returns through the shared cell-handler RTS unless it is column seven. Column seven patches the 21-byte dynamic-room-object VDU stream from the active tile pair and coordinates in $03/$04, reverses its signed step and adjusts the coordinate when $43 is negative, converts the coordinate to the stream format, then emits all 21 bytes through OSWRCH.
+; Runtime $19E8-$1A56. Pops the saved room column and returns through the shared
+; cell-handler RTS unless it is column seven. Column seven patches the dynamic
+; room-object VDU stream from the active tile pair and named graphics coordinates,
+; reverses its signed step when the cell is mirrored, converts the coordinate
+; to VDU units, then emits the complete stream through OSWRCH.
 .configure_and_emit_dynamic_room_object_vdu_stream_source
     PLA
     CMP #&07
@@ -8930,9 +8934,9 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
     NOP
     NOP
     STA dynamic_object_vdu_gcol_action
-    LDA shared_workspace_03
+    LDA room_graphics_x_high
     STA dynamic_object_vdu_first_plot_x_high
-    LDA shared_workspace_04
+    LDA room_graphics_y_low
     STA dynamic_object_vdu_first_plot_y_low
     LDA #&00
     STA dynamic_object_vdu_first_plot_y_high
