@@ -2302,13 +2302,13 @@ ORG dispatch_game_tick_updates
 
 .dispatch_game_tick_updates_branch_5
     LDA timed_effect_selector
-    CMP #&0C
+    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_0C
     BNE dispatch_game_tick_updates_branch_6
     JSR replace_saved_cell_then_play_sound
 
 .dispatch_game_tick_updates_branch_6
     LDA timed_effect_selector
-    CMP #&04
+    CMP #TIMED_EFFECT_SHIFT_SAVED_DISPLAY_BLOCK
     BNE dispatch_game_tick_updates_branch_7
     JSR advance_saved_display_block_shift_effect
 
@@ -2319,7 +2319,7 @@ ORG dispatch_game_tick_updates
 
 .dispatch_game_tick_updates_branch_8
     LDA timed_effect_selector
-    CMP #&14
+    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_14
     BNE dispatch_game_tick_updates_branch_9
     JSR replace_saved_cell_with_14_then_play_sound
 
@@ -2344,7 +2344,7 @@ ORG dispatch_game_tick_updates
     BNE dispatch_game_tick_updates_branch_11
 
 .dispatch_game_tick_updates_branch_12
-    LDA shared_workspace_4c
+    LDA horizontal_band_velocity_effect_state
     LSR A
     BCC dispatch_game_tick_updates_branch_13
     JSR set_velocity_step_from_horizontal_band
@@ -4029,12 +4029,12 @@ ORG set_velocity_step_from_horizontal_band
 ; follows the RTS at $24F4. A room is $4C units wide, so five bands exist and the
 ; table's five entries are $01, $FF, $02, $FE and $03 - alternating sign with
 ; rising magnitude.
-; $4D is the unit both the jet boots and gravity work in, added by the thrust code
+; vertical_velocity_step is the unit both the jet boots and gravity work in, added by the thrust code
 ; and subtracted at $277B, so a negative entry inverts which way the player is
 ; carried while standing still. Bands two and four therefore lift rather than drop.
-; This runs only when bit 0 of $4C is set, tested at $22AD, and
-; draw_and_initialise_room clears $4C for every room, so it is a per-room effect a
-; room has to ask for. It fired on 379 of 3,509 tested frames.
+; This runs only when horizontal_band_velocity_effect_state is odd.
+; draw_and_initialise_room clears that state for every room, so it is a
+; per-room effect a room has to request. It fired on 379 of 3,509 tested frames.
 ; What the effect is called in play is not established. A signed step that
 ; alternates by band is consistent with a current, and the account of the map has
 ; many water rooms, but no trace has been tied to a named room.
@@ -7587,7 +7587,7 @@ ORG draw_room_sign_or_collect_password
     LDA current_room_cell
     CMP #ROOM_CELL_JOKE_SHOP_SIGN
     BNE test_password_prompt_cell
-    STA shared_workspace_4c
+    STA horizontal_band_velocity_effect_state
 
 .test_password_prompt_cell
     CMP #ROOM_CELL_ORACLE_SIGN
@@ -9879,7 +9879,7 @@ ORG draw_and_initialise_room
     STA timed_effect_selector
     STA indexed_xor_erase_previous_graphic
     STA lift_and_hazard_active
-    STA shared_workspace_4c
+    STA horizontal_band_velocity_effect_state
     STA shared_workspace_4e
     STA music_tune_progress
     LDA #&01
