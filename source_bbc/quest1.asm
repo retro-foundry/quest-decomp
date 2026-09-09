@@ -668,9 +668,8 @@ COPYBLOCK room_cell_map_source, room_cell_map_source_end, room_cell_map+HIGH_RUN
 CLEAR room_cell_map_source, room_cell_map_source_end
 
 ORG initial_mode1_display_image
-; Runtime $3C80-$417F / loaded $5480-$597F: initial 1,280-byte Mode 1
-; display image before the loader entry at loaded $5980. It occupies the
-; first $500 bytes of the active screen window and is overwritten by drawing.
+; Initial 1,280-byte Mode 1 display image immediately before the loader. It
+; occupies the start of the active screen window and is overwritten by drawing.
 .initial_mode1_display_image_source
     EQUB &F0, &F0, &F0, &F0, &F0, &F0, &F0, &F0, &F0, &EE, &EE, &EE, &EE, &EE, &EE, &EE
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00
@@ -1958,9 +1957,8 @@ ASSERT copy_graphic_byte_to_display_source = copy_graphic_byte_to_display
 ASSERT copy_graphic_byte_to_display_source_end = load_room_palette_and_tile_pair
 COPYBLOCK copy_graphic_byte_to_display_source, copy_graphic_byte_to_display_source_end, copy_graphic_byte_to_display+HIGH_RUNTIME_TO_LOADED_DELTA
 
-; Runtime $1CE4-$1D68 overlaps the loaded transport image. Its reconstructed
-; bytes are already copied to $34E4-$3568, so release the logical range before
-; filling the original loaded bytes below.
+; Release this aliased logical range after its reconstructed bytes have been
+; copied into the transport image, before filling the original loaded bytes.
 CLEAR copy_16_byte_graphic_to_display_source, copy_graphic_byte_to_display_source_end
 
 ORG run_game_tick_with_player_contact_flag_cleared
@@ -3733,8 +3731,8 @@ CLEAR set_velocity_step_from_horizontal_band_source, set_velocity_step_from_hori
 
 ORG advance_bounded_tick_target
 
-; Runtime $24F9-$252C plus mutable bytes $252D/$252E. Increment the delay
-; counter and return through the preceding routine's RTS until the upper target
+; Increment the delay counter and return through the preceding routine's RTS
+; until the upper target
 ; minus the current target is smaller than the counter. On expiry, clear the
 ; counter and add the signed delta to bounded_tick_target_value. Reaching either
 ; named endpoint reads the interval timer and negates the delta with one's
@@ -3857,8 +3855,8 @@ ORG initialise_new_game
     STA water_environment_flag ; this graphic selector is also WATER_ENVIRONMENT_INACTIVE
     BEQ draw_cleared_icon_slot
 
-; Runtime $0C00-$0C0F is skipped unconditionally by the BEQ above. Its sixteen
-; bytes have the shape and size of one Mode 1 graphic record, but neither the
+; The BEQ above skips this complete aligned Mode 1 record unconditionally.
+; Neither the
 ; static references nor committed traces read it. Preserve that evidence limit
 ; in the name instead of assigning an invented picture or gameplay role.
 .unused_new_game_inline_mode1_record_source_data
@@ -5163,10 +5161,8 @@ COPYBLOCK apply_player_damage_and_redraw_energy_source, apply_player_damage_and_
 CLEAR apply_player_damage_and_redraw_energy_source, apply_player_damage_and_redraw_energy_source_end
 
 ; The two tile-run painters are assembled here rather than in runtime order.
-; Their COPYBLOCK destinations, loaded $2B61-$2BB1, are the same image bytes as
-; which lie inside the region
-; check_player_candidate_bounds_overlap assembles at runtime $2B57-$2B87. The
-; CLEAR above releases that region, so these blocks must follow it.
+; Their COPYBLOCK destinations alias check_player_candidate_bounds_overlap.
+; The CLEAR above releases that region, so these blocks must follow it.
 
 ORG tile_run_shared_rts
 
@@ -7562,8 +7558,6 @@ ASSERT select_graphic_then_xor_draw_source = select_graphic_then_xor_draw
 ASSERT select_graphic_then_xor_draw_source_end = xor_graphic_into_display
 COPYBLOCK select_graphic_then_xor_draw_source, select_graphic_then_xor_draw_source_end, select_graphic_then_xor_draw+HIGH_RUNTIME_TO_LOADED_DELTA
 
-; Runtime $32C5-$32D0 also overlaps the loaded transport image. Release the
-; logical source range after its bytes have been copied to loaded $4AC5-$4AD0.
 CLEAR select_graphic_then_xor_draw_source, select_graphic_then_xor_draw_source_end
 
 ORG play_descending_flash_sequence
@@ -7750,14 +7744,14 @@ ASSERT set_ghost_steps_toward_player_source = set_ghost_steps_toward_player
 ASSERT set_ghost_steps_toward_player_source_end = unused_ghost_update_return
 COPYBLOCK set_ghost_steps_toward_player_source, set_ghost_steps_toward_player_source_end, set_ghost_steps_toward_player+HIGH_RUNTIME_TO_LOADED_DELTA
 
-; Runtime $304F-$3081 overlaps the loaded transport image. Byte $3082 is an
-; unreachable RTS outside Ghidra's function body and remains original-owned.
+; unused_ghost_update_return is outside the lifted function body and remains a
+; separately named, unreachable RTS.
 CLEAR set_ghost_steps_toward_player_source, set_ghost_steps_toward_player_source_end
 
 
 ORG apply_ghost_player_axis_mode
 
-; the second body range of Ghidra function $304F. The
+; the second body range of the same lifted function. The
 ; entry supplies the negative horizontal step. Vertical mode advances until the
 ; ghost reaches player Y, then selects horizontal mode; horizontal mode advances
 ; until player X is reached, then selects vertical mode.
@@ -8427,7 +8421,7 @@ ORG print_inline_vdu_stream
 ; Consume the JSR return address as a little-endian pointer
 ; to the inline VDU stream. Each nonzero byte following the call is sent to
 ; OSWRCH. On the terminator, restore Y and push the terminator's address so RTS
-; resumes at the byte after it. The $17FD page-end checkpoint proves the pointer
+; resumes at the byte after it. The page-end checkpoint proves the pointer
 ; high-byte carry as well as the normal loop and stack-rewritten return.
 .print_inline_vdu_stream_source
     PLA
@@ -10394,7 +10388,7 @@ CLEAR initialise_room_moving_objects_source, initialise_room_moving_objects_sour
 
 ; Named gameplay databases. One EQUB row is one proved record.
 
-; Delay this copy until every routine assembled in loaded $2AA8-$2B60 has
+; Delay this copy until every routine assembled in the aliased destination has
 ; already copied itself elsewhere and released that overlapping runtime area.
 COPYBLOCK dispatch_room_cell_source, dispatch_room_cell_source_end, dispatch_room_cell+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR dispatch_room_cell_source, dispatch_room_cell_source_end
@@ -10595,7 +10589,7 @@ COPYBLOCK cross_room_robot_ghost_frame_pointer_table_source, player_graphic_fram
 CLEAR cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end
 
 ORG interval_timer_block
-; Runtime $0B9B-$0B9F: five-byte MOS interval timer value, replaced by
+; Five-byte MOS interval timer value, replaced by
 ; OSWORD_WRITE_INTERVAL_TIMER.
 .interval_timer_block_source
     EQUB &90, &E8, &FF, &FF, &FF
@@ -10627,11 +10621,10 @@ COPYBLOCK startup_room_sequence_table_source, startup_room_sequence_table_source
 CLEAR startup_room_sequence_table_source, startup_room_sequence_table_source_end
 
 ORG unreachable_runtime_low_tail_jsr
-; Runtime $0CFD-$0CFF / loaded $25FD-$25FF. These are the final three bytes of
-; the loader's proved $0400-$0CFF runtime-low copy, immediately before the
-; intentionally unmapped $0D00-$0DFF gap. They are byte-shaped as JSR $343A,
-; but no static or dynamic entry/xref reaches $0CFD and an RTS would fall into
-; that gap. Preserve them explicitly without promoting an unsupported routine.
+; Final three bytes of the loader's runtime-low copy, immediately before the
+; intentionally unmapped gap. They decode as a JSR, but no static or dynamic
+; entry reaches it and its return would fall into the gap. Preserve them
+; explicitly without promoting an unsupported routine.
 .unreachable_runtime_low_tail_jsr_source
     EQUB &20, &3A, &34
 .unreachable_runtime_low_tail_jsr_source_end
@@ -10694,7 +10687,7 @@ COPYBLOCK room_sign_text_table_source, room_sign_text_table_source_end, room_sig
 CLEAR room_sign_text_table_source, room_sign_text_table_source_end
 
 ORG across_to_password_number
-; Runtime $18AA-$18B1: stored password number carried by each map column.
+; Stored password number carried by each map column.
 .across_to_password_number_source
     EQUB &07, &02, &06, &00, &05, &01, &04, &03
 .across_to_password_number_source_end
@@ -10879,14 +10872,14 @@ ORG room_and_item_graphic_records
     EQUB &F0, &3C, &1E, &0F, &87, &C3, &F0, &FF, &C0, &E0, &F0, &F0, &78, &3C, &E0, &CC
 .fish_facing_left_and_herring_item_graphic_pair
 ; graphic records &34-&35: fish facing left; used both as the inventory herring
-; graphic and as the left-facing partner of fish_facing_right_frame at $06A0
+; graphic and as the left-facing partner of fish_facing_right_frame
 ; graphic record &34
     EQUB &00, &01, &03, &07, &0F, &00, &03, &00, &07, &0F, &C3, &C3, &0F, &03, &0F, &07
 ; graphic record &35
     EQUB &08, &0E, &0F, &0F, &0F, &0F, &0E, &08, &01, &03, &16, &0F, &2D, &16, &03, &01
 .mouse_facing_left_and_item_graphic_pair
 ; graphic records &36-&37: mouse facing left; used both as the inventory mouse
-; graphic and as the left-facing partner of mouse_facing_right_frame at $0680
+; graphic and as the left-facing partner of mouse_facing_right_frame
 ; graphic record &36
     EQUB &33, &33, &11, &23, &FF, &00, &00, &11, &00, &33, &FF, &FF, &FF, &77, &CC, &00
 ; graphic record &37
@@ -10987,7 +10980,7 @@ ORG room_moving_object_pointer_sets
 ; the caterpillar's two right/left animation phases; the fish's right- and left-facing graphics;
 ; the mouse's right- and left-facing graphics; and the vertical lift graphic.
 ; These room-local creature/puzzle graphics are separate from the room-enemy pairs
-; selected by the descriptor table at $1FDF.
+; selected by enemy_graphic_descriptor_table.
 .room_moving_object_pointer_sets_source
 .caterpillar_graphic_pointer_set
     EQUW runtime_caterpillar_facing_right_phase_0_frame, runtime_caterpillar_facing_left_phase_0_frame
@@ -11133,7 +11126,7 @@ COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, ro
 CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
 
 ORG cross_room_robot_ghost_record_table
-; Runtime $0A78-$0A95: ten per-level cross-room robot/ghost records, one per level.
+; Ten per-level cross-room robot/ghost records, one per level.
 ; These are separate from the room-enemy table. Levels 0-7 select the small
 ; bouncing robot frames; levels 8-9 select the ghost frames. Only those two
 ; enemy classes use this cross-room subsystem. Bats, moths, jellyfish, fish,
@@ -11188,8 +11181,8 @@ COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_
 CLEAR lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end
 
 ORG unused_runtime_low_tail_bytes
-; loaded $23FA-$23FF. These six bytes lie after the exact
-; twenty-record entity table and before the independent JMP entry at $0B00.
+; These six bytes lie after the exact twenty-record entity table and before
+; relocated_game_entry.
 ; No static or committed dynamic reference reads or executes them, so they are
 ; retained as proved-unused boundary data rather than invented as a twenty-first
 ; entity record or false instructions.
@@ -11212,7 +11205,7 @@ COPYBLOCK graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_
 CLEAR graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_source_end
 
 ORG enemy_graphic_descriptor_table
-; Four decoded graphic pairs selected by room-entity type at $1FB9. The fourth
+; Four decoded graphic pairs selected by initialise_room_enemy_from_table. The fourth
 ; jellyfish pair is present but no six-byte room record selects it.
 .enemy_graphic_descriptor_table_source
 .bat_graphic_descriptor
@@ -11401,9 +11394,9 @@ COPYBLOCK relocation_loader_source, relocation_loader_source_end, loader_initial
 CLEAR relocation_loader_source, relocation_loader_source_end
 
 
-; Loaded $5A9E-$5AFF. Literal dormant message immediately after the loader,
-; followed by six zero bytes. The high relocation also copies these bytes to
-; display RAM $429E-$42FF; no code or pointer reference to the text is known.
+; Literal dormant message immediately after the loader, followed by six zero
+; bytes. The high relocation also copies it into display RAM; no code or
+; pointer reference to the text is known.
 ORG EMBEDDED_MESSAGE_SOURCE_STAGING_ADDRESS
 .embedded_mountaineering_message_source
     EQUS "e Mountaineering Club.'Swing out Sister for Break-out. And goodluck Sally were ever you are!"
@@ -11414,10 +11407,10 @@ COPYBLOCK embedded_mountaineering_message_source, embedded_mountaineering_messag
 CLEAR embedded_mountaineering_message_source, embedded_mountaineering_message_source_end
 
 
-; Loaded $5B00-$5B0E, copied verbatim to $0100 before gameplay. X selects one
-; of the payload offsets. Each byte is XORed with the corresponding byte at
-; $7000,X and sent to OSWRCH; a zero XOR result terminates the tail-called
-; stream and returns directly to the caller of the $328F dispatcher.
+; Copied verbatim to transient_xor_message_decoder before gameplay. X selects
+; one payload offset. Each byte is XORed with the corresponding display sample
+; and sent to OSWRCH; a zero result terminates the tail-called stream and
+; returns directly to the caller of dispatch_completed_crystal_message.
 ORG transient_xor_message_decoder
 .transient_xor_message_decoder_source
 .decode_transient_xor_message_byte
@@ -11469,9 +11462,8 @@ COPYBLOCK irq_workspace_prefix_source, irq_workspace_prefix_source_end, chained_
 CLEAR irq_workspace_prefix_source, irq_workspace_prefix_source_end
 
 
-; Loaded $5C10 is the final byte copied by the loader to IRQ workspace $03E0.
-; It is a zero immediately after the installed handler, not part of the DFS
-; entry which starts at the catalogue execution address $5C11.
+; Final byte copied by the loader to the IRQ workspace. It is a zero immediately
+; after the installed handler, not part of dfs_execution_entry_stub.
 ORG IRQ_RELOCATION_TRAILING_ZERO_ADDRESS
 .irq_relocation_trailing_zero_source
     EQUB IRQ_RELOCATION_TRAILING_VALUE
@@ -11481,9 +11473,8 @@ COPYBLOCK irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_sour
 CLEAR irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end
 
 
-; Loaded-only DFS execution stub at $5C11-$5C1F. This code is outside every
-; relocated runtime segment. It makes the two observed MOS OSBYTE calls with
-; A=$E1/X=0 and A=$8C, then transfers control to the loader at $5980.
+; Loaded-only DFS execution stub outside every relocated runtime segment. It
+; makes the two named MOS OSBYTE calls, then transfers control to the loader.
 ORG DFS_STUB_SOURCE_STAGING_ADDRESS
 .dfs_execution_entry_stub_source
     LDA #OSBYTE_READ_KEYBOARD_STATUS
@@ -11500,7 +11491,7 @@ CLEAR dfs_execution_entry_stub_source, dfs_execution_entry_stub_source_end
 
 
 ; Install the two staged XOR graphic-bank parts only after every relocated
-; routine that assembles in the aliased $1D00-$217F address window is finished.
+; routine that assembles in the aliased destination window is finished.
 COPYBLOCK player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end, player_enemy_and_lift_xor_sprite_frames+LOW_RUNTIME_TO_LOADED_DELTA
 COPYBLOCK inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end, inert_xor_sprite_frame_block+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end
@@ -11509,8 +11500,8 @@ CLEAR inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end
 
 
 ; Complete source-owned transport image. No generated layout include or binary
-; authority slice is required: every byte from $1D00 through $5C1F has been
-; emitted above by source assembly/data and COPYBLOCK.
+; authority slice is required: the complete QUEST1 payload has been emitted
+; above by source assembly/data and COPYBLOCK.
 ORG QUEST1_LOAD_ADDRESS
 .quest1_load_start
 ORG QUEST1_LOAD_END_EXCLUSIVE
