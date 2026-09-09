@@ -235,10 +235,9 @@
 ;          across room boundaries: at horizontal $4D the column increments and
 ;          the position resets to zero, at a negative position the column
 ;          decrements and the position becomes $4C, and the deltas reverse at
-;          columns 0 and 7. So a pair roams along a whole level rather than
-;          sitting in one room, which is why suppressing its renderer $2EAA
-;          once appeared to do nothing: whether one is in the room being watched
-;          depends on where it has roamed to.
+;          columns 0 and 7. This proves that the pair can transition between
+;          room columns; it does not prove that the objects are enemies or
+;          identify their graphics.
 ;
 ;   $0A96  lift_and_hazard_room_record_table, twenty five-byte records selecting
 ;          either the vertical-lift graphic or the damaging moth-shaped frames.
@@ -1045,7 +1044,7 @@ ORG irq1v_handler
     BNE await_stable_raster_position
     LDA lower_screen_palette_base
     ORA #&A0
-    JSR &1269
+    JSR write_four_video_ula_palette_entries
 
 .restore_and_chain_to_previous_irq1v
     PLA
@@ -1057,18 +1056,18 @@ ORG irq1v_handler
 .write_sixteen_entry_palette_set
     LDA #&00
     PHA
-    JSR &1269
+    JSR write_four_video_ula_palette_entries
     PLA
     PHA
     ORA #&A0
-    JSR &1269
+    JSR write_four_video_ula_palette_entries
     PLA
     PHA
     ORA #&20
-    JSR &1269
+    JSR write_four_video_ula_palette_entries
     PLA
     ORA #&80
-    JSR &1269
+    JSR write_four_video_ula_palette_entries
     JMP restore_and_chain_to_previous_irq1v
 .irq1v_handler_source_end
 
@@ -2175,7 +2174,7 @@ ORG update_and_draw_room_enemies
     LDA shared_workspace_31
     STA secondary_entity_runtime_block,Y
     LDA shared_workspace_32
-    STA &123B,Y
+    STA enemy_vertical_delta,Y
     JMP move_indexed_entity_on_both_axes
 
 .clamp_indexed_entity_horizontal_delta
@@ -2561,7 +2560,7 @@ ORG advance_bcd_counter_and_print
     JMP print_bcd_counter
 
 .store_bcd_counter_state_at_3842
-    STA &3842
+    STA room_G0_row_2_cell_4
 
 .print_bcd_counter
     JSR print_inline_vdu_stream
@@ -2723,11 +2722,11 @@ ORG initialise_room_enemy_from_table
     ASL A
     ASL A
     ASL A
-    STA &1237
+    STA enemy_vertical_lower_limit
     STA primary_entity_runtime_block
     INY
     LDA room_enemy_record_table,Y
-    STA &1236
+    STA enemy_horizontal_lower_limit
     CLC
     ADC #&0A
     STA shared_workspace_0b
@@ -2745,15 +2744,15 @@ ORG initialise_room_enemy_from_table
     ASL A
     ASL A
     ASL A
-    STA &1233
+    STA enemy_initial_vertical_position
     LDA room_enemy_record_table,Y
     ASL A
     ASL A
     ASL A
-    STA &1238
+    STA enemy_vertical_upper_limit
     INY
     LDA room_enemy_record_table,Y
-    STA &1235
+    STA enemy_horizontal_upper_limit
     SEC
     SBC #&06
     STA shared_workspace_0b
@@ -2786,7 +2785,7 @@ ORG initialise_room_enemy_from_table
 .seed_entity_deltas
     TXA
     STA room_tick_update_selector,X
-    STA &123B,X
+    STA enemy_vertical_delta,X
     INX
     CPX #&03
     BNE seed_entity_deltas
@@ -2906,6 +2905,7 @@ ORG initialise_lifts_and_hazards_from_table
     LDA #&02
     STA shared_workspace_20
     STA shared_workspace_22
+.copy_lift_or_hazard_descriptor_for_active_class
     LDA active_lift_or_hazard_class
     ASL A
     ASL A
@@ -2943,7 +2943,7 @@ ORG run_terminal_interaction
     LDA reference_pair_primary_value
     CLC
     ADC #&31
-    STA &21A2
+    STA terminal_number_character
     LDA reference_pair_primary_value
     PHA
     LDA reference_pair_secondary_value
@@ -3218,52 +3218,52 @@ ORG place_initial_map_objects
 ; closed.
 .place_initial_map_objects_source
     LDA #&0B
-    STA &37FD
-    STA &3889
-    STA &3912
-    STA &38FD
-    STA &3983
-    STA &3945
-    STA &39D5
-    STA &3A72
-    STA &3AC2
-    STA &3B75
-    STA &3C29
-    STA &3C5F
+    STA room_B0_row_1_cell_0
+    STA room_F1_row_1_cell_0
+    STA room_A2_row_2_cell_2
+    STA room_E2_row_1_cell_1
+    STA room_H3_row_1_cell_0
+    STA room_C3_row_0_cell_3
+    STA room_H4_row_0_cell_2
+    STA room_G5_row_1_cell_4
+    STA room_G6_row_0_cell_4
+    STA room_C7_row_2_cell_3
+    STA room_G9_row_0_cell_3
+    STA room_B9_row_2_cell_2
     LDA #&14
-    STA &3842
-    STA &3888
-    STA &3982
+    STA room_G0_row_2_cell_4
+    STA room_E1_row_1_cell_4
+    STA room_G3_row_1_cell_4
     LDX #&07
-    STX &39DA
-    STX &3ACB
-    STX &37FC
+    STX room_A4_row_1_cell_2
+    STX room_A6_row_1_cell_3
+    STX room_A0_row_1_cell_4
     INX
-    STX &3BFC
+    STX room_F8_row_2_cell_3
     LDA #&11
-    STA &390C
-    STA &3A87
+    STA room_H2_row_1_cell_1
+    STA room_D5_row_2_cell_0
     LDA #&39
-    STA &390E
-    STA &3A95
-    STA &3A89
+    STA room_H2_row_1_cell_3
+    STA room_F5_row_2_cell_4
+    STA room_D5_row_2_cell_2
     LDA #&32
-    STA &397A
-    STA &397C
+    STA room_F3_row_1_cell_1
+    STA room_F3_row_1_cell_3
     LDA #&6F
-    STA &3A11
-    STA &3AFC
-    STA &3B6A
+    STA room_D4_row_2_cell_2
+    STA room_C6_row_2_cell_2
+    STA room_A7_row_2_cell_2
     LDA #&1E
-    STA &385D
+    STA room_E1_row_0_cell_1
     LDA #&28
-    STA &3C32
+    STA room_A9_row_1_cell_2
     LDA #&3C
-    STA &3A93
+    STA room_F5_row_2_cell_2
     LDA #&39
-    STA &3AAF
+    STA room_D6_row_0_cell_0
     LDA #&3F
-    STA &3C5E
+    STA room_B9_row_2_cell_1
     RTS
 .place_initial_map_objects_source_end
 
@@ -3335,7 +3335,7 @@ ORG advance_record_counter_then_dispatch
     INC shared_workspace_29
     LDA shared_workspace_29
     STA shared_workspace_34
-    JMP &22DE
+    JMP update_lift_or_hazard_from_preselected_slot
 .advance_record_counter_then_dispatch_source_end
 
 ASSERT advance_record_counter_then_dispatch_source = advance_record_counter_then_dispatch
@@ -3428,6 +3428,7 @@ ORG update_lift_and_hazard_slots
     LDA shared_workspace_28
     STA shared_workspace_34
     LDY #&00
+.update_lift_or_hazard_from_preselected_slot
     JSR draw_lift_or_hazard_without_slot_check
     JSR update_one_lift_or_hazard
     JSR update_one_lift_or_hazard
@@ -3509,26 +3510,26 @@ ORG apply_moving_entity_to_player
 .apply_moving_entity_to_player_source
     TYA
     PHA
-    LDA &0018,Y
+    LDA moving_entity_delta,Y
     CMP #&FE
     BNE entity_descending
-    LDA &0051,Y
+    LDA moving_entity_display_pointer_low,Y
     STA display_pointer_low
-    LDA &0052,Y
+    LDA moving_entity_display_pointer_high,Y
     STA display_pointer_high
     JSR adjust_display_pointer_then_scan_markers
     JSR test_lift_or_hazard_hit_player
     BNE restore_y_and_exit
     LDA #&01
-    JSR &28AE
+    JSR step_up_by_count
     JMP test_overlap_damage
 
 .entity_descending
     CLC
-    LDA &0051,Y
+    LDA moving_entity_display_pointer_low,Y
     ADC #&80
     STA display_pointer_low
-    LDA &0052,Y
+    LDA moving_entity_display_pointer_high,Y
     ADC #&02
     STA display_pointer_high
     JSR scan_four_display_bytes_for_markers
@@ -3577,7 +3578,7 @@ ORG reverse_lift_or_hazard_delta_at_limits
 .reverse_lift_or_hazard_delta_at_limits_source
     LDA #&01
     STA shared_workspace_75
-    LDA &0019,Y
+    LDA moving_entity_position,Y
     AND #&FE
     CMP lift_or_hazard_lower_position
     BEQ set_lift_or_hazard_delta_positive
@@ -3589,7 +3590,7 @@ ORG reverse_lift_or_hazard_delta_at_limits
     LDA #&02
 
 .store_lift_or_hazard_delta
-    STA &0018,Y
+    STA moving_entity_delta,Y
     RTS
 
 .set_lift_or_hazard_delta_negative
@@ -3621,21 +3622,21 @@ ORG advance_lift_or_hazard_vertical_position
 ; The $75 it clears is the flag reverse_lift_or_hazard_delta_at_limits sets on
 ; entry, so the clamp and the step bracket each other.
 .advance_lift_or_hazard_vertical_position_source
-    LDA &0019,Y
+    LDA moving_entity_position,Y
     STA indexed_pair_output_half_offset
-    LDA &0018,Y
+    LDA moving_entity_delta,Y
     STA vertical_step_delta
-    LDA &0051,Y
+    LDA moving_entity_display_pointer_low,Y
     STA vertical_step_pointer_low
-    LDA &0052,Y
+    LDA moving_entity_display_pointer_high,Y
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
     LDA indexed_pair_output_half_offset
-    STA &0019,Y
+    STA moving_entity_position,Y
     LDA vertical_step_pointer_low
-    STA &0051,Y
+    STA moving_entity_display_pointer_low,Y
     LDA vertical_step_pointer_high
-    STA &0052,Y
+    STA moving_entity_display_pointer_high,Y
     LDA #&00
     STA shared_workspace_75
     RTS
@@ -3679,7 +3680,7 @@ ORG xor_draw_lift_or_hazard
     LDA active_lift_or_hazard_class
     LSR A
     BCC single_row_lift_or_hazard
-    LDA &0019,Y
+    LDA moving_entity_position,Y
     LSR A
     LSR A
     LSR A
@@ -3699,9 +3700,9 @@ ORG xor_draw_lift_or_hazard
 
 .draw_lift_or_hazard_at_pointer
     STA xor_graphic_character_rows_remaining
-    LDA &0052,Y
+    LDA moving_entity_display_pointer_high,Y
     STA display_pointer_high
-    LDA &0051,Y
+    LDA moving_entity_display_pointer_low,Y
     JMP select_graphic_then_xor_draw
 .xor_draw_lift_or_hazard_source_end
 
@@ -3957,7 +3958,7 @@ ORG update_lift_or_hazard_by_class
     LDA active_lift_or_hazard_class
     CMP #LIFT_OR_HAZARD_HAZARD
     BNE push_player_with_entity
-    LDA &0019,Y
+    LDA moving_entity_position,Y
     LSR A
     STA indexed_pair_output_half_offset
     SEC
@@ -5356,7 +5357,7 @@ ORG process_terminal_password_markers
     CPX #&05
     BNE activate_terminal_password
     LDA #&0A
-    STA &397C
+    STA room_F3_row_1_cell_3
 
 .activate_terminal_password
     JSR write_indexed_terminal_activation_value
@@ -5737,7 +5738,7 @@ ORG enter_room_to_the_right
     LDA player_display_pointer_high
     SBC #&02
     STA player_display_pointer_high
-    JSR &1211
+    JSR increment_reference_then_draw_and_initialise_room
     JMP xor_draw_player_two_parts
 .enter_room_to_the_right_source_end
 
@@ -5934,7 +5935,7 @@ ORG enter_room_to_the_left
     LDA player_display_pointer_high
     ADC #&02
     STA player_display_pointer_high
-    JSR &120C
+    JSR decrement_reference_then_draw_and_initialise_room
     JMP xor_draw_player_two_parts
 .enter_room_to_the_left_source_end
 
@@ -5972,7 +5973,7 @@ ORG enter_room_below
     STA player_display_pointer_high
     LDA #&00
     STA player_vertical_position
-    JSR &1209
+    JSR enter_advance_secondary_reference_and_pointer
     JSR xor_draw_player_two_parts
     LDA reference_pair_secondary_value
     CMP #&08
@@ -6018,7 +6019,7 @@ ORG enter_room_above
     LDA player_display_pointer_high
     ADC #&7D
     STA player_display_pointer_high
-    JSR &1203
+    JSR enter_retreat_secondary_reference_and_pointer
     INC player_vertical_velocity
     JMP xor_draw_player_two_parts
 .enter_room_above_source_end
@@ -6272,14 +6273,15 @@ ORG draw_curved_bowl_before_alternating_suffix
 ; Runtime $141D-$1436, room-cell type $06. Draw 7-column blank tiles, one record-$08 tile, then column alternating room tiles, the mirrored layout counterpart of cell type $05.
 .draw_curved_bowl_before_alternating_suffix_source
     LDY #&08
-    STY &7FFB
+    STY temporary_display_byte_7ffb
+.draw_curved_bowl_before_alternating_suffix_body
     TAX
     LDA #&07
     SEC
     SBC shared_workspace_09
     TAX
     JSR draw_blank_tile_run
-    LDA &7FFB
+    LDA temporary_display_byte_7ffb
     JSR apply_mirror_flag_then_copy_graphic
     LDX shared_workspace_09
     JMP draw_alternating_tile_run
@@ -6290,10 +6292,11 @@ ORG draw_curved_bowl_after_alternating_prefix
 ; Runtime $1405-$141C, room-cell type $05. Draw A alternating room tiles, one record-$08 tile, then 7-column blank tiles, placing record $08 at the current room column.
 .draw_curved_bowl_after_alternating_prefix_source
     LDY #&08
-    STY &7FFB
+    STY temporary_display_byte_7ffb
+.draw_curved_bowl_after_alternating_prefix_body
     TAX
     JSR draw_alternating_tile_run
-    LDA &7FFB
+    LDA temporary_display_byte_7ffb
     JSR apply_mirror_flag_then_copy_graphic
     LDA #&07
     SEC
@@ -6895,7 +6898,7 @@ ORG replace_saved_cell_then_play_sound
     ADC #&00
     STA display_pointer_high
     LDX #&04
-    JSR &249A
+    JSR draw_next_record_row
     LDA #&0A
     STA sound_block_duration
     LDA #&64
@@ -6973,15 +6976,14 @@ ORG initialise_indexed_pair_from_record
 ; initialises two objects. advance_indexed_pair_value_and_display_pointer then
 ; carries them across room boundaries - at horizontal $4D the column increments
 ; and the position resets to zero, below zero the column decrements and the
-; position becomes $4C, and the deltas reverse at columns 0 and 7. So a pair
-; roams along a whole level rather than belonging to one room, which makes it
-; the candidate for the horizontally moving platforms.
+; position becomes $4C, and the deltas reverse at columns 0 and 7. This proves
+; cross-column movement, but not that these objects are enemies or horizontal
+; platforms. Their visual and gameplay identity remains unresolved.
 ;
 ; That also explains a failed experiment. Suppressing this class's renderer,
 ; draw_indexed_pair_if_reference_matches, appeared to leave the horizontal
-; platforms untouched. It would: whether one is in the room being watched
-; depends on where along the level it has roamed to, so a single room and a
-; single moment prove nothing either way.
+; platforms untouched. Because the indexed pair can move between columns, a
+; single room and a single moment cannot identify the rendered objects.
 .initialise_indexed_pair_from_record_source
     LDA reference_pair_secondary_value
     ASL A
@@ -6990,7 +6992,7 @@ ORG initialise_indexed_pair_from_record
     LDA #&01
     STA indexed_pair_value_delta_field
     LDA #&FF
-    STA &222E
+    STA indexed_pair_secondary_delta_slot_1
     LDA #&01
     LDX #&03
 
@@ -7007,13 +7009,13 @@ ORG initialise_indexed_pair_from_record
     AND #&FC
     STA indexed_pair_positive_delta_threshold
     STA indexed_pair_value_field
-    STA &2231
+    STA indexed_pair_runtime_value_slot_0
     STA shared_workspace_0b
     INY
     LDA indexed_pair_record_table,Y
     AND #&07
     STA indexed_pair_negative_delta_selector
-    STA &222D
+    STA indexed_pair_secondary_delta_slot_0
     LDA indexed_pair_record_table,Y
     LSR A
     AND #&FC
@@ -7028,7 +7030,7 @@ ORG initialise_indexed_pair_from_record
     SEC
     SBC #&08
     STA indexed_pair_offset_field
-    STA &2232
+    STA indexed_pair_runtime_value_slot_1
     JSR display_action_jump_table
     LDA display_pointer_low
     STA indexed_pair_display_pointer_low
@@ -7128,7 +7130,7 @@ ORG draw_record_08_or_edge_pattern_row
 .draw_record_08_or_edge_pattern_row_source
     CMP #&06
     BNE select_cell_12_last_column
-    JMP &1545
+    JMP draw_column_sensitive_room_patterns_branch_4
 
 .select_cell_12_last_column
     CMP #&07
@@ -7140,7 +7142,7 @@ ORG draw_record_08_or_edge_pattern_row
 .draw_column_gated_58_59_pair_row_source
     CMP #&02
     BMI draw_58_59_pair_or_edge_pattern_row
-    JSR &12C4
+    JSR mirror_cell_direction
 
 .draw_58_59_pair_or_edge_pattern_row_source
     LDX #&08
@@ -7152,7 +7154,7 @@ ORG draw_record_08_or_edge_pattern_row
     STY active_tile_pair_first
     INY
     STY active_tile_pair_second
-    JMP &13E0
+    JMP draw_selected_fixed_pair_run
 
 .draw_alternating_row_from_cell_12_13
     JMP draw_eight_alternating_tiles
@@ -8569,13 +8571,13 @@ ORG draw_blank_marker_and_column_gated_rows
 ; Runtime $19AA-$19E7. This contiguous room-cell handler cluster contains the two mirrored blank-marker layouts and cell types $36-$3A. Cells $36/$37 draw alternating rows only in columns three-or-seven / column three; $38 uses only column seven; $39 uses columns four-seven. Cell $3A optionally saves the cell/display pointers in column four, draws a blank row, then leaves A stacked for the shared $19E8 continuation. Natural room traces cover the marker, $38-$3A and shared alternating tails; focused real-dispatch fixtures cover every $36/$37 comparison and outcome with exact authority/rebuild parity.
 .draw_blank_marker_and_column_gated_rows_source
     LDY #&00
-    STY &7FFB
-    JMP &1422
+    STY temporary_display_byte_7ffb
+    JMP draw_curved_bowl_before_alternating_suffix_body
 
 .draw_blank_marker_after_alternating_prefix_source
     LDY #&00
-    STY &7FFB
-    JMP &140A
+    STY temporary_display_byte_7ffb
+    JMP draw_curved_bowl_after_alternating_prefix_body
 
 .draw_alternating_only_in_columns_three_or_seven_source
     CMP #&03
@@ -8748,7 +8750,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     BNE draw_next_dynamic_room_object_tile
     LDA #&00
     STA lift_and_hazard_slot_limit
-    JSR &206D
+    JSR copy_lift_or_hazard_descriptor_for_active_class
     LDA display_pointer_low
     PHA
     LDA display_pointer_high
@@ -9051,11 +9053,11 @@ ORG stamp_map_bytes_and_store
 ; than filling a range. What $69 means at those addresses is not established by
 ; this routine alone.
 .stamp_map_bytes_and_store_source
-    STA &37FE
+    STA room_B0_row_1_cell_1
     LDA #&69
-    STA &09D3
-    STA &09E2
-    STA &09E8
+    STA room_D4_appearance
+    STA room_C6_appearance
+    STA room_A7_appearance
     RTS
 .stamp_map_bytes_and_store_source_end
 
@@ -9409,10 +9411,10 @@ ORG play_sound_with_amplitude
 .play_sound_with_amplitude_source
     STA sound_block_amplitude
     LDA #&00
-    STA &32A3
+    STA sound_block_amplitude_high
     LDA #&12
     STA sound_block_channel
-    JMP &3363
+    JMP submit_sound_block
 .play_sound_with_amplitude_source_end
 
 ASSERT play_sound_with_amplitude_source = play_sound_with_amplitude
@@ -9463,7 +9465,7 @@ ORG submit_sound_block_with_pitch
     LDA #&10
     STA sound_block_channel
     LDA #&FF
-    STA &32A3
+    STA sound_block_amplitude_high
     LDA #&F1
     STA sound_block_amplitude
     LDA #&01
@@ -9629,7 +9631,7 @@ ORG play_note_for_position_and_test_tune
     CMP #&04
     BNE submit_sound_block_rts
     LDA #&2D
-    STA &385D
+    STA room_E1_row_0_cell_1
     RTS
 
 .test_note_still_held
@@ -9762,17 +9764,17 @@ ORG initialise_four_dynamic_room_object_slots
 .initialise_next_dynamic_object_slot
     CLC
     LDA display_pointer_low
-    STA &0051,Y
+    STA moving_entity_display_pointer_low,Y
     ADC #&20
     STA display_pointer_low
     LDA display_pointer_high
-    STA &0052,Y
+    STA moving_entity_display_pointer_high,Y
     ADC #&00
     STA display_pointer_high
     LDA #&FE
-    STA &0018,Y
+    STA moving_entity_delta,Y
     LDA #&00
-    STA &0019,Y
+    STA moving_entity_position,Y
     INY
     INY
     CPY #&0A
@@ -10278,7 +10280,7 @@ ORG advance_indexed_entity_with_collision_checks
 ; its signed horizontal direction, reverse that direction if the next column is
 ; also blocked, and tail-transfer to the horizontal mover.
 .advance_indexed_entity_with_collision_checks_source
-    LDA &123B,Y
+    LDA enemy_vertical_delta,Y
     CMP #&02
     BNE probe_indexed_entity_vertical_path
     JSR scan_markers_below_indexed_entry
@@ -10609,9 +10611,9 @@ ORG reverse_indexed_123a_delta_at_limits
 ; one turns it back at the end of its patrol.
 .reverse_indexed_123a_delta_at_limits_source
     LDA shared_workspace_68,Y
-    CMP &1236
+    CMP enemy_horizontal_lower_limit
     BMI set_indexed_123a_delta_positive
-    CMP &1235
+    CMP enemy_horizontal_upper_limit
     BPL set_indexed_123a_delta_negative
     RTS
 
@@ -10698,9 +10700,9 @@ ORG reverse_indexed_123b_delta_at_limits
 .reverse_indexed_123b_delta_at_limits_source
     LDA primary_entity_runtime_block,Y
     AND #&FE
-    CMP &1237
+    CMP enemy_vertical_lower_limit
     BEQ set_indexed_123b_delta_positive
-    CMP &1238
+    CMP enemy_vertical_upper_limit
     BEQ set_indexed_123b_delta_negative
     RTS
 
@@ -10708,7 +10710,7 @@ ORG reverse_indexed_123b_delta_at_limits
     LDA #&02
 
 .store_indexed_123b_delta
-    STA &123B,Y
+    STA enemy_vertical_delta,Y
     RTS
 
 .set_indexed_123b_delta_negative
@@ -10742,7 +10744,7 @@ ORG advance_indexed_entity_vertical_position
 .advance_indexed_entity_vertical_position_source
     LDA primary_entity_runtime_block,Y
     STA indexed_pair_output_half_offset
-    LDA &123B,Y
+    LDA enemy_vertical_delta,Y
     STA vertical_step_delta
     LDA shared_workspace_47,Y
     STA vertical_step_pointer_low
@@ -10914,10 +10916,10 @@ ORG initialise_room_moving_objects
     BNE copy_indexed_xor_graphic_pointers
     LDA #&01
     STA indexed_xor_graphic_selector_delta
-    STA &122E
+    STA room_moving_object_delta_slot_2
     LDA #&FF
-    STA &122C
-    STA &1230
+    STA room_moving_object_delta_slot_1
+    STA room_moving_object_delta_slot_3
     RTS
 .initialise_room_moving_objects_source_end
 
@@ -11570,7 +11572,9 @@ COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, &2
 CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
 
 ORG indexed_pair_record_table
-; Runtime 0A78-0A95: ten per-level roaming-pair records.
+; Runtime 0A78-0A95: ten per-level indexed-pair records. These are separate
+; from the room-enemy table. Their update code can cross room columns, but the
+; sprites and gameplay identity selected by this subsystem are not yet proven.
 .indexed_pair_record_table_source
     EQUB &51, &8D, &0F
     EQUB &1D, &46, &07
@@ -11721,7 +11725,7 @@ ORG &8100
 .copy_transient_decoder_source
     LDX #&00
 .copy_transient_decoder_byte
-    LDA &5B00,X
+    LDA loader_source_page_5b00,X
     STA transient_xor_message_decoder,X
     INX
     CPX #&B0
@@ -11785,7 +11789,7 @@ ORG &8100
     STA CRTC_ADDRESS_SELECT
     LDX #&00
 .copy_irq_workspace_byte
-    LDA &5BB0,X
+    LDA loader_irq_source_page_5bb0,X
     STA chained_irq1v_vector,X
     INX
     CPX #&61
@@ -11808,7 +11812,7 @@ ORG &8100
 
 .enter_relocated_game_source
     LDA #&00
-    STA &0262                       ; MOS keyboard-state workspace
+    STA mos_keyboard_state_workspace                       ; MOS keyboard-state workspace
     JMP relocated_game_entry
 .relocation_loader_source_end
 
@@ -11845,7 +11849,7 @@ ORG transient_xor_message_decoder
 .transient_xor_message_decoder_source
 .decode_transient_xor_message_byte
     LDA transient_xor_message_payload,X
-    EOR &7000,X
+    EOR mode1_display_page_7000,X
     BEQ transient_xor_message_finished
     JSR OSWRCH
     INX
