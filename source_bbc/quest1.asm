@@ -11675,13 +11675,13 @@ ORG &8100
     JMP enter_relocated_game
 
 .copy_loaded_low_block_to_runtime_source
-    LDA #&00
+    LDA #LO(QUEST1_LOAD_ADDRESS)
     STA graphic_source_pointer_low
-    LDA #&1D
+    LDA #HI(QUEST1_LOAD_ADDRESS)
     STA graphic_source_pointer_high
-    LDA #&00
+    LDA #LO(player_enemy_and_lift_xor_sprite_frames)
     STA display_pointer_low
-    LDA #&04
+    LDA #HI(player_enemy_and_lift_xor_sprite_frames)
     STA display_pointer_high
     LDY #&00
 .copy_loaded_low_byte
@@ -11696,18 +11696,18 @@ ORG &8100
     INC display_pointer_high
 .copy_loaded_low_destination_advanced
     LDA graphic_source_pointer_high
-    CMP #&26
+    CMP #HI(loaded_high_block_source)
     BEQ copy_loaded_high_block_source
-    JMP copy_loaded_low_block_to_runtime+&12
+    JMP loaded_copy_low_byte_loop
 
 .copy_loaded_high_block_source
-    LDA #&00
+    LDA #LO(loaded_high_block_source)
     STA graphic_source_pointer_low
-    LDA #&26
+    LDA #HI(loaded_high_block_source)
     STA graphic_source_pointer_high
-    LDA #&00
+    LDA #LO(room_and_item_graphic_bank)
     STA display_pointer_low
-    LDA #&0E
+    LDA #HI(room_and_item_graphic_bank)
     STA display_pointer_high
     LDY #&00
 .copy_loaded_high_byte
@@ -11722,9 +11722,9 @@ ORG &8100
     INC display_pointer_high
 .copy_loaded_high_destination_advanced
     LDA graphic_source_pointer_high
-    CMP #&5B
+    CMP #HI(loader_source_page_5b00)
     BEQ copy_transient_decoder_source
-    JMP copy_loaded_high_block_to_runtime+&12
+    JMP loaded_copy_high_byte_loop
 
 .copy_transient_decoder_source
     LDX #&00
@@ -11732,7 +11732,7 @@ ORG &8100
     LDA loader_source_page_5b00,X
     STA transient_xor_message_decoder,X
     INX
-    CPX #&B0
+    CPX #loader_irq_source_page_5bb0-loader_source_page_5b00
     BNE copy_transient_decoder_byte
     RTS
 
