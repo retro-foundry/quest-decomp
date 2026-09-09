@@ -3264,14 +3264,15 @@ ORG apply_moving_entity_to_player
 ; positive report sets player_contact_or_damage_flag, forces an upward player
 ; velocity and calls the downward mover.
 ; So the entity pushes the player the way it is going, one step at a time, which
-; is what a moving platform or a crusher does. Either path then checks $0B, and
-; a nonzero collision result costs energy through the damage routine.
+; is what a moving platform or a crusher does. Either path then checks the
+; collision result temporarily held in display_grid_column; a nonzero result
+; costs energy through the damage routine.
 ;
 ; This is the path a class other than 1 takes, so this is the moving platform
 ; behaviour proper: A4, B2 and B6 are the three rooms whose record selects it.
-; A rising platform lifts the player through the $28AE entry and a descending
-; one drives them down, which is why the same routine serves a lift and a
-; crusher.
+; A rising platform lifts the player through step_up_by_count and a descending
+; one drives them down through move_player_down_by_velocity, which is why the
+; same routine serves a lift and a crusher.
 ; Y is preserved across the whole thing, so the caller can walk its entities.
 .apply_moving_entity_to_player_source
     TYA
@@ -4412,10 +4413,10 @@ CLEAR move_player_left_with_collision_source, move_player_left_with_collision_so
 
 ORG advance_player_vertical_position_and_display_pointer
 
-; Copy the player's vertical position and display pointer
-; from $2C/$38/$39 into the candidate state at $3C/$3E/$3F, let the original
-; $34F1 helper apply the signed step in $40, then copy the result back. The
-; wrapper itself is straight-line and preserves X/Y around the nested call.
+; Copy player_vertical_position and player_display_pointer into the candidate
+; vertical-step state, call apply_signed_vertical_step_to_pointer using
+; vertical_step_delta, then copy the result back. The wrapper is straight-line
+; and preserves X/Y around the nested call.
 .advance_player_vertical_position_and_display_pointer_source
     LDA player_vertical_position
     STA candidate_half_vertical_position
@@ -5662,7 +5663,7 @@ ORG dispatch_room_cell
     EQUW draw_right_edge_or_full_last_column-1 ; ROOM_CELL_RIGHT_EDGE_OR_FULL
 .room_cell_draw_dispatch_table_source_end
 
-; Cell type $0F's handler. A is the current room column. Columns zero through
+; ROOM_CELL_LAST_COLUMN_PILLAR's handler. A is the current room column. Columns zero through
 ; six draw blanks; column seven draws eight pillar/base tiles.
 .draw_pillar_base_row_in_last_column_source
     CMP #ROOM_COLUMN_LAST
@@ -6038,7 +6039,7 @@ CLEAR pick_up_item_below_player_source, pick_up_item_below_player_source_end
 
 ORG draw_curved_bowl_before_alternating_suffix
 
-; room-cell type $06. Draw blank tiles up to the selected
+; ROOM_CELL_CURVED_BOWL_LEFT. Draw blank tiles up to the selected
 ; column, one curved-bowl tile, then alternating room tiles. This mirrors the
 ; prefix layout below.
 .draw_curved_bowl_before_alternating_suffix_source
@@ -6059,7 +6060,7 @@ ORG draw_curved_bowl_before_alternating_suffix
 
 ORG draw_curved_bowl_after_alternating_prefix
 
-; room-cell type $05. Draw alternating room tiles up to the
+; ROOM_CELL_CURVED_BOWL_RIGHT. Draw alternating room tiles up to the
 ; selected column, one curved-bowl tile, then the remaining blank tiles.
 .draw_curved_bowl_after_alternating_prefix_source
     LDY #GRAPHIC_CURVED_BOWL
@@ -6686,7 +6687,7 @@ CLEAR replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_so
 
 ORG draw_repeated_87_blank_pairs_by_state
 
-; room-cell type $09. A zero column enters the adjacent
+; ROOM_CELL_STATE_87_PAIRS. A zero column enters the adjacent
 ; edge-pattern handler. Other columns draw leading blanks for removed progress
 ; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
 .draw_repeated_87_blank_pairs_by_state_source
@@ -6992,7 +6993,10 @@ CLEAR update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cr
 
 ORG draw_last_column_special_pair_row
 
-; room-cell type $16. Columns zero through six reuse the cell-$13 edge-pattern row. Column seven draws that row, sets the dynamic-object VDU vertical step to two, changes the active selector to $84, then enters the dynamic-object VDU setup at $19F7.
+; ROOM_CELL_LAST_COLUMN_SPECIAL. Columns zero through six reuse the
+; ROOM_CELL_58_59_EDGE layout. Column seven draws that row, configures the
+; dynamic-object vertical step and XOR hollow-arch selector, then enters
+; prepare_dynamic_object_vdu_stream.
 .draw_last_column_special_pair_row_source
     CMP #ROOM_COLUMN_LAST
     BEQ draw_last_column_pair_before_special_setup
@@ -7016,9 +7020,10 @@ COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pai
 CLEAR draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end
 
 ORG draw_state_selected_13_center_row
-; room-cell type $17. The first and final room graphics Y coordinates draw
-; alternating tiles. Other values draw two blanks, selector $13, the two-tile
-; $04/$03 centre run at $1531, another $13 and two trailing blanks. Only the
+; ROOM_CELL_STATE_13_CENTER. The first and final room graphics Y coordinates
+; draw alternating tiles. Other values draw two blanks, a narrow vertical bar,
+; the two-tile hollow-arch/solid-diagonal centre run, another narrow bar, and
+; two trailing blanks. Only the
 ; alternating outcome is present in committed traces; the dispatch entry and
 ; static flow establish the alternate layout without assigning gameplay lore.
 .draw_state_selected_13_center_row_source
@@ -7050,8 +7055,10 @@ CLEAR draw_state_selected_13_center_row_source, draw_state_selected_13_center_ro
 ORG handle_matching_cross_room_robot_ghost
 
 ; A failed pair comparison returns carry clear through
-; the shared exit at $2E7A. A match copies one indexed field to $11, transforms
-; the adjacent field into $3C, and tail-transfers to the sourced $2B57 guard.
+; cross_room_robot_ghost_mismatch_return. A match copies the indexed value into
+; candidate_horizontal_position, converts the adjacent offset into
+; candidate_half_vertical_position, and tail-transfers to the player-overlap
+; guard.
 .handle_matching_cross_room_robot_ghost_source
     JSR test_cross_room_robot_ghost_matches_reference
     BCC cross_room_robot_ghost_mismatch_return
@@ -7075,7 +7082,9 @@ CLEAR handle_matching_cross_room_robot_ghost_source, handle_matching_cross_room_
 
 ORG draw_room_flag_then_fixed_pair_row
 
-; room-cell type $1A. Column zero enables the room-local jet-boots flag. Every column preserves its number on the stack, draws four repetitions of the active tile pair, then enters the dynamic-room-object VDU continuation.
+; ROOM_CELL_FLAG_AND_FIXED_PAIR. Column zero enables the room-local jet-boots
+; flag. Every column preserves its number on the stack, draws four repetitions
+; of the active tile pair, then enters the dynamic-room-object VDU continuation.
 .draw_room_flag_then_fixed_pair_row_source
     CMP #ROOM_COLUMN_FIRST
     BNE draw_fixed_pair_then_configure_object
@@ -7135,11 +7144,12 @@ CLEAR draw_directional_ghost_if_reference_matches_source, draw_directional_ghost
 
 ORG draw_cross_room_robot_ghost_if_reference_matches
 
-; Select small-bouncing-robot graphic-pointer offset
-; $10/$12 from bit 1 of the indexed value, configure two renderer rows, and draw only when the indexed
-; pair matches the reference fields. A mismatch branches to the original
-; shared PLA/TAX/RTS exit at $2EA7. The $74-controlled state clear is retained
-; exactly, although committed traces exercise only $74 = 0.
+; Select the small-bouncing-robot animation phase from bit 1 of the indexed
+; value, configure its two renderer rows, and draw only when the indexed pair
+; matches the reference fields. A mismatch branches to the shared register-
+; restoring exit. The reset_cross_room_robot_ghost_countdowns-controlled state
+; clear is retained exactly, although committed traces exercise only the
+; disabled state.
 .draw_cross_room_robot_ghost_if_reference_matches_source
     LDA cross_room_robot_ghost_value_field,X
     LSR A
