@@ -2397,8 +2397,8 @@ ORG apply_mirror_flag_then_copy_graphic
 
 .apply_mirrored_record_bias
     CLC
-    ADC #&40
-    AND #&7F
+    ADC #GRAPHIC_RECORD_MIRROR_FLAG
+    AND #GRAPHIC_RECORD_WITH_MIRROR_MASK
 .apply_mirror_flag_then_copy_graphic_source_end
 
 ASSERT apply_mirror_flag_then_copy_graphic_source = apply_mirror_flag_then_copy_graphic
@@ -2424,7 +2424,7 @@ ORG match_packed_record_against_references
 ; scan: 890 of 907 calls fail, 801 of them on the first comparison.
 .match_packed_record_against_references_source
     LDA (packed_record_pointer_low),Y
-    AND #&3F
+    AND #PACKED_RECORD_SECONDARY_MASK
     CMP reference_pair_secondary_value
     BNE report_no_match
     LDA (packed_record_pointer_low),Y
@@ -2433,11 +2433,11 @@ ORG match_packed_record_against_references
     LSR A
     LSR A
     LSR A
-    AND #&FE
+    AND #PACKED_RECORD_EXTRACTED_EVEN_MASK
     STA shared_workspace_31
     INY
     LDA (packed_record_pointer_low),Y
-    AND #&0F
+    AND #PACKED_RECORD_PRIMARY_MASK
     CMP reference_pair_primary_value
     BNE report_no_match
     LDA (packed_record_pointer_low),Y
@@ -2484,13 +2484,13 @@ ORG load_room_palette_and_tile_pair
     ASL A
     ADC reference_pair_primary_value
     TAX
-    LDA #&0F
+    LDA #ROOM_APPEARANCE_PALETTE_MASK
     AND room_appearance_table,X
     STA lower_screen_palette_base
     LDA room_appearance_table,X
     LSR A
     LSR A
-    AND #&FC
+    AND #ROOM_APPEARANCE_TILE_OFFSET_MASK
     TAX
     LDY #&00
 
@@ -2688,9 +2688,9 @@ ORG initialise_room_enemy_from_table
 ; visual identity alone must not be used to infer movement or collision rules.
 .initialise_room_enemy_from_table_source
     LDX #&00
-    LDA #&00
+    LDA #LO(room_enemy_record_table)
     STA shared_workspace_13
-    LDA #&0A
+    LDA #HI(room_enemy_record_table)
     STA shared_workspace_14
 
 .test_next_entity_record
@@ -2835,9 +2835,9 @@ ORG initialise_lifts_and_hazards_from_table
 ; hazard, and G8 holds two. The renderer draws both alike; only contact
 ; differs.
 .initialise_lifts_and_hazards_from_table_source
-    LDA #&96
+    LDA #LO(lift_and_hazard_room_record_table)
     STA shared_workspace_13
-    LDA #&0A
+    LDA #HI(lift_and_hazard_room_record_table)
     STA shared_workspace_14
     LDX #&00
 
@@ -3579,7 +3579,7 @@ ORG reverse_lift_or_hazard_delta_at_limits
     LDA #&01
     STA shared_workspace_75
     LDA moving_entity_position,Y
-    AND #&FE
+    AND #LIFT_HAZARD_EVEN_POSITION_MASK
     CMP lift_or_hazard_lower_position
     BEQ set_lift_or_hazard_delta_positive
     CMP lift_or_hazard_upper_position
@@ -4484,7 +4484,7 @@ ORG redraw_energy_bar_segment
     ADC #&00
     STA display_pointer_high
     LDA shared_workspace_3b
-    AND #&07
+    AND #ENERGY_BAR_SUBSTEP_MASK
     LSR A
     TAY
     LDA energy_bar_fill_patterns,Y
@@ -7001,28 +7001,28 @@ ORG initialise_indexed_pair_from_record
     DEX
     BPL preset_pair_flags
     LDA indexed_pair_record_table,Y
-    AND #&07
+    AND #INDEXED_PAIR_SELECTOR_MASK
     STA indexed_pair_positive_delta_selector
     STA indexed_pair_primary_field
     LDA indexed_pair_record_table,Y
     LSR A
-    AND #&FC
+    AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
     STA indexed_pair_positive_delta_threshold
     STA indexed_pair_value_field
     STA indexed_pair_runtime_value_slot_0
     STA shared_workspace_0b
     INY
     LDA indexed_pair_record_table,Y
-    AND #&07
+    AND #INDEXED_PAIR_SELECTOR_MASK
     STA indexed_pair_negative_delta_selector
     STA indexed_pair_secondary_delta_slot_0
     LDA indexed_pair_record_table,Y
     LSR A
-    AND #&FC
+    AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
     STA indexed_pair_negative_delta_threshold
     INY
     LDA indexed_pair_record_table,Y
-    AND #&3F
+    AND #INDEXED_PAIR_POSITION_MASK
     STA shared_workspace_0a
     ASL A
     ASL A
@@ -8793,7 +8793,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     TAX
     JSR draw_blank_tile_run
     LDA shared_workspace_09
-    AND #&FE
+    AND #ROOM_EVEN_COLUMN_MASK
     TAX
     INX
     JSR draw_alternating_tile_run
@@ -10699,7 +10699,7 @@ ORG reverse_indexed_123b_delta_at_limits
 ; they do rather than for either caller reason.
 .reverse_indexed_123b_delta_at_limits_source
     LDA primary_entity_runtime_block,Y
-    AND #&FE
+    AND #ENEMY_EVEN_VERTICAL_POSITION_MASK
     CMP enemy_vertical_lower_limit
     BEQ set_indexed_123b_delta_positive
     CMP enemy_vertical_upper_limit
@@ -10824,9 +10824,9 @@ ORG initialise_room_moving_objects
 ; clamp, draw, and advance these same four room-local instances.
 .initialise_room_moving_objects_source
     LDX #&00
-    LDA #&30
+    LDA #LO(room_moving_object_record_table)
     STA shared_workspace_13
-    LDA #&09
+    LDA #HI(room_moving_object_record_table)
     STA shared_workspace_14
 
 .test_next_indexed_xor_record
