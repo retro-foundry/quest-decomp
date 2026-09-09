@@ -1495,15 +1495,14 @@ CLEAR draw_room_enemy_with_xor_graphic_source, draw_room_enemy_with_xor_graphic_
 
 ORG apply_signed_vertical_step_to_pointer
 
-; Add the signed step in $40 to the vertical position at $3C
-; and walk the pointer at $3E/$3F to match, two display scanlines per step.
+; Add vertical_step_delta to candidate_half_vertical_position and move
+; vertical_step_pointer with it, two display scanlines per step.
 ; Within a Mode 1 character cell the eight scanlines are consecutive bytes, so a
 ; step of two is two increments or two decrements of the low byte. Crossing a
-; cell boundary costs $027A instead, which is one character row of $0280 less
-; the six bytes the step would have run past. The sign of $40 selects the
-; direction and each direction tests the scanline within the cell before
-; committing: upwards when the low three bits are below 5, downwards when they
-; are 2 or more.
+; cell boundary uses MODE1_ROW_WRAP_LOW_ADJUST and
+; MODE1_ROW_WRAP_HIGH_ADJUST to account for the character-row stride. The sign
+; of vertical_step_delta selects the direction, and each direction checks the
+; current scanline against its named wrap limit before committing.
 ; All four paths are covered: 2,038 within-cell against 679 row-crossing
 ; upwards, and 1,673 against 568 downwards.
 .apply_signed_vertical_step_to_pointer_source
@@ -2134,13 +2133,14 @@ CLEAR dispatch_game_tick_updates_source, dispatch_game_tick_updates_source_end
 ORG apply_mirror_flag_then_copy_graphic
 
 ; An alternate entry to the 16-byte graphic blitter that
-; first decides whether the record is drawn mirrored. Bit 7 of $43 is rotated
-; into carry without disturbing A; when it is set, $40 is added to the record
-; index and the result masked to seven bits, which sets bit 6, the flag the
-; blitter reads as reversed order within each eight-byte half.
+; first decides whether the record is drawn mirrored. The top bit of
+; xor_sprite_display_pointer_low is rotated into carry without disturbing the
+; selector in A; when set, GRAPHIC_RECORD_MIRROR_FLAG is added and
+; GRAPHIC_RECORD_WITH_MIRROR_MASK clears the XOR flag. The blitter interprets
+; the resulting mirror flag as reversed order within each eight-byte half.
 ; There is no branch at the end: the block runs off its last instruction
-; straight into copy_16_byte_graphic_to_display at $1CE4, and the carry-clear
-; path branches to that same address.
+; straight into copy_16_byte_graphic_to_display, and the carry-clear path
+; branches to that same entry.
 .apply_mirror_flag_then_copy_graphic_source
     PHA
     LDA xor_sprite_display_pointer_low
