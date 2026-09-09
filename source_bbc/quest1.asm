@@ -58,10 +58,10 @@ ORG SPRITE_SOURCE_STAGING_ADDRESS
 .bat_wings_lowered_frame
     EQUB &00, &00, &00, &03, &34, &70, &00, &00, &22, &22, &22, &0F, &6F, &87, &23, &22
     EQUB &44, &44, &44, &0F, &6F, &1E, &4C, &44, &00, &00, &00, &0E, &E1, &F0, &00, &00
-.moth_and_hazard_frame_0
+.moth_wings_raised_frame
     EQUB &02, &05, &00, &00, &33, &CC, &11, &EE, &00, &00, &68, &61, &CF, &03, &CD, &01
     EQUB &00, &00, &61, &68, &3F, &0C, &3B, &08, &04, &0A, &00, &00, &CC, &33, &88, &77
-.moth_and_hazard_frame_1
+.moth_wings_lowered_frame
     EQUB &03, &00, &00, &EE, &11, &CC, &33, &00, &08, &04, &60, &61, &CF, &03, &CD, &01
     EQUB &01, &02, &60, &68, &3F, &0C, &3B, &08, &0C, &00, &00, &77, &88, &33, &CC, &00
 .player_upper_facing_right_frame
@@ -2782,7 +2782,7 @@ ORG lift_and_hazard_graphic_descriptor_table
 .vertical_lift_graphic_descriptor
     EQUW vertical_lift_graphic, vertical_lift_graphic ; LIFT_OR_HAZARD_LIFT
 .moth_hazard_graphic_descriptor
-    EQUW runtime_moth_and_hazard_frame_0, runtime_moth_and_hazard_frame_1 ; LIFT_OR_HAZARD_HAZARD
+    EQUW runtime_moth_wings_raised_frame, runtime_moth_wings_lowered_frame ; LIFT_OR_HAZARD_HAZARD
 .lift_and_hazard_graphic_descriptor_table_source_end
 ASSERT vertical_lift_graphic_descriptor = lift_and_hazard_graphic_descriptor_table + LIFT_OR_HAZARD_LIFT*LIFT_HAZARD_DESCRIPTOR_BYTES
 ASSERT moth_hazard_graphic_descriptor = lift_and_hazard_graphic_descriptor_table + LIFT_OR_HAZARD_HAZARD*LIFT_HAZARD_DESCRIPTOR_BYTES
@@ -3401,7 +3401,7 @@ ORG xor_draw_lift_or_hazard
 ; XOR-draw the Y-indexed lift or moth-shaped hazard.
 ; The checked entry skips both invalid endpoint slots; the unchecked entry is
 ; for callers that have already decided the slot is drawable.
-; The graphic index defaults to the first frame. For the moth/hazard class, a
+; The graphic index defaults to the raised-wing frame. For the moth hazard class, a
 ; position bit selects the second frame so the moth alternates as it moves.
 ; A nonzero lift_and_hazard_slot_limit then makes the draw two
 ; character rows tall with the source scanlines repeated, otherwise one row.
@@ -11509,7 +11509,7 @@ ORG enemy_graphic_descriptor_table
 .small_bouncing_robot_graphic_descriptor
     EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
 .moth_graphic_descriptor
-    EQUW runtime_moth_and_hazard_frame_0, runtime_moth_and_hazard_frame_1
+    EQUW runtime_moth_wings_raised_frame, runtime_moth_wings_lowered_frame
 .jellyfish_graphic_descriptor
     EQUW runtime_jellyfish_frame_0, runtime_jellyfish_frame_1 ; unselected here
 .enemy_graphic_descriptor_table_source_end
