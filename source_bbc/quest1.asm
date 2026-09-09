@@ -10637,7 +10637,12 @@ ORG interval_timer_block
 ; Five-byte MOS interval timer value, replaced by
 ; OSWORD_WRITE_INTERVAL_TIMER.
 .interval_timer_block_source
-    EQUB &90, &E8, &FF, &FF, &FF
+.interval_timer_centiseconds_low
+    EQUB INTERVAL_TIMER_INITIAL_LOW_BYTE
+.interval_timer_centiseconds_high
+    EQUB INTERVAL_TIMER_INITIAL_HIGH_BYTE
+.interval_timer_sign_extension
+    EQUB INTERVAL_TIMER_SIGN_EXTENSION_BYTE, INTERVAL_TIMER_SIGN_EXTENSION_BYTE, INTERVAL_TIMER_SIGN_EXTENSION_BYTE
 .interval_timer_block_source_end
 ASSERT interval_timer_block_source = interval_timer_block
 ASSERT interval_timer_block_source_end = write_system_clock_via_osword_02
@@ -10647,8 +10652,24 @@ CLEAR interval_timer_block_source, interval_timer_block_source_end
 ORG music_note_pitch_table
 ; eight pitches selected by the player's keyboard position.
 .music_note_pitch_table_source
-    EQUB &34, &3C, &44, &48, &50, &58, &60, &64
+.music_position_0_pitch
+    EQUB &34
+.music_position_1_pitch
+    EQUB &3C
+.music_position_2_pitch
+    EQUB &44
+.music_position_3_pitch
+    EQUB &48
+.music_position_4_pitch
+    EQUB &50
+.music_position_5_pitch
+    EQUB &58
+.music_position_6_pitch
+    EQUB &60
+.music_position_7_pitch
+    EQUB &64
 .music_note_pitch_table_source_end
+ASSERT music_note_pitch_table_source_end-music_note_pitch_table_source = MUSIC_PITCH_POSITION_COUNT
 ASSERT music_note_pitch_table_source = music_note_pitch_table
 ASSERT music_note_pitch_table_source_end = initialise_new_game
 COPYBLOCK music_note_pitch_table_source, music_note_pitch_table_source_end, music_note_pitch_table+LOW_RUNTIME_TO_LOADED_DELTA
