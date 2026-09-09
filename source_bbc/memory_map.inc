@@ -662,6 +662,7 @@ PLAYER_COLLISION_SCAN_ROWS      = &18 ; behavioral: vertical extent passed to th
 CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_WRAP_POSITION = &4D ; behavioral: advancing from this horizontal position enters the next room column
 CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_FIRST_POSITION = &00 ; behavioral: first horizontal position after wrapping into the next room column
 ROOM_CELL_MIRROR_FLAG           = &40 ; behavioral: reverses a room-cell drawing direction
+ROOM_CELL_MIRRORED_FF_LAST_COLUMN = ROOM_CELL_MIRROR_FLAG+ROOM_CELL_FF_LAST_COLUMN ; behavioral: mirrored last-column $FF-state row used by initial map stamping
 ROOM_COLUMN_LAST                = &07 ; behavioral: zero-based index of the eighth and final room column
 FIXED_PAIR_GAP_EDGE_TILE_COUNT  = &02 ; behavioral: two fixed-pair tiles bracket the central gap
 FIXED_PAIR_GAP_BLANK_TILE_COUNT = &04 ; behavioral: four blank tiles form the central gap

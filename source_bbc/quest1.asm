@@ -3196,20 +3196,15 @@ CLEAR music_tune_progress_source, music_tune_progress_source_end
 
 ORG place_initial_map_objects
 
-; Runtime $0780-$07FF. Write the starting object bytes into the room map.
-; This is a straight run of stores with no branches: eleven addresses take $0B,
-; three take $14, three take 7 and one 8, and the rest take single values,
-; all scattered across $37FC to $3C5F, which is the room cell data the renderer
-; reads through $76/$77.
-; So the map on disk holds the room geometry and this routine stamps in what
-; each room starts with. It runs once, from initialise_new_game, before the
-; first room is drawn.
-; $385D is among the addresses it sets, to $1E. That is the byte
-; play_note_for_position_and_test_tune overwrites with $2D when the twelve-note
-; tune is completed in sector E, so this is where the music room door starts
-; closed.
+; Write the mutable starting cell types into named locations in the room map.
+; This straight-line initialiser stamps twelve centered slopes, three $FF-state
+; motifs, both key motifs, and the remaining named layouts. It runs once from
+; initialise_new_game before the first room is drawn.
+; The Music Room location starts as ROOM_CELL_MUSIC_ROOM_SIGN;
+; play_note_for_position_and_test_tune replaces it with
+; ROOM_CELL_PASSWORD_PROMPT when the twelve-note tune is completed.
 .place_initial_map_objects_source
-    LDA #&0B
+    LDA #ROOM_CELL_CENTERED_SLOPE
     STA room_B0_row_1_cell_0
     STA room_F1_row_1_cell_0
     STA room_A2_row_2_cell_2
@@ -3222,39 +3217,39 @@ ORG place_initial_map_objects
     STA room_C7_row_2_cell_3
     STA room_G9_row_0_cell_3
     STA room_B9_row_2_cell_2
-    LDA #&14
+    LDA #ROOM_CELL_FF_STATE_MOTIF
     STA room_G0_row_2_cell_4
     STA room_E1_row_1_cell_4
     STA room_G3_row_1_cell_4
-    LDX #&07
+    LDX #ROOM_CELL_FIRST_KEY_MOTIF
     STX room_A4_row_1_cell_2
     STX room_A6_row_1_cell_3
     STX room_A0_row_1_cell_4
     INX
     STX room_F8_row_2_cell_3
-    LDA #&11
+    LDA #ROOM_CELL_FOUR_TILE_HALF_ROW
     STA room_H2_row_1_cell_1
     STA room_D5_row_2_cell_0
-    LDA #&39
+    LDA #ROOM_CELL_ALTERNATING_RIGHT_HALF
     STA room_H2_row_1_cell_3
     STA room_F5_row_2_cell_4
     STA room_D5_row_2_cell_2
-    LDA #&32
+    LDA #ROOM_CELL_BORDERED_CHECKER
     STA room_F3_row_1_cell_1
     STA room_F3_row_1_cell_3
-    LDA #&6F
+    LDA #ROOM_CELL_MIRRORED_FF_LAST_COLUMN
     STA room_D4_row_2_cell_2
     STA room_C6_row_2_cell_2
     STA room_A7_row_2_cell_2
-    LDA #&1E
+    LDA #ROOM_CELL_MUSIC_ROOM_SIGN
     STA room_E1_row_0_cell_1
     LDA #ROOM_CELL_ORACLE_SIGN
     STA room_A9_row_1_cell_2
-    LDA #&3C
+    LDA #ROOM_CELL_TRANSITION_3C
     STA room_F5_row_2_cell_2
-    LDA #&39
+    LDA #ROOM_CELL_ALTERNATING_RIGHT_HALF
     STA room_D6_row_0_cell_0
-    LDA #&3F
+    LDA #ROOM_CELL_RIGHT_EDGE_OR_FULL
     STA room_B9_row_2_cell_1
     RTS
 .place_initial_map_objects_source_end
