@@ -2414,14 +2414,15 @@ CLEAR apply_mirror_flag_then_copy_graphic_source, apply_mirror_flag_then_copy_gr
 
 ORG match_packed_record_against_references
 
-; Runtime $208A-$20B1. Match the two-byte packed record at the pointer in $13
+; Runtime $208A-$20B1. Match the two-byte packed record at
+; packed_record_pointer
 ; against the two reference values, extracting the rest of it only on success.
 ; Each byte carries two fields. The first is matched on its low six bits
-; against the secondary reference at $8F, and its top three bits shifted down
-; and masked even become $31. The second is matched on its low nibble against
-; the primary reference at $90, and its high nibble becomes $32. Carry set means
-; both halves matched and $31 and $32 hold the extracted fields; carry clear
-; means neither was written.
+; against reference_pair_secondary_value, and its top three bits shifted down
+; and masked even become packed_record_even_field. The second is matched on its
+; low nibble against reference_pair_primary_value, and its high nibble becomes
+; packed_record_type_field. Carry set means both halves matched and the extracted
+; fields are valid; carry clear means the complete record did not match.
 ; Testing the cheaper half first is what makes this affordable to call in a
 ; scan: 890 of 907 calls fail, 801 of them on the first comparison.
 .match_packed_record_against_references_source
@@ -2436,7 +2437,7 @@ ORG match_packed_record_against_references
     LSR A
     LSR A
     AND #PACKED_RECORD_EXTRACTED_EVEN_MASK
-    STA shared_workspace_31
+    STA packed_record_even_field
     INY
     LDA (packed_record_pointer_low),Y
     AND #PACKED_RECORD_PRIMARY_MASK
@@ -2447,7 +2448,7 @@ ORG match_packed_record_against_references
     LSR A
     LSR A
     LSR A
-    STA shared_workspace_32
+    STA packed_record_type_field
     SEC
     RTS
 
@@ -2712,9 +2713,9 @@ ORG initialise_room_enemy_from_table
     RTS
 
 .unpack_matched_entity_record
-    LDA shared_workspace_31
+    LDA packed_record_even_field
     STA active_enemy_last_slot_index
-    LDA shared_workspace_32
+    LDA packed_record_type_field
     STA active_enemy_species
     LDA #&01
     STA room_tick_update_selector
@@ -2859,11 +2860,11 @@ ORG initialise_lifts_and_hazards_from_table
     RTS
 
 .unpack_matched_lift_or_hazard_record
-    LDA shared_workspace_31
+    LDA packed_record_even_field
     CLC
     ADC #LIFT_HAZARD_SLOT_INDEX_BIAS
     STA lift_and_hazard_slot_limit
-    LDA shared_workspace_32
+    LDA packed_record_type_field
     STA active_lift_or_hazard_class
     LDA #&01
     STA lift_and_hazard_active
@@ -3356,12 +3357,11 @@ CLEAR advance_record_counter_then_dispatch_source, advance_record_counter_then_d
 
 ORG store_byte_through_saved_pointer
 
-; Runtime $244E-$2452. Write A through the saved pointer at $00/$01, indexed by
-; $02. The pointer is set up elsewhere, notably at $14D9 in the room-render
-; layer, which copies $76/$77 into $00/$01 and $03 into $02 before the write
-; becomes reachable.
+; Runtime $244E-$2452. Write A through indirect_write_pointer, indexed by
+; saved_cell_write_offset. save_display_pointer_and_cell_reference captures
+; both values from the current room-cell traversal before this write is used.
 .store_byte_through_saved_pointer_source
-    LDY shared_workspace_02
+    LDY saved_cell_write_offset
     STA (indirect_write_pointer_low),Y
     RTS
 .store_byte_through_saved_pointer_source_end
@@ -4354,7 +4354,7 @@ ORG run_startup_room_sequence_until_space
     LDA #&00
 
 .clear_next_startup_zero_page_byte
-    STA shared_workspace_00,X
+    STA startup_zero_page_clear_base,X
     DEX
     BNE clear_next_startup_zero_page_byte
     LDX #&04
@@ -6752,24 +6752,23 @@ CLEAR right_half_four_tile_graphic_sequences_source, right_half_four_tile_graphi
 
 ORG save_display_pointer_and_cell_reference
 
-; Runtime $14D9-$14EF. Save the current display pointer to $1243/$1244 and build
-; the indirect cell pointer that later writes go through, copying $76/$77 into
-; $00/$01 and $03 into $02.
+; Runtime $14D9-$14EF. Save the current display pointer and build the indirect
+; room-cell pointer used by later writes, including the current cell offset.
 ; Both halves are consumed elsewhere in this source:
-; replace_saved_cell_then_play_sound reads $1243/$1244 back as the redraw
-; position, and store_byte_through_saved_pointer writes through $00/$01 indexed
-; by $02. This is the only observed producer of either.
+; replace_saved_cell_then_play_sound restores the saved display position, and
+; store_byte_through_saved_pointer writes through the captured room-cell
+; pointer. This is the only observed producer of either saved state.
 .save_display_pointer_and_cell_reference_source
     LDA display_pointer_low
     STA saved_effect_display_pointer_low
     LDA display_pointer_high
     STA saved_effect_display_pointer_high
     LDA room_data_pointer_low
-    STA shared_workspace_00
+    STA indirect_write_pointer_low
     LDA room_data_pointer_high
-    STA shared_workspace_01
+    STA indirect_write_pointer_high
     LDA shared_workspace_03
-    STA shared_workspace_02
+    STA saved_cell_write_offset
     RTS
 
 save_display_pointer_and_cell_reference_source_end = &1550
@@ -8507,11 +8506,11 @@ ORG start_saved_display_block_shift_effect
 ; active path. All authority/rebuild boundaries, complete effects, PC sequences,
 ; displays and video hardware compare exactly.
 .start_saved_display_block_shift_effect_source
-    INC shared_workspace_02
-    INC shared_workspace_02
+    INC saved_cell_write_offset
+    INC saved_cell_write_offset
     JSR store_byte_through_saved_pointer
-    DEC shared_workspace_02
-    DEC shared_workspace_02
+    DEC saved_cell_write_offset
+    DEC saved_cell_write_offset
     LDA #&20
     STA timed_effect_countdown
     LDA #&04
@@ -8833,9 +8832,9 @@ ORG write_indexed_terminal_activation_value
     ADC reference_pair_primary_value
     TAX
     LDA terminal_activation_records,X
-    STA shared_workspace_00
+    STA indirect_write_pointer_low
     LDA terminal_activation_records+1,X
-    STA shared_workspace_01
+    STA indirect_write_pointer_high
     LDY #&00
     LDA terminal_activation_records+2,X
     STA (indirect_write_pointer_low),Y
@@ -10839,9 +10838,9 @@ ORG initialise_room_moving_objects
     RTS
 
 .load_matched_indexed_xor_record
-    LDA shared_workspace_32
+    LDA packed_record_type_field
     STA current_room_cell
-    LDX shared_workspace_31
+    LDX packed_record_even_field
     INX
     INX
     STX room_moving_object_slot_limit

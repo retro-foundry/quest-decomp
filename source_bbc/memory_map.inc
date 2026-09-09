@@ -10,9 +10,6 @@
 ; Canonical names for bytes reused as scratch/state by several unrelated
 ; routines. More specific aliases below document roles where dataflow proves
 ; one; source operands use these shared names when no single role is universal.
-shared_workspace_00 = &0000
-shared_workspace_01 = &0001
-shared_workspace_02 = &0002
 shared_workspace_03 = &0003
 shared_workspace_04 = &0004
 shared_workspace_09 = &0009
@@ -48,8 +45,13 @@ moving_entity_horizontal_position = &0068 ; behavioral: Y-indexed horizontal pos
 room_moving_object_inner_horizontal_position = &0066 ; dataflow: midpoint copied into the second room-local object position
 moving_entity_second_horizontal_position = moving_entity_horizontal_position+2 ; dataflow: second endpoint shared by room enemies and room-local moving objects
 indirect_write_pointer_low      = &0000 ; dataflow alias: little-endian pointer used by saved-cell and terminal activation writes
+indirect_write_pointer_high     = &0001 ; dataflow alias: high byte paired with indirect_write_pointer_low
+saved_cell_write_offset         = &0002 ; behavioral: saved room-cell offset, temporarily advanced by two during block-shift setup
+startup_zero_page_clear_base    = &0000 ; structural: indexed base of the new-game zero-page clear loop
 packed_record_pointer_low       = &0013 ; dataflow alias: little-endian source pointer consumed by packed-record matching
 packed_record_pointer_high      = &0014 ; dataflow alias: high byte paired with packed_record_pointer_low
+packed_record_even_field        = &0031 ; dataflow alias: top record bits shifted into an even slot/count value by packed-record matching
+packed_record_type_field        = &0032 ; dataflow alias: high nibble of the second packed-record byte
 graphic_sequence_pointer_low    = &007E ; dataflow alias: little-endian selector-sequence pointer used by room-cell drawing
 graphic_sequence_pointer_high   = &007F ; dataflow alias: high byte paired with graphic_sequence_pointer_low
 item_slot_first                 = &000C ; measured: holds a carried item's code; $2C is the Key and $32 the access card, both read off a captured status bar
