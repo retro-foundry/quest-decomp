@@ -5610,7 +5610,7 @@ ORG dispatch_room_cell
     EQUW draw_curved_bowl_before_alternating_suffix-1 ; ROOM_CELL_CURVED_BOWL_LEFT
     EQUW draw_first_key_column_motif-1 ; ROOM_CELL_FIRST_KEY_MOTIF
     EQUW draw_second_key_column_motif-1 ; ROOM_CELL_SECOND_KEY_MOTIF; entry load remains unexecuted
-    EQUW draw_repeated_87_blank_pairs_by_state-1 ; ROOM_CELL_STATE_87_PAIRS
+    EQUW draw_repeated_87_blank_pairs_by_state-1 ; ROOM_CELL_PROGRESS_CROSSED_DIAGONAL_PAIRS
     EQUW draw_bordered_horizontal_bar_row-1 ; ROOM_CELL_BORDERED_BAR
     EQUW draw_centered_slope_pair_by_column-1 ; ROOM_CELL_CENTERED_SLOPE
     EQUW draw_blank_state_column_motif-1 ; ROOM_CELL_BLANK_STATE_MOTIF
@@ -5619,17 +5619,17 @@ ORG dispatch_room_cell
     EQUW draw_pillar_base_row_in_last_column-1 ; ROOM_CELL_LAST_COLUMN_PILLAR
     EQUW draw_alternating_or_curved_bowl_row-1 ; ROOM_CELL_ALTERNATING_OR_CURVED_BOWL
     EQUW draw_table_selected_four_tile_half_row-1 ; ROOM_CELL_FOUR_TILE_HALF_ROW
-    EQUW draw_record_08_or_edge_pattern_row-1 ; ROOM_CELL_RECORD_08_EDGE
-    EQUW draw_fixed_edge_pair_or_alternating_pattern_row-1 ; ROOM_CELL_58_59_EDGE
+    EQUW draw_record_08_or_edge_pattern_row-1 ; ROOM_CELL_CURVED_BOWL_OR_EDGE_PATTERN
+    EQUW draw_fixed_edge_pair_or_alternating_pattern_row-1 ; ROOM_CELL_FIXED_EDGE_PAIR
     EQUW draw_ff_state_column_motif-1 ; ROOM_CELL_FF_STATE_MOTIF
     EQUW draw_narrow_bar_fixture_row-1 ; ROOM_CELL_NARROW_BAR_FIXTURE
     EQUW draw_last_column_special_pair_row-1 ; ROOM_CELL_LAST_COLUMN_SPECIAL
-    EQUW draw_state_selected_13_center_row-1 ; ROOM_CELL_STATE_13_CENTER; alternate layout remains unexecuted
+    EQUW draw_state_selected_13_center_row-1 ; ROOM_CELL_STATE_SELECTED_NARROW_BAR_CENTER; alternate layout remains unexecuted
     EQUW draw_blank_marker_before_alternating_suffix-1 ; ROOM_CELL_BLANK_BEFORE_SUFFIX
     EQUW draw_blank_marker_after_alternating_prefix-1 ; ROOM_CELL_BLANK_AFTER_PREFIX
     EQUW draw_room_flag_then_fixed_pair_row-1 ; ROOM_CELL_FLAG_AND_FIXED_PAIR
     EQUW draw_table_selected_left_half_row-1 ; ROOM_CELL_LEFT_HALF_SEQUENCE
-    EQUW draw_two_13_two_beam_two_13_two_pattern-1 ; ROOM_CELL_13_BEAM_PATTERN
+    EQUW draw_two_13_two_beam_two_13_two_pattern-1 ; ROOM_CELL_NARROW_BAR_BEAM_PATTERN
     EQUW draw_left_half_sequence_twice_or_13_beam_pattern-1 ; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_MUSIC_ROOM_SIGN
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_LEVEL_SECTOR_SIGN
@@ -5649,7 +5649,7 @@ ORG dispatch_room_cell
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_PASSWORD_PROMPT
     EQUW select_blank_or_right_half_pattern_by_column-1 ; ROOM_CELL_RIGHT_HALF_PATTERN
     EQUW set_ff_state_and_draw_last_column_special_row-1 ; ROOM_CELL_FF_LAST_COLUMN
-    EQUW draw_column_gated_58_59_pair_row-1 ; ROOM_CELL_COLUMN_GATED_58_59
+    EQUW draw_column_gated_58_59_pair_row-1 ; ROOM_CELL_COLUMN_GATED_EDGE_PAIR
     EQUW draw_fixed_pair_gap_row-1 ; ROOM_CELL_FIXED_PAIR_GAP
     EQUW draw_bordered_checker_diagonal_row-1 ; ROOM_CELL_BORDERED_CHECKER
     EQUW draw_and_configure_dynamic_room_object-1 ; ROOM_CELL_DYNAMIC_OBJECT
@@ -6691,7 +6691,7 @@ CLEAR replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_so
 
 ORG draw_repeated_87_blank_pairs_by_state
 
-; ROOM_CELL_STATE_87_PAIRS. A zero column enters the adjacent
+; ROOM_CELL_PROGRESS_CROSSED_DIAGONAL_PAIRS. A zero column enters the adjacent
 ; edge-pattern handler. Other columns draw leading blanks for removed progress
 ; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
 .draw_repeated_87_blank_pairs_by_state_source
@@ -6897,7 +6897,7 @@ CLEAR draw_narrow_bar_fixture_row_source, draw_narrow_bar_fixture_row_source_end
 
 ORG draw_record_08_or_edge_pattern_row
 
-; ROOM_CELL_RECORD_08_EDGE draws its curved-bowl record in the penultimate
+; ROOM_CELL_CURVED_BOWL_OR_EDGE_PATTERN draws its curved-bowl graphic in the penultimate
 ; column, alternates in the last, and blanks elsewhere. The shared edge-pattern
 ; handlers select blanks, alternating tiles, or GRAPHIC_EDGE_PATTERN_A/B.
 .draw_record_08_or_edge_pattern_row_source
@@ -6999,7 +6999,7 @@ CLEAR update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cr
 ORG draw_last_column_special_pair_row
 
 ; ROOM_CELL_LAST_COLUMN_SPECIAL. Columns zero through six reuse the
-; ROOM_CELL_58_59_EDGE layout. Column seven draws that row, configures the
+; ROOM_CELL_FIXED_EDGE_PAIR layout. Column seven draws that row, configures the
 ; dynamic-object vertical step and XOR hollow-arch selector, then enters
 ; prepare_dynamic_object_vdu_stream.
 .draw_last_column_special_pair_row_source
@@ -7025,7 +7025,7 @@ COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pai
 CLEAR draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end
 
 ORG draw_state_selected_13_center_row
-; ROOM_CELL_STATE_13_CENTER. The first and final room graphics Y coordinates
+; ROOM_CELL_STATE_SELECTED_NARROW_BAR_CENTER. The first and final room graphics Y coordinates
 ; draw alternating tiles. Other values draw two blanks, a narrow vertical bar,
 ; the two-tile hollow-arch/solid-diagonal centre run, another narrow bar, and
 ; two trailing blanks. Only the
@@ -7205,7 +7205,7 @@ CLEAR draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_r
 
 ORG draw_two_13_two_beam_two_13_two_pattern
 
-; ROOM_CELL_13_BEAM_PATTERN. Draw two narrow vertical bars, two mirrored
+; ROOM_CELL_NARROW_BAR_BEAM_PATTERN. Draw two narrow vertical bars, two mirrored
 ; diagonal beams, another two narrow bars, then two alternating tiles. The
 ; internal draw_two_narrow_vertical_bar_tiles entry draws exactly two narrow bars.
 .draw_two_13_two_beam_two_13_two_pattern_source
@@ -7235,7 +7235,7 @@ ASSERT draw_two_13_two_beam_two_13_two_pattern_source_end = &16DD
 ORG draw_left_half_sequence_twice_or_13_beam_pattern
 ; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM. Columns zero through three draw
 ; their four-selector record from left_half_four_tile_graphic_sequences twice.
-; Columns four through seven reuse ROOM_CELL_13_BEAM_PATTERN.
+; Columns four through seven reuse ROOM_CELL_NARROW_BAR_BEAM_PATTERN.
 ; This entry has not appeared in committed traces; its dispatch-table target
 ; and direct shared-tail structure establish the dataflow contract.
 .draw_left_half_sequence_twice_or_13_beam_pattern_source
