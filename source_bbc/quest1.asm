@@ -4945,11 +4945,11 @@ ORG scan_four_display_bytes_for_markers
     LDA (display_pointer_low),Y
     BEQ advance_display_scan_offset
     CMP #DISPLAY_MARKER_WATER
-    BEQ mark_c0_display_byte
-    CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_0A
-    BEQ mark_0a_or_05_display_byte
-    CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_05
-    BEQ mark_0a_or_05_display_byte
+    BEQ mark_water_display_byte
+    CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_PRIMARY
+    BEQ mark_deferred_damage_display_byte
+    CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_ALTERNATE
+    BEQ mark_deferred_damage_display_byte
     CMP #DISPLAY_MARKER_IMMEDIATE_DAMAGE
     BNE return_occupied_display_byte
     JSR apply_player_damage_and_redraw_energy
@@ -4960,7 +4960,7 @@ ORG scan_four_display_bytes_for_markers
     SEC
     RTS
 
-.mark_c0_display_byte
+.mark_water_display_byte
     LDA #WATER_ENVIRONMENT_ACTIVE
     STA water_environment_flag
 
@@ -4978,7 +4978,7 @@ ORG scan_four_display_bytes_for_markers
     CLC
     RTS
 
-.mark_0a_or_05_display_byte
+.mark_deferred_damage_display_byte
     LDA #DISPLAY_MARKER_DEFERRED_DAMAGE_PENDING
     STA display_marker_deferred_damage_flag
     JMP advance_display_scan_offset
