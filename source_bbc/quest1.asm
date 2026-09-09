@@ -5817,7 +5817,7 @@ ORG dispatch_room_cell
     EQUW draw_column_sensitive_room_patterns-1 ; ROOM_CELL_COLUMN_PATTERNS
     EQUW draw_fixed_center_motif_by_column-1 ; ROOM_CELL_FIXED_CENTER_MOTIF
     EQUW draw_pillar_base_row_in_last_column-1 ; ROOM_CELL_LAST_COLUMN_PILLAR
-    EQUW draw_alternating_or_record_08_row-1 ; ROOM_CELL_ALTERNATING_OR_RECORD_08
+    EQUW draw_alternating_or_curved_bowl_row-1 ; ROOM_CELL_ALTERNATING_OR_CURVED_BOWL
     EQUW draw_table_selected_four_tile_half_row-1 ; ROOM_CELL_FOUR_TILE_HALF_ROW
     EQUW draw_record_08_or_edge_pattern_row-1 ; ROOM_CELL_RECORD_08_EDGE
     EQUW draw_58_59_pair_or_edge_pattern_row-1 ; ROOM_CELL_58_59_EDGE
@@ -6521,20 +6521,20 @@ ORG draw_column_sensitive_room_patterns
 
 .draw_blank_or_alternating_row_by_column
     CMP #COLUMN_PATTERN_RIGHT_START
-    BPL draw_column_sensitive_room_patterns_branch_2
+    BPL tail_draw_eight_alternating_tiles
     JMP draw_eight_blank_tiles
 
-.draw_column_sensitive_room_patterns_branch_2
+.tail_draw_eight_alternating_tiles
     JMP draw_eight_alternating_tiles
 
-.draw_full_fixed_01_02_pair_row
+.draw_full_rounded_pattern_pair_row
     JMP draw_fixed_pair_tile_run
 
 .draw_fixed_center_motif_by_column
     CMP #ROOM_COLUMN_FIRST
-    BEQ draw_full_fixed_01_02_pair_row
+    BEQ draw_full_rounded_pattern_pair_row
     CMP #ROOM_COLUMN_LAST
-    BEQ draw_full_fixed_01_02_pair_row
+    BEQ draw_full_rounded_pattern_pair_row
     LDX #GRAPHIC_ROUNDED_PATTERN_A
     JSR set_fixed_tile_pair
     LDX #FIXED_CENTER_BEAM_TILE_COUNT
@@ -6542,29 +6542,29 @@ ORG draw_column_sensitive_room_patterns
     LDX #GRAPHIC_ROUNDED_PATTERN_B
     JMP set_fixed_tile_pair
 
-.draw_eight_04_03_pair_tiles
+.draw_eight_hollow_arch_diagonal_pairs
     LDX #ROOM_CELL_TILE_COUNT
 
-.draw_04_03_pair_tile_run
+.draw_hollow_arch_diagonal_pair_run
     LDA #GRAPHIC_HOLLOW_ARCH
     STA active_tile_pair_first
     LDA #GRAPHIC_SOLID_DIAGONAL_A
     STA active_tile_pair_second
     JMP draw_selected_fixed_pair_run
 
-.draw_alternating_or_record_08_row
+.draw_alternating_or_curved_bowl_row
     CMP #ROOM_COLUMN_FIRST
-    BEQ draw_column_sensitive_room_patterns_branch_4
+    BEQ draw_eight_curved_bowl_tiles
     JMP draw_eight_alternating_tiles
 
-.draw_column_sensitive_room_patterns_branch_4
+.draw_eight_curved_bowl_tiles
     LDX #ROOM_CELL_TILE_COUNT
 
-.draw_column_sensitive_room_patterns_branch_5
+.draw_next_curved_bowl_tile
     LDA #GRAPHIC_CURVED_BOWL
     JSR copy_16_byte_graphic_to_display
     DEX
-    BNE draw_column_sensitive_room_patterns_branch_5
+    BNE draw_next_curved_bowl_tile
     RTS
 
 
@@ -7100,7 +7100,7 @@ ORG draw_record_08_or_edge_pattern_row
 .draw_record_08_or_edge_pattern_row_source
     CMP #&06
     BNE select_cell_12_last_column
-    JMP draw_column_sensitive_room_patterns_branch_4
+    JMP draw_eight_curved_bowl_tiles
 
 .select_cell_12_last_column
     CMP #&07
