@@ -709,6 +709,7 @@ PASSWORD_NUMBER_CHARACTER_BIAS  = &31 ; behavioral: zero-based password number b
 PASSWORD_COLLECTED              = &01 ; behavioral: collected-password table flag
 PASSWORD_CHARACTER_COUNT        = &05 ; behavioral: every password contains five letters
 PASSWORD_COUNT                  = &08 ; behavioral: eight collectible passwords are tracked and listed
+PASSWORD_LETTER_STRIDE          = &03 ; dataflow: adjacent five-letter passwords overlap by two letters
 RESTORED_SPECIAL_ROOM_APPEARANCE = &69 ; behavioral: common appearance value restored for rooms D4, C6 and A7
 ROOM_APPEARANCE_INDEX_A7        = &38 ; dataflow: room A7 offset in the eight-rooms-per-level appearance table
 ROOM_APPEARANCE_INDEX_B0        = &01 ; dataflow: room B0 offset in the appearance table

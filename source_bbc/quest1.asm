@@ -7233,6 +7233,7 @@ ORG draw_room_sign_or_collect_password
     JSR OSWRCH
     LDA #PASSWORD_COLLECTED
     STA collected_password_flags,X
+    ; Convert the password number to its PASSWORD_LETTER_STRIDE table offset.
     TXA
     STA inline_vdu_stream_pointer_low
     ASL A
@@ -10636,8 +10637,33 @@ CLEAR unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_
 ORG password_letters
 ; eight overlapping five-letter passwords at stride three.
 .password_letters_source
-    EQUS "SALLYNDAVIDIOTTERASEVENTER"
+.sally_password_letters
+    EQUS "SAL"
+.lynda_password_letters
+    EQUS "LYN"
+.david_password_letters
+    EQUS "DAV"
+.idiot_password_letters
+    EQUS "IDI"
+.otter_password_letters
+    EQUS "OTT"
+.erase_password_letters
+    EQUS "ERA"
+.seven_password_letters
+    EQUS "SEV"
+.enter_password_letters
+    EQUS "ENT"
+.password_overlap_tail_letters
+    EQUS "ER"
 .password_letters_source_end
+ASSERT lynda_password_letters-sally_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT david_password_letters-lynda_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT idiot_password_letters-david_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT otter_password_letters-idiot_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT erase_password_letters-otter_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT seven_password_letters-erase_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT enter_password_letters-seven_password_letters = PASSWORD_LETTER_STRIDE
+ASSERT password_letters_source_end-password_letters_source = (PASSWORD_COUNT-1)*PASSWORD_LETTER_STRIDE+PASSWORD_CHARACTER_COUNT
 ASSERT password_letters_source = password_letters
 ASSERT password_letters_source_end = room_sign_text_table
 COPYBLOCK password_letters_source, password_letters_source_end, password_letters+HIGH_RUNTIME_TO_LOADED_DELTA
