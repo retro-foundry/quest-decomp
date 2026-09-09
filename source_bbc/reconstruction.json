@@ -27,7 +27,7 @@
         "all known pointers into this range are $20-aligned and the XOR renderer consumes them as multi-row Mode 1 source graphics",
         "xor_graphic_into_display proves eight scanlines with source bytes N+0/N+8/N+16/N+24; decoding in that exact order identifies four small-robot directions at $0400-$0460, an as-yet unidentified flying-creature pair at $0480/$04A0, a moth at $04C0/$04E0, a jellyfish at $0600/$0620, striped platforms at $0640/$0660, a mouse at $0680 and a fish at $06A0",
         "enemy_graphic_descriptor_table selects the unidentified flying-creature, striped-platform, moth/hazard and jellyfish pairs; the six-byte room records do not select the jellyfish pair",
-        "the decoded bank identifies all $0500-$05E0 records as player artwork and all $06C0-$0760 records as ghost artwork; the player renderer selects $0500/$0560/$0540/$05E0/$05A0/$05C0 while the remaining player and ghost frames currently have no proved selector",
+        "the decoded bank identifies all $0500-$05E0 records as player artwork and all $06C0-$0760 records as ghost artwork; xor_draw_player_two_parts draws two rows from $0500 or $0560, and xor_graphic_into_display advances the source by $20 for row two, proving $0520/$0580 are the corresponding player middle records",
         "graphic identity and runtime reachability are recorded separately: decoded player and ghost frames retain those identities even where no pointer-table selector has yet been proved"
       ]
     },
@@ -298,8 +298,8 @@
       "meaning_level": "behavioral",
       "record_size": 2,
       "evidence": [
-        "xor_draw_player_two_parts indexes these exact six words with X=$18/$1A for the upper frame and X=$1C/$1E/$20/$22 for normal or alternate lower frames",
-        "the targets are $0500/$0560/$0540/$05E0/$05A0/$05C0, matching the individually source-labelled player frame records"
+        "xor_draw_player_two_parts indexes these exact six words with X=$18/$1A for an upper-plus-middle two-row graphic and X=$1C/$1E/$20/$22 for normal or alternate lower frames",
+        "$0500/$0560 begin two-record composites whose implicit second rows are $0520/$0580; the other targets are the single-row lower records $0540/$05E0/$05A0/$05C0"
       ]
     },
     {

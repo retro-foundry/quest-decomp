@@ -88,5 +88,7 @@ for index, (runtime_address, label, record) in enumerate(records):
     draw.rectangle((sprite_x - 1, sprite_y - 1, sprite_x + 16 * scale, sprite_y + 8 * scale), outline=(96, 96, 96))
 
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-sheet.save(OUTPUT)
+temporary_output = OUTPUT.with_name(f"{OUTPUT.stem}.new{OUTPUT.suffix}")
+sheet.save(temporary_output)
+temporary_output.replace(OUTPUT)
 print(OUTPUT)

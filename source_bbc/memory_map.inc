@@ -117,7 +117,7 @@ indexed_xor_graphic_pointer_table = &0B5F ; behavioral: four active roaming/effe
 enemy_graphic_descriptor          = &0B67 ; behavioral: selected unidentified-flying-creature, striped-platform, moth/hazard or jellyfish frame pair
 lift_and_hazard_graphic_descriptor = &0B6B ; behavioral: selected pair of lift/hazard sprite-frame pointers
 unused_graphic_frame_pointer_words = &0B6F ; structural: lift-frame 0/1 and ghost-frame 0/3 pointers below every proved runtime selector index
-player_graphic_frame_pointer_table = &0B77 ; behavioral: six facing/standing/stride/step player sprite-frame pointers selected by X=$18-$22
+player_graphic_frame_pointer_table = &0B77 ; behavioral: two upper-plus-middle and four lower player part pointers selected by X=$18-$22
 interval_timer_block              = &0B9B ; port-contract: five-byte MOS interval-timer block read by OSWORD $04
 indexed_xor_graphic_pointer_sets = &1F0F ; behavioral: small-robot, fish/item-record-33, mouse/herring-record-35 and background pointer sets copied to the roaming/effect table
 terminal_message_text           = &2199 ; dataflow: the terminal's messages - TERMINAL, PASSWORDS, ACCESS GRANTED, ACTIVATED, DENIED and INVALID PASSWORD

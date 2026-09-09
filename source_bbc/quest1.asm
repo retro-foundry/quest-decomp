@@ -314,7 +314,7 @@ ORG &9000
 .player_upper_facing_right_frame
     EQUB &00, &00, &11, &11, &11, &11, &16, &78, &77, &F8, &F0, &C3, &C3, &C3, &6B, &A5
     EQUB &FF, &F1, &87, &FF, &0F, &0F, &0C, &87, &88, &00, &00, &88, &88, &08, &00, &00
-.player_unused_upper_facing_right_frame
+.player_middle_facing_right_frame
     EQUB &9E, &F8, &F0, &F0, &F0, &70, &70, &00, &C3, &87, &C3, &87, &C3, &87, &C3, &07
     EQUB &08, &84, &08, &84, &48, &84, &48, &84, &00, &00, &00, &00, &00, &00, &00, &00
 .player_lower_standing_frame
@@ -323,7 +323,7 @@ ORG &9000
 .player_upper_facing_left_frame
     EQUB &11, &00, &00, &11, &11, &01, &00, &00, &FF, &F8, &1E, &FF, &0F, &0F, &03, &1E
     EQUB &EE, &F1, &F0, &3C, &3C, &3C, &6D, &5A, &00, &00, &88, &88, &88, &88, &86, &E1
-.player_unused_upper_facing_left_frame
+.player_middle_facing_left_frame
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &01, &12, &01, &12, &21, &12, &21, &12
     EQUB &B4, &1E, &3C, &1E, &3C, &1E, &3C, &0E, &97, &F1, &F0, &F0, &F0, &E0, &E0, &EE
 .player_lower_wide_stride_frame
@@ -11068,11 +11068,12 @@ ORG unused_graphic_frame_pointer_words
 .unused_graphic_frame_pointer_words_source_end
 ASSERT unused_graphic_frame_pointer_words_source = unused_graphic_frame_pointer_words
 
-; Runtime $0B77-$0B82: six player-frame pointers. xor_draw_player_two_parts
-; indexes these exact words with X=$18/$1A for the upper frame and
-; X=$1C/$1E/$20/$22 for the normal/alternate lower frame.
+; Runtime $0B77-$0B82: six player-part pointers. xor_draw_player_two_parts
+; indexes $0500/$0560 with X=$18/$1A and draws two character rows, so the XOR
+; renderer advances by $20 and consumes $0520/$0580 as the corresponding middle
+; record. X=$1C/$1E/$20/$22 selects one of the four single-row lower records.
 .player_graphic_frame_pointer_table_source
-    EQUW &0500, &0560 ; player_upper_facing_right/left_frame
+    EQUW &0500, &0560 ; upper records; the following $20 records are the middles
     EQUW &0540, &05E0 ; player_lower_standing/step_right_frame
     EQUW &05A0, &05C0 ; player_lower_wide_stride/step_left_frame
 .player_graphic_frame_pointer_table_source_end
