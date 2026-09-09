@@ -2758,12 +2758,12 @@ ORG initialise_room_enemy_from_table
     SEC
     SBC #ENEMY_SECOND_HORIZONTAL_BIAS
     STA display_grid_column
-    STA shared_workspace_6a
+    STA moving_entity_second_horizontal_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA shared_workspace_49
+    STA room_enemy_second_display_pointer_low
     LDA display_pointer_high
-    STA shared_workspace_4a
+    STA room_enemy_second_display_pointer_high
     LDY #ENEMY_JELLYFISH_DESCRIPTOR_OFFSET
     LDA shared_workspace_79
     BNE copy_entity_descriptor
@@ -4280,7 +4280,7 @@ ORG walk_player_toward_target_position
     JSR play_sound_with_amplitude
 
 .walk_one_step_toward_target
-    LDA shared_workspace_2e
+    LDA player_walk_target_vertical_position
     LSR A
     STA shared_workspace_31
     LDX #&02
@@ -4300,7 +4300,7 @@ ORG walk_player_toward_target_position
 .test_horizontal_difference
     BCS step_horizontally_toward_target
     LDA player_horizontal_position
-    CMP shared_workspace_2d
+    CMP player_walk_target_horizontal_position
     BNE step_horizontally_toward_target
     LDX #&00
     JSR flash_background_colour_with_sound
@@ -4312,7 +4312,7 @@ ORG walk_player_toward_target_position
 
 .step_horizontally_toward_target
     LDA player_horizontal_position
-    CMP shared_workspace_2d
+    CMP player_walk_target_horizontal_position
     BEQ wait_for_frame_then_continue
     BPL step_left_toward_target
     JSR advance_player_one_cell_right
@@ -7037,13 +7037,13 @@ ORG initialise_indexed_pair_from_record
     JSR display_action_jump_table
     LDA display_pointer_low
     STA indexed_pair_display_pointer_low
-    STA shared_workspace_9b
+    STA indexed_pair_second_display_pointer_low
     LDA display_pointer_high
     STA indexed_pair_display_pointer_high
-    STA shared_workspace_9c
+    STA indexed_pair_second_display_pointer_high
     LDA reference_pair_secondary_value
     STA indexed_pair_secondary_field
-    STA shared_workspace_8c
+    STA indexed_pair_second_secondary_field
     RTS
 .initialise_indexed_pair_from_record_source_end
 
@@ -9985,13 +9985,13 @@ ORG draw_and_initialise_room
     LDA #&0A
     JSR OSBYTE
     LDA player_horizontal_position
-    STA shared_workspace_2d
+    STA player_walk_target_horizontal_position
     LDA player_vertical_position
-    STA shared_workspace_2e
+    STA player_walk_target_vertical_position
     LDA player_display_pointer_low
-    STA shared_workspace_2f
+    STA room_setup_player_display_pointer_low
     LDA player_display_pointer_high
-    STA shared_workspace_30
+    STA room_setup_player_display_pointer_high
     LDA #OSBYTE_FLUSH_BUFFER
     LDX #&04
     JSR OSBYTE
@@ -10883,10 +10883,10 @@ ORG initialise_room_moving_objects
     ADC indexed_xor_graphic_selector_upper_limit
     ROR A
     ADC #ROOM_MOVING_OBJECT_CENTRE_BIAS
-    STA shared_workspace_66
+    STA room_moving_object_inner_horizontal_position
     STA moving_entity_horizontal_position
     LDA indexed_xor_graphic_selector_upper_limit
-    STA shared_workspace_6a
+    STA moving_entity_second_horizontal_position
     LDX #&00
 
 .build_indexed_xor_display_pointers
