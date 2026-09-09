@@ -6688,19 +6688,22 @@ CLEAR draw_bordered_horizontal_bar_row_source, draw_bordered_horizontal_bar_row_
 
 ORG draw_table_selected_four_tile_half_row
 
-; Runtime $1550-$156D, room-cell type $11. Column zero saves its cell/display reference. Columns zero through three draw four blanks followed by a four-selector record from right_half_four_tile_graphic_sequences; columns four through seven draw alternating tiles.
+; The four-tile-half-row cell saves its cell/display reference in column zero.
+; Columns zero through three draw four blanks followed by a four-selector record
+; from right_half_four_tile_graphic_sequences; the right half draws alternating
+; tiles.
 .draw_table_selected_four_tile_half_row_source
-    CMP #&00
-    BNE select_cell_11_column_half
+    CMP #ROOM_COLUMN_FIRST
+    BNE select_four_tile_half_row_column_half
     JSR save_display_pointer_and_cell_reference
 
-.select_cell_11_column_half
-    CMP #&04
-    BMI draw_cell_11_table_selected_half
+.select_four_tile_half_row_column_half
+    CMP #ROOM_HALF_COLUMN_COUNT
+    BMI draw_four_tile_half_row_table_selected_half
     JMP draw_eight_alternating_tiles
 
-.draw_cell_11_table_selected_half
-    LDX #&04
+.draw_four_tile_half_row_table_selected_half
+    LDX #FOUR_TILE_SEQUENCE_SELECTOR_COUNT
     JSR draw_blank_tile_run
     LDA #LO(right_half_four_tile_graphic_sequences)
     STA graphic_sequence_pointer_low
@@ -7669,11 +7672,14 @@ ASSERT draw_room_sign_or_collect_password_source_end = password_letters
 
 ORG draw_table_selected_left_half_row
 
-; Runtime $1685-$16B1, room-cell type $1B. Columns zero through three draw four blanks then a four-selector record from left_half_four_tile_graphic_sequences. Columns four through seven select the same records by column minus four, then append two selector-$13 tiles and two alternating tiles.
+; The left-half-sequence cell draws four blanks then one four-selector record in
+; columns zero through three. Columns four through seven select the same records
+; by their position within the right half, then append two narrow bars and two
+; alternating tiles.
 .draw_table_selected_left_half_row_source
-    CMP #&04
-    BPL draw_cell_1b_right_half_layout
-    LDX #&04
+    CMP #ROOM_HALF_COLUMN_COUNT
+    BPL draw_left_half_sequence_right_half_layout
+    LDX #FOUR_TILE_SEQUENCE_SELECTOR_COUNT
     JSR draw_blank_tile_run
 
 .load_left_half_graphic_sequence_pointer
@@ -7681,19 +7687,19 @@ ORG draw_table_selected_left_half_row
     STA graphic_sequence_pointer_low
     LDA #HI(left_half_four_tile_graphic_sequences)
     STA graphic_sequence_pointer_high
-    LDX #&04
-    LDY #&02
+    LDX #FOUR_TILE_SEQUENCE_SELECTOR_COUNT
+    LDY #FOUR_TILE_SEQUENCE_INDEX_SHIFTS
     JMP draw_graphic_selector_sequence
 
-.draw_cell_1b_right_half_layout
+.draw_left_half_sequence_right_half_layout
     SEC
-    SBC #&04
+    SBC #ROOM_HALF_COLUMN_COUNT
     STA room_graphics_column
     JSR load_left_half_graphic_sequence_pointer
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     JSR copy_16_byte_graphic_to_display
-    LDX #&02
+    LDX #TWO_TILE_ALTERNATING_SUFFIX_COUNT
     JMP draw_alternating_tile_run
 .draw_table_selected_left_half_row_source_end
 
