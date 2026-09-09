@@ -4450,9 +4450,9 @@ ORG redraw_energy_bar_segment
 ; Redraw the one cell of the energy bar that the current
 ; energy value partially fills.
 ; player_energy selects both the cell and the fill. Its top five bits
-; address the cell, $4071 plus the value masked to $F8, and its low three bits
-; halved index the four fill patterns at $2222. That pattern is then written to
-; four consecutive display bytes, Y counting down from 4 to 1.
+; address the cell by adding the masked value to energy_bar_partial_cell_base,
+; and its low three bits halved index energy_bar_fill_patterns. That pattern is
+; then written to ENERGY_BAR_FILL_BYTE_COUNT consecutive display bytes.
 ; Y is preserved across the whole redraw. Only the partial cell is touched: the
 ; full and empty cells either side of it are left as they were, which is why a
 ; single energy change costs four byte writes rather than a whole bar redraw.
@@ -4460,7 +4460,7 @@ ORG redraw_energy_bar_segment
     TYA
     PHA
     LDA player_energy
-    AND #&F8
+    AND #ENERGY_BAR_CELL_OFFSET_MASK
     CLC
     ADC #LO(energy_bar_partial_cell_base)
     STA display_pointer_low
@@ -4472,7 +4472,7 @@ ORG redraw_energy_bar_segment
     LSR A
     TAY
     LDA energy_bar_fill_patterns,Y
-    LDY #&04
+    LDY #ENERGY_BAR_FILL_BYTE_COUNT
 
 .write_next_fill_byte
     STA (display_pointer_low),Y
@@ -4494,17 +4494,15 @@ CLEAR redraw_energy_bar_segment_source, redraw_energy_bar_segment_source_end
 
 ORG set_display_pointer_three_mode1_rows_below_player
 
-; A Mode 1 character row occupies $0280 bytes, so $0780
-; advances three such rows. The low-byte ADC carry is deliberately propagated
-; into the high byte. Committed no-input and X traces exercise both carry
-; states and produce $7460->$7BE0 and $42C0->$4A40 respectively.
+; Add MODE1_THREE_CHARACTER_ROWS_BYTES to the player's display pointer. The
+; low-byte ADC carry is deliberately propagated into the high byte.
 .set_display_pointer_three_mode1_rows_below_player_source
     LDA player_display_pointer_low
     CLC
-    ADC #&80
+    ADC #LO(MODE1_THREE_CHARACTER_ROWS_BYTES)
     STA display_pointer_low
     LDA player_display_pointer_high
-    ADC #&07
+    ADC #HI(MODE1_THREE_CHARACTER_ROWS_BYTES)
     STA display_pointer_high
     RTS
 .set_display_pointer_three_mode1_rows_below_player_source_end
@@ -4520,16 +4518,16 @@ CLEAR set_display_pointer_three_mode1_rows_below_player_source, set_display_poin
 ORG move_player_right_with_collision
 
 ; Move the player one cell right unless something stops it.
-; A horizontal position of $4C is the right edge of the room and transfers to
-; $2ACF instead of moving. Otherwise the display pointer is set $20 ahead of the
-; player and a column of $18 rows is scanned for a blocking byte. A blocked
-; column recomputes the pointer to the cell boundary, adding $02B5 to the
-; position masked to $F0, and transfers to $29B9. Only a clear column reaches
+; PLAYER_RIGHT_EDGE_POSITION transfers to the adjacent room instead of moving.
+; Otherwise the display pointer is advanced by PLAYER_COLLISION_LOOKAHEAD_BYTES
+; and PLAYER_COLLISION_SCAN_ROWS are scanned for a blocking byte. A blocked
+; column recomputes the interaction pointer from the masked player pointer and
+; PLAYER_RIGHT_BLOCKED_CELL_POINTER_OFFSET. Only a clear column reaches
 ; the step itself, which increments the position and adds one Mode 1 character
 ; cell to the display pointer, touching the high byte only on carry.
 .move_player_right_with_collision_source
     LDA player_horizontal_position
-    CMP #&4C
+    CMP #PLAYER_RIGHT_EDGE_POSITION
     BNE scan_column_ahead_of_player
     JMP enter_room_to_the_right
 
@@ -4547,11 +4545,11 @@ ORG move_player_right_with_collision
     BCC advance_player_one_cell_right
     CLC
     LDA player_display_pointer_low
-    AND #&F0
-    ADC #&B5
+    AND #PLAYER_BLOCKED_POINTER_LOW_MASK
+    ADC #LO(PLAYER_RIGHT_BLOCKED_CELL_POINTER_OFFSET)
     STA display_pointer_low
     LDA player_display_pointer_high
-    ADC #&02
+    ADC #HI(PLAYER_RIGHT_BLOCKED_CELL_POINTER_OFFSET)
     STA display_pointer_high
     JMP process_player_cell_interactions
 
@@ -4579,14 +4577,14 @@ ORG move_player_left_with_collision
 
 ; The mirror of move_player_right_with_collision. A
 ; horizontal position of zero is the left edge of the room and transfers to
-; $2AE6 instead of moving; otherwise a column of $18 rows is scanned one cell
-; to the left of the player and a blocking byte diverts to $29B9 after
+; enter_room_to_the_left instead of moving; otherwise PLAYER_COLLISION_SCAN_ROWS
+; are scanned one cell to the left of the player and a blocking byte diverts to
+; process_player_cell_interactions after
 ; recomputing the pointer to the cell boundary. Only a clear column reaches the
-; step at $2805, which decrements the position and subtracts one Mode 1
+; movement step, which decrements the position and subtracts one Mode 1
 ; character cell, touching the display pointer high byte only on borrow.
 ; The two routines differ only where the geometry forces it: SEC/SBC against
-; CLC/ADC, position zero against $4C for the edge, and $02B5 against $0275 when
-; recomputing the blocked pointer.
+; CLC/ADC, the two room edges, and the directional blocked-cell pointer offsets.
 .move_player_left_with_collision_source
     LDA player_horizontal_position
     BNE scan_column_left_of_player
@@ -4608,11 +4606,11 @@ ORG move_player_left_with_collision
 .recompute_pointer_at_blocking_cell
     CLC
     LDA player_display_pointer_low
-    AND #&F0
-    ADC #&75
+    AND #PLAYER_BLOCKED_POINTER_LOW_MASK
+    ADC #LO(PLAYER_LEFT_BLOCKED_CELL_POINTER_OFFSET)
     STA display_pointer_low
     LDA player_display_pointer_high
-    ADC #&02
+    ADC #HI(PLAYER_LEFT_BLOCKED_CELL_POINTER_OFFSET)
     STA display_pointer_high
     JMP process_player_cell_interactions
 
