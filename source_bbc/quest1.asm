@@ -5620,7 +5620,7 @@ ORG dispatch_room_cell
     EQUW draw_alternating_or_curved_bowl_row-1 ; ROOM_CELL_ALTERNATING_OR_CURVED_BOWL
     EQUW draw_table_selected_four_tile_half_row-1 ; ROOM_CELL_FOUR_TILE_HALF_ROW
     EQUW draw_record_08_or_edge_pattern_row-1 ; ROOM_CELL_RECORD_08_EDGE
-    EQUW draw_58_59_pair_or_edge_pattern_row-1 ; ROOM_CELL_58_59_EDGE
+    EQUW draw_fixed_edge_pair_or_alternating_pattern_row-1 ; ROOM_CELL_58_59_EDGE
     EQUW draw_ff_state_column_motif-1 ; ROOM_CELL_FF_STATE_MOTIF
     EQUW draw_narrow_bar_fixture_row-1 ; ROOM_CELL_NARROW_BAR_FIXTURE
     EQUW draw_last_column_special_pair_row-1 ; ROOM_CELL_LAST_COLUMN_SPECIAL
@@ -6392,8 +6392,8 @@ ORG draw_bordered_horizontal_bar_row
     STY saved_interaction_item_code
     CMP #COLUMN_MOTIF_LEFT_OUTER_END
     BPL select_column_motif_middle_or_right
-.draw_outer_04_03_pair_row
-    JMP draw_eight_04_03_tiles
+.draw_outer_hollow_arch_solid_diagonal_pair_row
+    JMP draw_eight_hollow_arch_solid_diagonal_tiles
 
 .select_column_motif_middle_or_right
     CMP #ROOM_COLUMN_LAST
@@ -6404,7 +6404,7 @@ ORG draw_bordered_horizontal_bar_row
 
 .select_column_motif_middle_columns
     CMP #COLUMN_MOTIF_MIDDLE_END
-    BPL draw_outer_04_03_pair_row
+    BPL draw_outer_hollow_arch_solid_diagonal_pair_row
     LDX #COLUMN_MOTIF_SIDE_BLANK_TILES
     JSR draw_blank_tile_run
     CPY #COLUMN_MOTIF_NONE
@@ -6421,11 +6421,11 @@ ORG draw_bordered_horizontal_bar_row
 
 .draw_column_motif_last_column
     CPY #COLUMN_MOTIF_OUTER_ONLY
-    BEQ draw_outer_04_03_pair_row
+    BEQ draw_outer_hollow_arch_solid_diagonal_pair_row
     CPY #COLUMN_MOTIF_NONE
-    BEQ draw_outer_04_03_pair_row
+    BEQ draw_outer_hollow_arch_solid_diagonal_pair_row
     LDX #COLUMN_MOTIF_LAST_COLUMN_EDGE_TILES
-    JSR draw_04_03_alternating_run
+    JSR draw_hollow_arch_solid_diagonal_alternating_run
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     TYA
@@ -6434,7 +6434,7 @@ ORG draw_bordered_horizontal_bar_row
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     LDX #COLUMN_MOTIF_LAST_COLUMN_EDGE_TILES
-    JMP draw_04_03_alternating_run
+    JMP draw_hollow_arch_solid_diagonal_alternating_run
 
 .draw_blank_state_column_motif_source
     LDY #COLUMN_MOTIF_NONE
@@ -6696,7 +6696,7 @@ ORG draw_repeated_87_blank_pairs_by_state
 ; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
 .draw_repeated_87_blank_pairs_by_state_source
     CMP #ROOM_COLUMN_FIRST
-    BEQ draw_58_59_pair_or_edge_pattern_row
+    BEQ draw_fixed_edge_pair_or_alternating_pattern_row
     LDA #PROGRESS_PATTERN_CELL_MAX_PAIRS
     SEC
     SBC progress_pattern_pair_count
@@ -6705,15 +6705,15 @@ ORG draw_repeated_87_blank_pairs_by_state
     JSR draw_blank_tile_run
     LDX progress_pattern_pair_count
     CPX #TILE_RUN_EMPTY_COUNT
-    BEQ record_87_pair_run_finished_exit
+    BEQ crossed_diagonal_blank_pair_run_finished_exit
 
-.draw_next_87_blank_pair
+.draw_next_xor_crossed_diagonal_blank_pair
     LDA #GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_CROSSED_DIAGONAL
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     DEX
-    BNE draw_next_87_blank_pair
+    BNE draw_next_xor_crossed_diagonal_blank_pair
     RTS
 .draw_repeated_87_blank_pairs_by_state_source_end
 
@@ -6832,13 +6832,13 @@ ORG draw_narrow_bar_fixture_row
     BNE select_narrow_bar_column_group
     LDX #NARROW_BAR_PAIR_COUNT
 
-.draw_next_15_blank_pair
+.draw_next_column_junction_blank_pair
     LDA #GRAPHIC_COLUMN_JUNCTION
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     DEX
-    BNE draw_next_15_blank_pair
+    BNE draw_next_column_junction_blank_pair
 
 .return_from_narrow_bar_fixture
     RTS
@@ -6847,7 +6847,7 @@ ORG draw_narrow_bar_fixture_row
     CMP #ROOM_HALF_COLUMN_COUNT
     BPL select_narrow_bar_right_edge
     LDX #NARROW_BAR_PAIR_COUNT
-    JMP draw_next_13_07_pair
+    JMP draw_next_narrow_bar_crossed_diagonal_pair
 
 .select_narrow_bar_right_edge
     CMP #ROOM_COLUMN_LAST
@@ -6862,7 +6862,7 @@ ORG draw_narrow_bar_fixture_row
     LDA #ROOM_COLUMN_LAST
     SBC room_graphics_column
     TAX
-    JSR draw_next_13_07_pair
+    JSR draw_next_narrow_bar_crossed_diagonal_pair
     LDA #GRAPHIC_WIDE_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_BLANK
@@ -6876,13 +6876,13 @@ ORG draw_narrow_bar_fixture_row
     TAX
     JMP draw_blank_tile_run
 
-.draw_next_13_07_pair
+.draw_next_narrow_bar_crossed_diagonal_pair
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_CROSSED_DIAGONAL
     JSR copy_16_byte_graphic_to_display
     DEX
-    BNE draw_next_13_07_pair
+    BNE draw_next_narrow_bar_crossed_diagonal_pair
     RTS
 .draw_narrow_bar_fixture_row_source_end
 
@@ -6914,10 +6914,10 @@ ORG draw_record_08_or_edge_pattern_row
 
 .draw_column_gated_58_59_pair_row_source
     CMP #EDGE_PATTERN_BLANK_FIRST_COLUMN
-    BMI draw_58_59_pair_or_edge_pattern_row
+    BMI draw_fixed_edge_pair_or_alternating_pattern_row
     JSR mirror_cell_direction
 
-.draw_58_59_pair_or_edge_pattern_row_source
+.draw_fixed_edge_pair_or_alternating_pattern_row_source
     LDX #ROOM_CELL_TILE_COUNT
     CMP #EDGE_PATTERN_BLANK_FIRST_COLUMN
     BPL draw_blank_row_from_record_edge_handlers
@@ -6935,7 +6935,7 @@ ORG draw_record_08_or_edge_pattern_row
 
 ASSERT draw_record_08_or_edge_pattern_row_source = draw_record_08_or_edge_pattern_row
 ASSERT draw_column_gated_58_59_pair_row_source = draw_column_gated_58_59_pair_row
-ASSERT draw_58_59_pair_or_edge_pattern_row_source = draw_58_59_pair_or_edge_pattern_row
+ASSERT draw_fixed_edge_pair_or_alternating_pattern_row_source = draw_fixed_edge_pair_or_alternating_pattern_row
 ASSERT draw_record_08_or_edge_pattern_row_source_end = &15DF
 COPYBLOCK draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_row_source_end, &2DB1
 
@@ -7005,10 +7005,10 @@ ORG draw_last_column_special_pair_row
 .draw_last_column_special_pair_row_source
     CMP #ROOM_COLUMN_LAST
     BEQ draw_last_column_pair_before_special_setup
-    JMP draw_58_59_pair_or_edge_pattern_row
+    JMP draw_fixed_edge_pair_or_alternating_pattern_row
 
 .draw_last_column_pair_before_special_setup
-    JSR draw_58_59_pair_or_edge_pattern_row
+    JSR draw_fixed_edge_pair_or_alternating_pattern_row
     LDA #CROSS_ROOM_ROBOT_CHARACTER_ROWS
     STA dynamic_object_vdu_vertical_step_high
     LDA #GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_HOLLOW_ARCH
@@ -7045,7 +7045,7 @@ ORG draw_state_selected_13_center_row
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDX #TWO_TILE_RUN_COUNT
-    JSR draw_04_03_alternating_run
+    JSR draw_hollow_arch_solid_diagonal_alternating_run
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDX #TWO_TILE_RUN_COUNT
@@ -7207,23 +7207,23 @@ ORG draw_two_13_two_beam_two_13_two_pattern
 
 ; ROOM_CELL_13_BEAM_PATTERN. Draw two narrow vertical bars, two mirrored
 ; diagonal beams, another two narrow bars, then two alternating tiles. The
-; internal draw_two_13_tiles entry draws exactly two narrow bars.
+; internal draw_two_narrow_vertical_bar_tiles entry draws exactly two narrow bars.
 .draw_two_13_two_beam_two_13_two_pattern_source
-    JSR draw_two_13_tiles
+    JSR draw_two_narrow_vertical_bar_tiles
     LDX #TWO_TILE_RUN_COUNT
     JSR draw_mirrored_diagonal_beam_tile_run
-    JSR draw_two_13_tiles
+    JSR draw_two_narrow_vertical_bar_tiles
     LDX #TWO_TILE_RUN_COUNT
     JMP draw_alternating_tile_run
 
-.draw_two_13_tiles
+.draw_two_narrow_vertical_bar_tiles
     LDX #TWO_TILE_RUN_COUNT
 
-.draw_next_13_tile
+.draw_next_narrow_vertical_bar_tile
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     DEX
-    BNE draw_next_13_tile
+    BNE draw_next_narrow_vertical_bar_tile
     RTS
 .draw_two_13_two_beam_two_13_two_pattern_source_end
 
