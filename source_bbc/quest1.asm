@@ -3792,8 +3792,8 @@ CLEAR draw_record_three_from_alternate_bank_source, draw_record_three_from_alter
 ORG erase_collected_icon
 
 ; Blank one icon in the collected row, at the index in A.
-; The address is A times sixteen plus $3F70, one slot past the $3F60 base
-; add_collected_icon draws to, so this erases the icon above the given index.
+; The address is A times sixteen plus collected_icon_next_slot_base, one slot
+; past the add_collected_icon base, so this erases the icon above the given index.
 ; There is no terminator: the block runs off its last instruction into
 ; draw_record_three_from_alternate_bank, which draws the blanking record and
 ; restores the graphic bank.
@@ -3805,7 +3805,7 @@ ORG erase_collected_icon
     CLC
     ADC #LO(collected_icon_next_slot_base)
     STA display_pointer_low
-    LDA #GAME_CLOCK_TICK_CONSUMED
+    LDA #POINTER_HIGH_CARRY_BIAS
     ADC #HI(collected_icon_next_slot_base)
     STA display_pointer_high
 .erase_collected_icon_source_end
@@ -3821,13 +3821,12 @@ CLEAR erase_collected_icon_source, erase_collected_icon_source_end
 
 ORG write_system_clock_via_osword_02
 
-; Runtime $0BA0-$0BBC has two distinct entries attached to one Ghidra function.
-; $0BA0 selects OSWORD function $02 with parameter block $0E00 and tail-calls
-; the MOS. $0BA9 prints the high then low nibble of A as two characters; the
-; low digit tail-jumps to OSWRCH. Inputs outside packed BCD intentionally use
-; the same nibble-plus-$30 conversion.
+; The first entry selects OSWORD_WRITE_SYSTEM_CLOCK with system_clock_block and
+; tail-calls the MOS. The second prints the high then low nibble of A as two
+; characters; the low digit tail-jumps to OSWRCH. Inputs outside packed BCD
+; intentionally use the same nibble-plus-ASCII_DIGIT_ZERO conversion.
 .write_system_clock_via_osword_02_source
-    LDA #&02
+    LDA #OSWORD_WRITE_SYSTEM_CLOCK
     LDX #LO(system_clock_block)
     LDY #HI(system_clock_block)
     JMP OSWORD
@@ -3839,12 +3838,12 @@ ORG write_system_clock_via_osword_02
     LSR A
     LSR A
     CLC
-    ADC #&30
+    ADC #ASCII_DIGIT_ZERO
     JSR OSWRCH
     PLA
-    AND #&0F
+    AND #PACKED_BCD_LOW_NIBBLE_MASK
     CLC
-    ADC #&30
+    ADC #ASCII_DIGIT_ZERO
     JMP OSWRCH
 .write_system_clock_via_osword_02_source_end
 
@@ -3879,17 +3878,17 @@ ORG update_lift_and_hazard_group
 
 ; Walk the lift/hazard slots, drawing each one either
 ; side of its update.
-; Y starts at 8 and advances by two per slot until it reaches the count at
-; $124A, so the slots are two-byte pairs and the record decides how many exist.
+; Y starts at LIFT_HAZARD_SLOT_GROUP_BASE_INDEX and advances by two per slot
+; until it reaches lift_and_hazard_slot_limit, so the record decides how many exist.
 ; Each slot is drawn before and after its update, which with an XOR renderer
-; erases and redraws it; the leading draw is skipped when $61 is clear, so a
+; erases and redraws it; the leading draw is skipped when erase_previous_xor_sprite_flag is clear, so a
 ; freshly entered room does not erase what was never drawn.
-; Slot $0A is updated twice rather than once, which moves it at double the rate
+; LIFT_HAZARD_DOUBLE_SPEED_SLOT_INDEX is updated twice, moving it at double the rate
 ; of its neighbours.
 ; The repeated-scanline flag is cleared on exit, so the two-row entity draws do
 ; not leak into whatever runs next.
 .update_lift_and_hazard_group_source
-    LDY #&08
+    LDY #LIFT_HAZARD_SLOT_GROUP_BASE_INDEX
 
 .draw_update_next_slot
     LDA erase_previous_xor_sprite_flag
@@ -3898,7 +3897,7 @@ ORG update_lift_and_hazard_group
 
 .update_this_slot
     JSR update_lift_or_hazard_by_class
-    CPY #&0A
+    CPY #LIFT_HAZARD_DOUBLE_SPEED_SLOT_INDEX
     BNE redraw_slot
     JSR update_lift_or_hazard_by_class
 
@@ -3908,7 +3907,7 @@ ORG update_lift_and_hazard_group
     INY
     CPY lift_and_hazard_slot_limit
     BNE draw_update_next_slot
-    LDA #&00
+    LDA #XOR_GRAPHIC_REPEAT_DISABLED
     STA xor_graphic_repeat_source_scanlines
     RTS
 .update_lift_and_hazard_group_source_end
