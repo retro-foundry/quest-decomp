@@ -1720,7 +1720,7 @@ ORG draw_room_enemy_with_xor_graphic
 
 .select_entity_row_count
     LDX #&08
-    LDA shared_workspace_68,Y
+    LDA moving_entity_horizontal_position,Y
     ROR A
     ROR A
     BCS load_pointer_then_draw_entity
@@ -2730,7 +2730,7 @@ ORG initialise_room_enemy_from_table
     CLC
     ADC #&0A
     STA display_grid_column
-    STA shared_workspace_68
+    STA moving_entity_horizontal_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
     STA room_enemy_display_pointer_low
@@ -6722,9 +6722,9 @@ ORG draw_table_selected_four_tile_half_row
     LDX #&04
     JSR draw_blank_tile_run
     LDA #LO(right_half_four_tile_graphic_sequences)
-    STA shared_workspace_7e
+    STA graphic_sequence_pointer_low
     LDA #HI(right_half_four_tile_graphic_sequences)
-    STA shared_workspace_7f
+    STA graphic_sequence_pointer_high
     JMP draw_four_graphic_selectors_from_pointer
 .draw_table_selected_four_tile_half_row_source_end
 
@@ -7700,9 +7700,9 @@ ORG draw_table_selected_left_half_row
 
 .load_left_half_graphic_sequence_pointer
     LDA #LO(left_half_four_tile_graphic_sequences)
-    STA shared_workspace_7e
+    STA graphic_sequence_pointer_low
     LDA #HI(left_half_four_tile_graphic_sequences)
-    STA shared_workspace_7f
+    STA graphic_sequence_pointer_high
     LDX #&04
     LDY #&02
     JMP draw_graphic_selector_sequence
@@ -9121,9 +9121,9 @@ ORG draw_table_selected_sequence_in_columns_five_to_seven
     LDX #&02
     JSR draw_blank_tile_run
     LDA #LO(cell_3b_graphic_sequence_table)
-    STA shared_workspace_7e
+    STA graphic_sequence_pointer_low
     LDA #HI(cell_3b_graphic_sequence_table)
-    STA shared_workspace_7f
+    STA graphic_sequence_pointer_high
     JSR draw_four_graphic_selectors_from_pointer
     LDX #&02
     JMP draw_blank_tile_run
@@ -9186,9 +9186,9 @@ ORG draw_cell_3c_transition_row_by_column
     LDX #&04
     JSR draw_blank_tile_run
     LDA #LO(cell_3c_graphic_sequence_table)
-    STA shared_workspace_7e
+    STA graphic_sequence_pointer_low
     LDA #HI(cell_3c_graphic_sequence_table)
-    STA shared_workspace_7f
+    STA graphic_sequence_pointer_high
     DEC shared_workspace_09
     DEC shared_workspace_09
     LDX #&04
@@ -9364,9 +9364,9 @@ ORG draw_table_selected_eight_tiles_in_columns_four_five
     SBC #&04
     STA shared_workspace_09
     LDA #LO(cell_3d_graphic_sequence_table)
-    STA shared_workspace_7e
+    STA graphic_sequence_pointer_low
     LDA #HI(cell_3d_graphic_sequence_table)
-    STA shared_workspace_7f
+    STA graphic_sequence_pointer_high
     LDX #&08
     LDY #&03
     JMP draw_graphic_selector_sequence
@@ -10546,7 +10546,7 @@ ORG load_indexed_pair_output_from_y_tables
 
 ; Runtime $367F-$368A. The Y-indexed counterpart of the field load inside handle_matching_indexed_pair: it copies one field to $11 and halves an adjacent field into $3C. The sources are the zero-page table at $68 and the relocated table at $1231 rather than $222F/$2230, and no $08 bias is added before the shift.
 .load_indexed_pair_output_from_y_tables_source
-    LDA shared_workspace_68,Y
+    LDA moving_entity_horizontal_position,Y
     STA indexed_pair_output_value
     LDA primary_entity_runtime_block,Y
     LSR A
@@ -10610,7 +10610,7 @@ ORG reverse_indexed_123a_delta_at_limits
 ; reflect_indexed_entity_at_obstacles: one turns an entity back at a wall, this
 ; one turns it back at the end of its patrol.
 .reverse_indexed_123a_delta_at_limits_source
-    LDA shared_workspace_68,Y
+    LDA moving_entity_horizontal_position,Y
     CMP enemy_horizontal_lower_limit
     BMI set_indexed_123a_delta_positive
     CMP enemy_horizontal_upper_limit
@@ -10651,10 +10651,10 @@ ORG advance_indexed_entity_horizontal_position
 ; The two directions are separate exits rather than a shared tail, which is why
 ; the routine is longer than the arithmetic needs.
 .advance_indexed_entity_horizontal_position_source
-    LDA shared_workspace_68,Y
+    LDA moving_entity_horizontal_position,Y
     CLC
     ADC secondary_entity_runtime_block,Y
-    STA shared_workspace_68,Y
+    STA moving_entity_horizontal_position,Y
     LDA secondary_entity_runtime_block,Y
     BMI step_entity_left
     CLC
@@ -10881,7 +10881,7 @@ ORG initialise_room_moving_objects
     ROR A
     ADC #&07
     STA shared_workspace_66
-    STA shared_workspace_68
+    STA moving_entity_horizontal_position
     LDA indexed_xor_graphic_selector_upper_limit
     STA shared_workspace_6a
     LDX #&00
