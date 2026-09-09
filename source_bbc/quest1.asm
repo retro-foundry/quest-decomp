@@ -4464,7 +4464,7 @@ ORG redraw_energy_bar_segment
     ADC #LO(energy_bar_partial_cell_base)
     STA display_pointer_low
     LDA #HI(energy_bar_partial_cell_base)
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
     LDA player_energy
     AND #ENERGY_BAR_SUBSTEP_MASK
@@ -4536,7 +4536,7 @@ ORG move_player_right_with_collision
     ADC #PLAYER_COLLISION_LOOKAHEAD_BYTES
     STA display_pointer_low
     LDA player_display_pointer_high
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
     LDA #PLAYER_COLLISION_SCAN_ROWS
     STA xor_graphic_character_rows_remaining
@@ -4595,7 +4595,7 @@ ORG move_player_left_with_collision
     SBC #MODE1_CELL_COLUMN_BYTES
     STA display_pointer_low
     LDA player_display_pointer_high
-    SBC #&00
+    SBC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
     LDA #PLAYER_COLLISION_SCAN_ROWS
     STA xor_graphic_character_rows_remaining
@@ -6220,7 +6220,7 @@ ORG pick_up_item_below_player
     BEQ find_empty_item_slot
     CMP #ROOM_MOVING_OBJECT_LIFT
     BEQ find_empty_item_slot
-    LDA #&00
+    LDA #ROOM_MOVING_OBJECT_INACTIVE
     STA room_moving_objects_active
 
 .find_empty_item_slot
@@ -6320,7 +6320,7 @@ ORG draw_two_item_slots
 ; are placed in this array before this renderer is entered.
 .draw_two_item_slots_source
     STA graphic_source_pointer_low
-    LDA #&00
+    LDA #ITEM_GRAPHIC_POINTER_HIGH_CLEAR
     STA graphic_source_pointer_high
     JSR set_display_pointer_three_rows_below_player_cell
     LDA display_pointer_low
@@ -6443,13 +6443,13 @@ ORG drop_carried_item
     LDA #ITEM_DROP_UPWARD_VELOCITY
     STA player_vertical_velocity
     JSR move_player_up_by_velocity
-    LDA #&00
+    LDA #ROOM_INITIAL_STATE_CLEAR
     STA player_vertical_velocity
     PLA
     TAX
     LDA display_grid_column
     BNE drop_carried_item_unavailable_exit
-    LDA #&00
+    LDA #ITEM_CODE_NONE
     STA item_slot_first,X
     LDA carried_item_code_being_dropped
     PHA
@@ -6784,7 +6784,7 @@ ORG consume_matching_item_from_slots
 ; symbol matching the key shape. The source-owned pickup and drop routines now
 ; prove that this same array holds carried item codes.
 .consume_matching_item_from_slots_source
-    LDX #&01
+    LDX #ITEM_SLOT_LAST_INDEX
 
 .test_next_slot
     CMP item_slot_first,X
@@ -6795,7 +6795,7 @@ ORG consume_matching_item_from_slots
     RTS
 
 .clear_slot_and_redraw
-    LDA #&00
+    LDA #ITEM_CODE_NONE
     STA item_slot_first,X
     JSR redraw_carried_item_slots
     JSR refill_energy_in_28_steps
@@ -6880,14 +6880,14 @@ ORG replace_saved_cell_then_play_sound
     LDA #ROOM_CELL_BLANK_STATE_MOTIF
 .write_saved_cell_and_redraw
     JSR store_byte_through_saved_pointer
-    LDA #&00 ; disable timed-effect dispatch after the cell change
+    LDA #TIMED_EFFECT_DISABLED
     STA timed_effect_selector
     CLC
     LDA saved_effect_display_pointer_low
     ADC #SAVED_CELL_REDRAW_POINTER_OFFSET
     STA display_pointer_low
     LDA saved_effect_display_pointer_high
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
     LDX #SAVED_CELL_REDRAW_CHARACTER_ROWS
     JSR draw_next_record_row
@@ -6914,7 +6914,7 @@ ORG draw_repeated_87_blank_pairs_by_state
 ; edge-pattern handler. Other columns draw leading blanks for removed progress
 ; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
 .draw_repeated_87_blank_pairs_by_state_source
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BEQ draw_58_59_pair_or_edge_pattern_row
     LDA #PROGRESS_PATTERN_CELL_MAX_PAIRS
     SEC
@@ -6923,7 +6923,7 @@ ORG draw_repeated_87_blank_pairs_by_state
     TAX
     JSR draw_blank_tile_run
     LDX progress_pattern_pair_count
-    CPX #&00
+    CPX #TILE_RUN_EMPTY_COUNT
     BEQ record_87_pair_run_finished_exit
 
 .draw_next_87_blank_pair
@@ -7062,7 +7062,7 @@ ORG draw_narrow_bar_fixture_row
     RTS
 
 .select_narrow_bar_column_group
-    CMP #COLLECTED_ICON_EFFECT_RESERVED_COUNT
+    CMP #ROOM_HALF_COLUMN_COUNT
     BPL select_narrow_bar_right_edge
     LDX #NARROW_BAR_PAIR_COUNT
     JMP draw_next_13_07_pair
@@ -7226,7 +7226,7 @@ ORG draw_last_column_special_pair_row
     JSR draw_58_59_pair_or_edge_pattern_row
     LDA #CROSS_ROOM_ROBOT_CHARACTER_ROWS
     STA dynamic_object_vdu_vertical_step_high
-    LDA #&84
+    LDA #GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_HOLLOW_ARCH
     STA active_tile_pair_first
     JMP prepare_dynamic_object_vdu_stream
 .draw_last_column_special_pair_row_source_end
@@ -7254,15 +7254,15 @@ ORG draw_state_selected_13_center_row
 .draw_cell_17_alternating_row
     JMP draw_eight_alternating_tiles
 .draw_cell_17_framed_center
-    LDX #&02
+    LDX #TWO_TILE_RUN_COUNT
     JSR draw_blank_tile_run
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
-    LDX #&02
+    LDX #TWO_TILE_RUN_COUNT
     JSR draw_04_03_alternating_run
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
-    LDX #&02
+    LDX #TWO_TILE_RUN_COUNT
     JMP draw_blank_tile_run
 .draw_state_selected_13_center_row_source_end
 ASSERT draw_state_selected_13_center_row_source = draw_state_selected_13_center_row
@@ -7283,7 +7283,7 @@ ORG handle_matching_cross_room_robot_ghost
     STA candidate_horizontal_position
     LDA cross_room_robot_ghost_offset_field,X
     CLC
-    ADC #&08
+    ADC #CROSS_ROOM_ROBOT_GHOST_VERTICAL_OFFSET_BIAS
     LSR A
     STA candidate_half_vertical_position
     JMP check_player_candidate_bounds_overlap
@@ -7448,7 +7448,7 @@ ORG draw_left_half_sequence_twice_or_13_beam_pattern
 ; This entry has not appeared in committed traces; its dispatch-table target
 ; and direct shared-tail structure establish the dataflow contract.
 .draw_left_half_sequence_twice_or_13_beam_pattern_source
-    CMP #&04
+    CMP #ROOM_HALF_COLUMN_COUNT
     BPL draw_cell_1d_right_half_pattern
     JSR load_left_half_graphic_sequence_pointer
     JMP load_left_half_graphic_sequence_pointer
@@ -7576,7 +7576,7 @@ ORG draw_room_sign_or_collect_password
     ADC #ROOM_SIGN_DISPLAY_ROW_STRIDE_LOW
     STA display_pointer_low
     LDA display_pointer_high
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
     JSR print_inline_vdu_stream
 .room_sign_cursor_prefix
@@ -8342,7 +8342,7 @@ ORG consume_collected_icon_and_apply_effect
 ; once, then sweep X through every nonzero byte value using OSBYTE calls and pitch-X sounds.
 .consume_collected_icon_and_apply_effect_source
     LDA collected_icon_count
-    CMP #&04
+    CMP #COLLECTED_ICON_EFFECT_RESERVED_COUNT
     BEQ run_energy_bar_sweep_rts
     DEC collected_icon_count
     LDA collected_icon_count
