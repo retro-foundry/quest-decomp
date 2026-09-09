@@ -11150,29 +11150,29 @@ COPYBLOCK cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_rec
 CLEAR cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_record_table_source_end
 
 ORG lift_and_hazard_room_record_table
-; Runtime 0A96-0AF9: twenty lift/hazard room records. The second byte's high
+; Twenty lift/hazard room records. The second byte's high
 ; nibble selects LIFT_OR_HAZARD_*; the comments decode the packed room.
 .lift_and_hazard_room_record_table_source
     EQUB &44, &00, &08, &07, &1B ; A4 lift
     EQUB &42, &01, &28, &0C, &16 ; B2 lift
     EQUB &06, &01, &44, &14, &1B ; B6 lift
-    EQUB &02, &16, &1E, &0C, &13 ; G2 moth-shaped hazard
-    EQUB &41, &10, &08, &04, &13 ; A1 moth-shaped hazard
-    EQUB &03, &11, &06, &07, &10 ; B3 moth-shaped hazard
-    EQUB &40, &12, &14, &0C, &16 ; C0 moth-shaped hazard
-    EQUB &48, &16, &08, &11, &18 ; G8 moth-shaped hazard, first
-    EQUB &00, &15, &26, &05, &10 ; F0 moth-shaped hazard
-    EQUB &08, &14, &10, &08, &0E ; E8 moth-shaped hazard
-    EQUB &05, &14, &21, &09, &11 ; E5 moth-shaped hazard
-    EQUB &08, &16, &00, &14, &18 ; G8 moth-shaped hazard, second
-    EQUB &05, &16, &2E, &0C, &12 ; G5 moth-shaped hazard
-    EQUB &07, &17, &26, &0E, &18 ; H7 moth-shaped hazard
-    EQUB &44, &17, &18, &05, &0C ; H4 moth-shaped hazard
-    EQUB &03, &14, &2E, &04, &12 ; E3 moth-shaped hazard
-    EQUB &42, &12, &34, &05, &13 ; C2 moth-shaped hazard
-    EQUB &06, &14, &40, &0D, &19 ; E6 moth-shaped hazard
-    EQUB &08, &11, &26, &04, &15 ; B8 moth-shaped hazard
-    EQUB &45, &13, &38, &11, &16 ; D5 moth-shaped hazard
+    EQUB &02, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &1E, &0C, &13 ; G2 moth-shaped hazard
+    EQUB &41, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE, &08, &04, &13 ; A1 moth-shaped hazard
+    EQUB &03, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&01, &06, &07, &10 ; B3 moth-shaped hazard
+    EQUB &40, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&02, &14, &0C, &16 ; C0 moth-shaped hazard
+    EQUB &48, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &08, &11, &18 ; G8 moth-shaped hazard, first
+    EQUB &00, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&05, &26, &05, &10 ; F0 moth-shaped hazard
+    EQUB &08, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &10, &08, &0E ; E8 moth-shaped hazard
+    EQUB &05, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &21, &09, &11 ; E5 moth-shaped hazard
+    EQUB &08, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &00, &14, &18 ; G8 moth-shaped hazard, second
+    EQUB &05, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&06, &2E, &0C, &12 ; G5 moth-shaped hazard
+    EQUB &07, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&07, &26, &0E, &18 ; H7 moth-shaped hazard
+    EQUB &44, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&07, &18, &05, &0C ; H4 moth-shaped hazard
+    EQUB &03, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &2E, &04, &12 ; E3 moth-shaped hazard
+    EQUB &42, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&02, &34, &05, &13 ; C2 moth-shaped hazard
+    EQUB &06, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&04, &40, &0D, &19 ; E6 moth-shaped hazard
+    EQUB &08, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&01, &26, &04, &15 ; B8 moth-shaped hazard
+    EQUB &45, LIFT_OR_HAZARD_HAZARD*PACKED_RECORD_TYPE_SCALE+&03, &38, &11, &16 ; D5 moth-shaped hazard
 .lift_and_hazard_room_record_table_source_end
 ASSERT lift_and_hazard_room_record_table_source = lift_and_hazard_room_record_table
 ASSERT lift_and_hazard_room_record_table_source_end-lift_and_hazard_room_record_table_source = LIFT_HAZARD_RECORD_COUNT*LIFT_HAZARD_RECORD_BYTES
