@@ -6902,14 +6902,14 @@ ORG draw_record_08_or_edge_pattern_row
 ; handlers select blanks, alternating tiles, or GRAPHIC_EDGE_PATTERN_A/B.
 .draw_record_08_or_edge_pattern_row_source
     CMP #CELL_12_PATTERN_COLUMN
-    BNE select_cell_12_last_column
+    BNE select_record_08_edge_last_column
     JMP draw_eight_curved_bowl_tiles
 
-.select_cell_12_last_column
+.select_record_08_edge_last_column
     CMP #ROOM_COLUMN_LAST
-    BEQ draw_alternating_row_from_cell_12_13
+    BEQ draw_alternating_row_from_record_edge_handlers
 
-.draw_blank_row_from_cell_12_13
+.draw_blank_row_from_record_edge_handlers
     JMP draw_eight_blank_tiles
 
 .draw_column_gated_58_59_pair_row_source
@@ -6920,16 +6920,16 @@ ORG draw_record_08_or_edge_pattern_row
 .draw_58_59_pair_or_edge_pattern_row_source
     LDX #ROOM_CELL_TILE_COUNT
     CMP #EDGE_PATTERN_BLANK_FIRST_COLUMN
-    BPL draw_blank_row_from_cell_12_13
+    BPL draw_blank_row_from_record_edge_handlers
     CMP #EDGE_PATTERN_PAIR_COLUMN
-    BNE draw_alternating_row_from_cell_12_13
+    BNE draw_alternating_row_from_record_edge_handlers
     LDY #GRAPHIC_EDGE_PATTERN_A
     STY active_tile_pair_first
     INY
     STY active_tile_pair_second
     JMP draw_selected_fixed_pair_run
 
-.draw_alternating_row_from_cell_12_13
+.draw_alternating_row_from_record_edge_handlers
     JMP draw_eight_alternating_tiles
 .draw_record_08_or_edge_pattern_row_source_end
 
@@ -7034,12 +7034,12 @@ ORG draw_state_selected_13_center_row
 .draw_state_selected_13_center_row_source
     LDX room_graphics_y_low
     CPX #ROOM_GRAPHICS_Y_FINAL_ROW
-    BEQ draw_cell_17_alternating_row
+    BEQ draw_state_13_center_alternating_row
     CPX #ROOM_GRAPHICS_Y_BEFORE_FIRST_ROW
-    BNE draw_cell_17_framed_center
-.draw_cell_17_alternating_row
+    BNE draw_state_13_center_framed_row
+.draw_state_13_center_alternating_row
     JMP draw_eight_alternating_tiles
-.draw_cell_17_framed_center
+.draw_state_13_center_framed_row
     LDX #TWO_TILE_RUN_COUNT
     JSR draw_blank_tile_run
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
@@ -7240,10 +7240,10 @@ ORG draw_left_half_sequence_twice_or_13_beam_pattern
 ; and direct shared-tail structure establish the dataflow contract.
 .draw_left_half_sequence_twice_or_13_beam_pattern_source
     CMP #ROOM_HALF_COLUMN_COUNT
-    BPL draw_cell_1d_right_half_pattern
+    BPL draw_left_sequence_or_beam_right_half_pattern
     JSR load_left_half_graphic_sequence_pointer
     JMP load_left_half_graphic_sequence_pointer
-.draw_cell_1d_right_half_pattern
+.draw_left_sequence_or_beam_right_half_pattern
     JMP draw_two_13_two_beam_two_13_two_pattern
 .draw_left_half_sequence_twice_or_13_beam_pattern_source_end
 ASSERT draw_left_half_sequence_twice_or_13_beam_pattern_source = draw_left_half_sequence_twice_or_13_beam_pattern
