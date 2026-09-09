@@ -9314,18 +9314,20 @@ CLEAR middle_columns_transition_graphic_sequences_source, middle_columns_transit
 
 ORG draw_pillar_framed_or_pattern_row
 
-; room-cell type $01. Column zero draws selector $02, six mirrored selector-$27 pillar tiles and selector $01. Column one draws the fixed tile pair four times; columns two through seven draw alternating tiles.
+; The pillar-framed room cell draws rounded end caps around six mirrored pillar
+; tiles in the first column. The second column draws four fixed tile pairs;
+; subsequent columns draw alternating tiles.
 .draw_pillar_framed_or_pattern_row_source
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BEQ draw_pillar_framed_first_column
-    CMP #&01
+    CMP #ROOM_COLUMN_SECOND
     BEQ draw_fixed_pair_second_column
     JMP draw_eight_alternating_tiles
 
 .draw_pillar_framed_first_column
     LDA #GRAPHIC_ROUNDED_PATTERN_B
     JSR copy_16_byte_graphic_to_display
-    LDX #&06
+    LDX #PILLAR_FRAMED_MIDDLE_TILE_COUNT
 
 .draw_next_pillar_middle_tile
     LDA #GRAPHIC_PILLAR_BASE
@@ -9403,18 +9405,14 @@ CLEAR middle_columns_eight_tile_graphic_sequences_source, middle_columns_eight_t
 
 ORG play_sound_with_amplitude
 
-; Play a sound on channel 2 with the amplitude in A.
-; $32A0 to $32A7 is an OSWORD $07 SOUND parameter block: channel, amplitude,
-; pitch and duration as four little-endian words. This writes A as the amplitude
-; low byte with a zero high byte, sets the channel word low byte to $12, which
-; is flush plus channel 2, and jumps into the submission routine at $3363.
-; Pitch and duration are not written here; callers preset them before calling,
-; which is why several routines store to $32A4 and $32A6 immediately beforehand.
+; Play a sound on flushed channel two with the amplitude in A. This fills the
+; relevant fields of the shared OSWORD SOUND block; callers preset pitch and
+; duration before entering here.
 .play_sound_with_amplitude_source
     STA sound_block_amplitude
-    LDA #&00
+    LDA #SOUND_PARAMETER_HIGH_CLEAR
     STA sound_block_amplitude_high
-    LDA #&12
+    LDA #SOUND_CHANNEL_TWO_FLUSH
     STA sound_block_channel
     JMP submit_sound_block
 .play_sound_with_amplitude_source_end
@@ -9435,9 +9433,9 @@ ORG configure_two_row_repeated_xor_graphic
 ; A returns $02; X, Y, and all flags except N/Z are unchanged. The routine
 ; does not touch the stack before its normal RTS.
 .configure_two_row_repeated_xor_graphic_source
-    LDA #&01
+    LDA #XOR_GRAPHIC_REPEAT_ENABLED
     STA xor_graphic_repeat_source_scanlines
-    LDA #&02
+    LDA #XOR_GRAPHIC_TWO_CHARACTER_ROWS
     STA xor_graphic_character_rows_remaining
     RTS
 .configure_two_row_repeated_xor_graphic_source_end
@@ -9454,9 +9452,8 @@ ORG submit_sound_block_with_pitch
 
 ; Play a sound with the pitch in A, or submit an
 ; already-filled block.
-; The $334C entry writes A as the pitch and fills the rest of the OSWORD $07
-; block with fixed values: channel $10, which is flush plus channel 0, amplitude
-; $FFF1, and duration 1. It then falls into the submission.
+; The pitch entry fills the rest of the OSWORD SOUND block with the named
+; channel-zero, amplitude and duration defaults, then falls into submission.
 ; The submission entry is also called directly by play_sound_with_amplitude,
 ; which fills the block differently first. A nonzero sound_disabled_flag
 ; abandons submission, so sound is silenced without changing callers. Otherwise
@@ -9464,13 +9461,13 @@ ORG submit_sound_block_with_pitch
 ; sound_block_channel.
 .submit_sound_block_with_pitch_source
     STA sound_block_pitch
-    LDA #&10
+    LDA #SOUND_CHANNEL_ZERO_FLUSH
     STA sound_block_channel
-    LDA #&FF
+    LDA #HI(DEFAULT_SOUND_AMPLITUDE)
     STA sound_block_amplitude_high
-    LDA #&F1
+    LDA #LO(DEFAULT_SOUND_AMPLITUDE)
     STA sound_block_amplitude
-    LDA #&01
+    LDA #DEFAULT_SOUND_DURATION
     STA sound_block_duration
 
 .submit_sound_block
@@ -9481,8 +9478,8 @@ ORG submit_sound_block_with_pitch
     PHA
     TYA
     PHA
-    LDX #&A0
-    LDY #&32
+    LDX #LO(sound_block_channel)
+    LDY #HI(sound_block_channel)
     LDA #OSWORD_SOUND
     JSR OSWORD
     PLA
@@ -9528,10 +9525,10 @@ ORG draw_character_row_as_tiles
     INX
     LDA character_definition_block,X
     STA character_definition_block
-    LDY #&08
+    LDY #CHARACTER_ROW_BIT_COUNT
 
 .shift_next_character_bit
-    LDX #&01
+    LDX #CHARACTER_ROW_TILE_RUN_COUNT
     ASL character_definition_block
     BCS draw_set_character_bit
     JSR draw_blank_tile_run
@@ -9592,34 +9589,29 @@ ORG play_note_for_position_and_test_tune
 
 ; Play the note for wherever the player is standing, then
 ; judge whether the tune is being played correctly.
-; The player horizontal position less $0E and divided by four selects a note
-; from the pitch table at $0BC0, which is submitted on channel with amplitude
-; $11. The note just played is then compared against the expected one at
-; $0B53 indexed by the progress counter $32BF.
-; A match advances the progress. Reaching twelve completes the tune: $0C is
-; stored in the flag at $1242 and, only when the primary reference is 4, $2D is
-; written to $385D.
+; The player horizontal position relative to MUSIC_NOTE_FIRST_POSITION, divided
+; by four, selects a pitch. It is compared with the expected tune entry indexed
+; by music_tune_progress. Completing the tune starts its named effect and, in
+; the qualifying room, changes the named completion cell.
 ; A mismatch does not reset immediately. The previous expected note is tested
 ; first, and if the player is still on it the progress is left alone, which is
 ; what lets a note be held without breaking the sequence; only a note that is
 ; neither the next nor the current one resets the count to zero.
 ;
-; The tune itself is legible from the two tables. BBC pitch runs four units to
-; a semitone, and the first five entries of $0BC0 are $34, $3C, $44, $48 and
-; $50: intervals of two, two, one and two semitones, which is the first five
-; degrees of a major scale. The twelve expected notes at $0B53 are $44 $3C $34
-; three times over in two pairs, so in scale degrees the sequence is
+; The tune itself is legible from the two named tables. BBC pitch runs four
+; units to a semitone; their intervals form the first five degrees of a major
+; scale. In scale degrees the expected sequence is
 ; 3-2-1, 3-2-1, 5-4-3, 5-4-3.
 .play_note_for_position_and_test_tune_source
     SEC
     LDA player_horizontal_position
-    SBC #&0E
+    SBC #MUSIC_NOTE_FIRST_POSITION
     LSR A
     LSR A
     TAY
     LDA music_note_pitch_table,Y
     STA sound_block_pitch
-    LDA #&11
+    LDA #MUSIC_SOUND_CHANNEL_ONE_FLUSH
     JSR submit_osword_07_sound_block
     LDX music_tune_progress
     LDA music_tune_sequence,X
@@ -9629,11 +9621,12 @@ ORG play_note_for_position_and_test_tune
     LDA music_tune_progress
     CMP #MUSIC_TUNE_NOTE_COUNT
     BNE submit_sound_block_rts
+    ; music_tune_progress equals MUSIC_TUNE_COMPLETE_EFFECT here.
     STA timed_effect_selector
     LDA reference_pair_primary_value
-    CMP #&04
+    CMP #MUSIC_TUNE_COMPLETION_REFERENCE
     BNE submit_sound_block_rts
-    LDA #&2D
+    LDA #MUSIC_TUNE_COMPLETION_CELL_VALUE
     STA room_E1_row_0_cell_1
     RTS
 
@@ -9642,7 +9635,7 @@ ORG play_note_for_position_and_test_tune
     LDA music_tune_sequence,X
     CMP sound_block_pitch
     BEQ submit_sound_block_rts
-    LDA #&00
+    LDA #MUSIC_TUNE_PROGRESS_RESET
     STA music_tune_progress
     RTS
 .play_note_for_position_and_test_tune_source_end
