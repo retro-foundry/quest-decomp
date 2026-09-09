@@ -38,7 +38,7 @@ INCLUDE "source_bbc/memory_map.inc"
 ; does not establish a species, the label deliberately names its visible form.
 ; Stage this data outside the loaded/runtime alias range. It is copied to its
 ; transport location only after all relocated routines have been assembled.
-ORG &9000
+ORG SPRITE_SOURCE_STAGING_ADDRESS
 .player_enemy_and_lift_xor_sprite_frames_source
 .caterpillar_direction_frame_0
     EQUB &00, &00, &00, &00, &06, &6F, &6F, &06, &00, &00, &00, &06, &6F, &6F, &6F, &06
@@ -130,7 +130,7 @@ ASSERT player_enemy_and_lift_xor_sprite_frames_end-player_enemy_and_lift_xor_spr
 ; Runtime $0800-$087F: four aligned Mode 1-shaped records after the embedded
 ; map initializer. No pointer-table entry or committed runtime read selects
 ; these addresses, so their source labels identify them as unused originals.
-ORG &9400
+ORG INERT_SPRITE_SOURCE_STAGING_ADDRESS
 .inert_xor_sprite_frame_block_source
 .inert_xor_sprite_frame_0
     EQUB &CC, &00, &00, &00, &00, &00, &00, &00, &C0, &C0, &C0, &C0, &04, &04, &04, &04
@@ -1266,7 +1266,7 @@ COPYBLOCK room_render_state_source, room_render_state_source_end, &2A1D
 CLEAR room_render_state_source, room_render_state_source_end
 
 
-ORG &1216
+ORG DISPLAY_ACTION_STATE_ALIGNMENT_ADDRESS
 
 ; Six unreachable zero alignment bytes and one NOP byte
 ; separate the display-action vectors from the mutable room-render state. No
@@ -10791,7 +10791,7 @@ ASSERT item_slot_label_table_source_end = &0B51
 COPYBLOCK item_slot_label_table_source, item_slot_label_table_source_end, &2403
 CLEAR item_slot_label_table_source, item_slot_label_table_source_end
 
-ORG &0B51
+ORG ITEM_LABEL_TABLE_PADDING_ADDRESS
 ; Runtime 0B51-0B52: zero padding between the label and tune tables.
 .item_label_table_padding_source
     EQUB &00, &00
@@ -11524,7 +11524,7 @@ CLEAR enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_sour
 ; Loaded-only relocation loader, assembled in scratch space so its absolute
 ; calls and jumps retain the load-view addresses below. Relative branches use
 ; source-local labels and therefore retain the same byte displacements.
-ORG &8100
+ORG RELOCATION_LOADER_SOURCE_STAGING_ADDRESS
 .relocation_loader_source
     JSR set_vdu_window_then_continue_loader
     JSR install_runtime_vectors_and_disable_via_irqs
@@ -11691,7 +11691,7 @@ CLEAR relocation_loader_source, relocation_loader_source_end
 ; Loaded $5A9E-$5AFF. Literal dormant message immediately after the loader,
 ; followed by six zero bytes. The high relocation also copies these bytes to
 ; display RAM $429E-$42FF; no code or pointer reference to the text is known.
-ORG &8300
+ORG EMBEDDED_MESSAGE_SOURCE_STAGING_ADDRESS
 .embedded_mountaineering_message_source
     EQUS "e Mountaineering Club.'Swing out Sister for Break-out. And goodluck Sally were ever you are!"
     EQUB &00, &00, &00, &00, &00, &00
@@ -11721,7 +11721,7 @@ ASSERT transient_xor_message_decoder_source_end = &010F
 COPYBLOCK transient_xor_message_decoder_source, transient_xor_message_decoder_source_end, &5B00
 CLEAR transient_xor_message_decoder_source, transient_xor_message_decoder_source_end
 
-ORG &010F
+ORG TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS
 .transient_xor_message_payload
     EQUB &10, &4B, &7D, &58, &4F, &55, &20, &52, &AB, &BE, &AE, &83, &80, &DD, &6D, &50
     EQUB &88, &89, &DC, &1D, &32, &28, &54, &5B, &BF, &91, &5E, &51, &2C, &20, &57, &45
@@ -11737,7 +11737,7 @@ ASSERT transient_xor_message_payload_end = &019E
 COPYBLOCK transient_xor_message_payload, transient_xor_message_payload_end, &5B0F
 CLEAR transient_xor_message_payload, transient_xor_message_payload_end
 
-ORG &019E
+ORG TRANSIENT_STACK_PAGE_PADDING_ADDRESS
 .transient_stack_page_padding_source
     EQUB &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF
     EQUB &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF
@@ -11759,7 +11759,7 @@ CLEAR irq_workspace_prefix_source, irq_workspace_prefix_source_end
 ; Loaded $5C10 is the final byte copied by the loader to IRQ workspace $03E0.
 ; It is a zero immediately after the installed handler, not part of the DFS
 ; entry which starts at the catalogue execution address $5C11.
-ORG &03E0
+ORG IRQ_RELOCATION_TRAILING_ZERO_ADDRESS
 .irq_relocation_trailing_zero_source
     EQUB &00
 .irq_relocation_trailing_zero_source_end
@@ -11771,7 +11771,7 @@ CLEAR irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_e
 ; Loaded-only DFS execution stub at $5C11-$5C1F. This code is outside every
 ; relocated runtime segment. It makes the two observed MOS OSBYTE calls with
 ; A=$E1/X=0 and A=$8C, then transfers control to the loader at $5980.
-ORG &8000
+ORG DFS_STUB_SOURCE_STAGING_ADDRESS
 .dfs_execution_entry_stub_source
     LDA #OSBYTE_READ_KEYBOARD_STATUS
     LDX #LOADER_COPY_FIRST_INDEX
@@ -11798,9 +11798,9 @@ CLEAR inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end
 ; Complete source-owned transport image. No generated layout include or binary
 ; authority slice is required: every byte from $1D00 through $5C1F has been
 ; emitted above by source assembly/data and COPYBLOCK.
-ORG &1D00
+ORG QUEST1_LOAD_ADDRESS
 .quest1_load_start
-ORG &5C20
+ORG QUEST1_LOAD_END_EXCLUSIVE
 .quest1_load_end
 ASSERT quest1_load_end-quest1_load_start = &3F20
 SAVE "build/reconstruction/QUEST1", quest1_load_start, quest1_load_end, QUEST1_EXECUTION_ADDRESS
