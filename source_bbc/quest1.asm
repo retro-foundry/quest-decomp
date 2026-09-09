@@ -380,21 +380,21 @@ ASSERT player_enemy_and_lift_xor_sprite_frames_end-player_enemy_and_lift_xor_spr
 ; map initializer. No pointer-table entry or committed runtime read selects
 ; these addresses, so their source labels identify them as unused originals.
 ORG &9400
-.unused_xor_sprite_frames_0800_087f_source
-.unused_xor_sprite_frame_0800
+.inert_xor_sprite_frame_block_source
+.inert_xor_sprite_frame_0
     EQUB &CC, &00, &00, &00, &00, &00, &00, &00, &C0, &C0, &C0, &C0, &04, &04, &04, &04
     EQUB &00, &00, &00, &64, &00, &00, &00, &FF, &00, &00, &00, &00, &00, &00, &00, &00
-.unused_xor_sprite_frame_0820
+.inert_xor_sprite_frame_1
     EQUB &00, &00, &00, &05, &00, &00, &00, &FF, &00, &00, &00, &00, &00, &00, &00, &00
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &FF, &00, &00, &00, &00, &F0, &00, &0E
-.unused_xor_sprite_frame_0840
+.inert_xor_sprite_frame_2
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00
-.unused_xor_sprite_frame_0860
+.inert_xor_sprite_frame_3
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00
     EQUB &64, &06, &90, &64, &06, &90, &64, &06, &90, &64, &06, &00, &00, &00, &00, &90
-.unused_xor_sprite_frames_0800_087f_end
-ASSERT unused_xor_sprite_frames_0800_087f_end-unused_xor_sprite_frames_0800_087f_source = &0080
+.inert_xor_sprite_frame_block_end
+ASSERT inert_xor_sprite_frame_block_end-inert_xor_sprite_frame_block_source = &0080
 
 ORG room_cell_map_alignment
 ; Runtime $37CD-$37CF: three zero bytes aligning the 80-room cell map at $37D0.
@@ -11829,17 +11829,17 @@ ORG &8100
     INC display_pointer_high
 .copy_loaded_high_destination_advanced
     LDA graphic_source_pointer_high
-    CMP #HI(loader_source_page_5b00)
+    CMP #HI(relocation_transport_source_start)
     BEQ copy_transient_decoder_source
     JMP loaded_copy_high_byte_loop
 
 .copy_transient_decoder_source
     LDX #&00
 .copy_transient_decoder_byte
-    LDA loader_source_page_5b00,X
+    LDA relocation_transport_source_start,X
     STA transient_xor_message_decoder,X
     INX
-    CPX #loader_irq_source_page_5bb0-loader_source_page_5b00
+    CPX #relocation_irq_source_start-relocation_transport_source_start
     BNE copy_transient_decoder_byte
     RTS
 
@@ -11900,7 +11900,7 @@ ORG &8100
     STA CRTC_ADDRESS_SELECT
     LDX #&00
 .copy_irq_workspace_byte
-    LDA loader_irq_source_page_5bb0,X
+    LDA relocation_irq_source_start,X
     STA chained_irq1v_vector,X
     INX
     CPX #&61
@@ -11960,7 +11960,7 @@ ORG transient_xor_message_decoder
 .transient_xor_message_decoder_source
 .decode_transient_xor_message_byte
     LDA transient_xor_message_payload,X
-    EOR mode1_display_page_7000,X
+    EOR xor_decoder_display_sample_page,X
     BEQ transient_xor_message_finished
     JSR OSWRCH
     INX
@@ -12040,9 +12040,9 @@ CLEAR dfs_execution_entry_stub_source, dfs_execution_entry_stub_source_end
 ; Install the two staged XOR graphic-bank parts only after every relocated
 ; routine that assembles in the aliased $1D00-$217F address window is finished.
 COPYBLOCK player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end, &1D00
-COPYBLOCK unused_xor_sprite_frames_0800_087f_source, unused_xor_sprite_frames_0800_087f_end, &2100
+COPYBLOCK inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end, &2100
 CLEAR player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end
-CLEAR unused_xor_sprite_frames_0800_087f_source, unused_xor_sprite_frames_0800_087f_end
+CLEAR inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end
 
 
 

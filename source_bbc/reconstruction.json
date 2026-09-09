@@ -32,7 +32,7 @@
       ]
     },
     {
-      "name": "unused_xor_sprite_frames_0800_087f",
+      "name": "inert_xor_sprite_frame_block",
       "runtime_start": 2048,
       "runtime_end_exclusive": 2176,
       "loaded_start": 8448,

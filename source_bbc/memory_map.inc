@@ -758,7 +758,7 @@ runtime_fish_facing_right_frame     = &06A0 ; behavioral: relocated runtime addr
 runtime_ghost_frame_0               = &06C0 ; behavioral: relocated runtime address of ghost_frame_0
 runtime_ghost_frame_3               = &0720 ; behavioral: relocated runtime address of ghost_frame_3
 vertical_lift_graphic               = &0EA0 ; behavioral: two-row vertical lift graphic reused from the room/item graphic bank
-unused_xor_sprite_frames_0800_087f = &0800 ; structural: four aligned sprite records absent from every pointer/selector table
+inert_xor_sprite_frame_block      = &0800 ; structural: four aligned sprite records absent from every pointer/selector table
 item_name_table                 = &0B09 ; dataflow: first nonblank slot label; item code $28+2n selects name n
 music_tune_sequence             = &0B53 ; dataflow: twelve expected note pitches compared in order by $337B
 music_note_pitch_table          = &0BC0 ; dataflow: note pitch per player position, indexed by ($35-$0E)/4
@@ -903,9 +903,9 @@ room_moving_object_delta_slot_3 = &1230 ; dataflow: fourth even-indexed room-mov
 terminal_number_character       = &21A2 ; behavioral: digit patched into the terminal text stream before display
 single_tile_room_graphic_selector = &7FFB ; dataflow: GRAPHIC_CURVED_BOWL or GRAPHIC_BLANK shared by mirrored single-tile room handlers
 mos_keyboard_state_workspace    = &0262 ; structural: MOS keyboard-state workspace written by the loader
-loader_source_page_5b00         = &5B00 ; structural: loaded transport source page copied by the relocation loader
-loader_irq_source_page_5bb0     = &5BB0 ; structural: loaded IRQ source page copied by the relocation loader
-mode1_display_page_7000         = &7000 ; dataflow: Mode 1 display page accessed by the transient XOR decoder
+relocation_transport_source_start = &5B00 ; structural: start of the loaded transport image copied downward by the relocation loader
+relocation_irq_source_start     = &5BB0 ; structural: start of the loaded IRQ image copied into its runtime page
+xor_decoder_display_sample_page = &7000 ; dataflow: Mode 1 display page sampled by the transient XOR decoder
 
 ; ---------------------------------------------------------------------------
 ; MOS workspace and vectors

@@ -52,8 +52,8 @@ records = read_block(
 )
 records += read_block(
     source,
-    "unused_xor_sprite_frames_0800_087f_source",
-    "unused_xor_sprite_frames_0800_087f_end",
+    "inert_xor_sprite_frame_block_source",
+    "inert_xor_sprite_frame_block_end",
     0x0800,
     32,
 )
