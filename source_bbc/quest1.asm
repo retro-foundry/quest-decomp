@@ -2869,21 +2869,21 @@ ORG terminal_activation_records
 ; intentional no-op writes through address zero when selected.
 .terminal_activation_records_source
     EQUW room_B0_row_1_cell_1
-    EQUB &58
+    EQUB ROOM_CELL_MIRROR_FLAG+ROOM_CELL_BLANK_BEFORE_SUFFIX
     EQUW NULL_POINTER
-    EQUB &00
+    EQUB ROOM_CELL_BLANK
     EQUW room_B9_row_2_cell_1
-    EQUB &3E
+    EQUB ROOM_CELL_LEFT_EDGE_OR_FULL
     EQUW room_D6_row_0_cell_0
-    EQUB &6E
+    EQUB ROOM_CELL_MIRROR_FLAG+ROOM_CELL_RIGHT_HALF_PATTERN
     EQUW NULL_POINTER
-    EQUB &00
+    EQUB ROOM_CELL_BLANK
     EQUW room_F3_row_1_cell_1
-    EQUB &0A
+    EQUB ROOM_CELL_BORDERED_BAR
     EQUW NULL_POINTER
-    EQUB &00
+    EQUB ROOM_CELL_BLANK
     EQUW NULL_POINTER
-    EQUB &00
+    EQUB ROOM_CELL_BLANK
 .terminal_activation_records_source_end
 ASSERT terminal_activation_records_source = terminal_activation_records
 ASSERT terminal_activation_records_source_end = restore_item_and_goal_records
