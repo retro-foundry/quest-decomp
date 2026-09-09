@@ -2854,14 +2854,14 @@ ORG initialise_lifts_and_hazards_from_table
     JSR match_packed_record_against_references
     BCS unpack_matched_lift_or_hazard_record
     INX
-    CPX #&14
+    CPX #LIFT_HAZARD_RECORD_COUNT
     BNE test_next_lift_or_hazard_record
     RTS
 
 .unpack_matched_lift_or_hazard_record
     LDA shared_workspace_31
     CLC
-    ADC #&0A
+    ADC #LIFT_HAZARD_SLOT_INDEX_BIAS
     STA lift_and_hazard_slot_limit
     LDA shared_workspace_32
     STA active_lift_or_hazard_class
@@ -2871,7 +2871,7 @@ ORG initialise_lifts_and_hazards_from_table
     LDA lift_and_hazard_room_record_table,Y
     STA lift_or_hazard_horizontal_extent
     SEC
-    SBC #&04
+    SBC #LIFT_HAZARD_FIRST_COLUMN_BIAS
     STA display_grid_column
     INY
     LDA lift_and_hazard_room_record_table,Y
@@ -2891,20 +2891,20 @@ ORG initialise_lifts_and_hazards_from_table
     INY
     LDA lift_and_hazard_room_record_table,Y
     SEC
-    SBC #&02
+    SBC #LIFT_HAZARD_SECOND_ROW_BIAS
     STA display_grid_row
     ASL A
     ASL A
     ASL A
     STA shared_workspace_21
-    ADC #&10
+    ADC #LIFT_HAZARD_UPPER_POSITION_SPAN
     STA lift_or_hazard_upper_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
     STA shared_workspace_59
     LDA display_pointer_high
     STA shared_workspace_5a
-    LDA #&02
+    LDA #LIFT_HAZARD_INITIAL_STEP
     STA shared_workspace_20
     STA shared_workspace_22
 .copy_lift_or_hazard_descriptor_for_active_class
@@ -2919,7 +2919,7 @@ ORG initialise_lifts_and_hazards_from_table
     STA lift_and_hazard_graphic_descriptor,X
     INY
     INX
-    CPX #&04
+    CPX #LIFT_HAZARD_DESCRIPTOR_BYTES
     BNE copy_next_lift_or_hazard_descriptor_byte
     RTS
 .initialise_lifts_and_hazards_from_table_source_end
@@ -3034,9 +3034,13 @@ CLEAR run_terminal_interaction_source, run_terminal_interaction_source_end
 ORG lift_and_hazard_graphic_descriptor_table
 ; Two pairs of sprite-frame pointers selected by lift/hazard class.
 .lift_and_hazard_graphic_descriptor_table_source
+.vertical_lift_graphic_descriptor
     EQUW vertical_lift_graphic, vertical_lift_graphic ; LIFT_OR_HAZARD_LIFT
+.moth_hazard_graphic_descriptor
     EQUW runtime_moth_and_hazard_frame_0, runtime_moth_and_hazard_frame_1 ; LIFT_OR_HAZARD_HAZARD
 .lift_and_hazard_graphic_descriptor_table_source_end
+ASSERT vertical_lift_graphic_descriptor = lift_and_hazard_graphic_descriptor_table + LIFT_OR_HAZARD_LIFT*LIFT_HAZARD_DESCRIPTOR_BYTES
+ASSERT moth_hazard_graphic_descriptor = lift_and_hazard_graphic_descriptor_table + LIFT_OR_HAZARD_HAZARD*LIFT_HAZARD_DESCRIPTOR_BYTES
 ASSERT lift_and_hazard_graphic_descriptor_table_source = lift_and_hazard_graphic_descriptor_table
 ASSERT lift_and_hazard_graphic_descriptor_table_source_end = match_packed_record_against_references
 COPYBLOCK lift_and_hazard_graphic_descriptor_table_source, lift_and_hazard_graphic_descriptor_table_source_end, &3882
@@ -10839,7 +10843,7 @@ ORG initialise_room_moving_objects
     JSR match_packed_record_against_references
     BCS load_matched_indexed_xor_record
     INX
-    CPX #&10
+    CPX #ROOM_MOVING_OBJECT_RECORD_COUNT
     BNE test_next_indexed_xor_record
     RTS
 
@@ -10862,7 +10866,7 @@ ORG initialise_room_moving_objects
     RTS
 
 .initialise_indexed_xor_record
-    LDX #&01
+    LDX #ROOM_MOVING_OBJECT_ACTIVE
     STX room_moving_objects_active
     DEX
 
@@ -10871,14 +10875,14 @@ ORG initialise_room_moving_objects
     LDA room_moving_object_record_table,Y
     STA indexed_xor_graphic_state,X
     INX
-    CPX #&03
+    CPX #ROOM_MOVING_OBJECT_RECORD_FIELDS
     BNE copy_indexed_xor_record_fields
     CLC
     LDA indexed_xor_graphic_selector_lower_limit
     STA indexed_xor_graphic_selector_state
     ADC indexed_xor_graphic_selector_upper_limit
     ROR A
-    ADC #&07
+    ADC #ROOM_MOVING_OBJECT_CENTRE_BIAS
     STA shared_workspace_66
     STA moving_entity_horizontal_position
     LDA indexed_xor_graphic_selector_upper_limit
@@ -10897,7 +10901,7 @@ ORG initialise_room_moving_objects
     STA indexed_xor_display_pointer_high,X
     INX
     INX
-    CPX #&08
+    CPX #ROOM_MOVING_OBJECT_SLOT_END
     BNE build_indexed_xor_display_pointers
     LDA current_room_cell
     ASL A
@@ -10911,12 +10915,12 @@ ORG initialise_room_moving_objects
     STA active_room_moving_object_pointer_table,X
     INY
     INX
-    CPX #&08
+    CPX #ROOM_MOVING_OBJECT_POINTER_SET_BYTES
     BNE copy_indexed_xor_graphic_pointers
-    LDA #&01
+    LDA #ROOM_MOVING_OBJECT_STEP_POSITIVE
     STA indexed_xor_graphic_selector_delta
     STA room_moving_object_delta_slot_2
-    LDA #&FF
+    LDA #ROOM_MOVING_OBJECT_STEP_NEGATIVE
     STA room_moving_object_delta_slot_1
     STA room_moving_object_delta_slot_3
     RTS
@@ -11499,14 +11503,22 @@ ORG room_moving_object_pointer_sets
 ; These room-local creature/puzzle graphics are separate from the room-enemy pairs
 ; selected by the descriptor table at $1FDF.
 .room_moving_object_pointer_sets_source
+.caterpillar_graphic_pointer_set
     EQUW runtime_caterpillar_direction_frame_0, runtime_caterpillar_direction_frame_1
     EQUW runtime_caterpillar_direction_frame_2, runtime_caterpillar_direction_frame_3
+.fish_graphic_pointer_set
     EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
     EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
+.mouse_graphic_pointer_set
     EQUW runtime_mouse_facing_right_frame, mouse_facing_left_and_item_graphic_pair
     EQUW runtime_mouse_facing_right_frame, mouse_facing_left_and_item_graphic_pair
+.vertical_lift_graphic_pointer_set
     EQUW vertical_lift_graphic, vertical_lift_graphic, vertical_lift_graphic, vertical_lift_graphic
 .room_moving_object_pointer_sets_source_end
+ASSERT caterpillar_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_CATERPILLAR*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
+ASSERT fish_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_FISH*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
+ASSERT mouse_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_MOUSE*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
+ASSERT vertical_lift_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_LIFT*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
 ASSERT room_moving_object_pointer_sets_source = room_moving_object_pointer_sets
 ASSERT room_moving_object_pointer_sets_source_end = initialise_room_enemy_from_table
 COPYBLOCK room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end, &370F
