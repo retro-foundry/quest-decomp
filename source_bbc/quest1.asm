@@ -1326,9 +1326,9 @@ ORG add_collected_icon
     ASL A
     ASL A
     ASL A
-    ADC #&60
+    ADC #LO(collected_icon_row_base)
     STA display_pointer_low
-    LDA #&3F
+    LDA #HI(collected_icon_row_base)
     ADC #&00
     STA display_pointer_high
     LDA #&02
@@ -3814,10 +3814,10 @@ ORG erase_collected_icon
     ASL A
     ASL A
     CLC
-    ADC #&70
+    ADC #LO(collected_icon_next_slot_base)
     STA display_pointer_low
     LDA #&00
-    ADC #&3F
+    ADC #HI(collected_icon_next_slot_base)
     STA display_pointer_high
 .erase_collected_icon_source_end
 
@@ -4190,9 +4190,9 @@ ORG initialise_new_game
     STA graphic_source_base_pointer_offset
     LDY #&0C
     STY power_crystals_remaining
-    LDA #&F0
+    LDA #LO(status_icon_row_base)
     STA display_pointer_low
-    LDA #&3C
+    LDA #HI(status_icon_row_base)
     STA display_pointer_high
 
 .clear_next_icon_slot
@@ -4217,18 +4217,18 @@ ORG initialise_new_game
     ; both live and previous-frame player pointers to $7460. The initial player
     ; grid position is horizontal $1C, vertical $B0. Enter the main loop through
     ; its fixed jump-table vector; if it returns, restart initialization.
-    LDA #&70
+    LDA #LO(collected_icon_next_slot_base)
     STA display_pointer_low
-    LDA #&3F
+    LDA #HI(collected_icon_next_slot_base)
     STA display_pointer_high
     LDA #&02
     JSR enter_copy_16_byte_graphic_to_display
     JSR enter_copy_16_byte_graphic_to_display
     JSR enter_copy_16_byte_graphic_to_display
-    LDA #&60
+    LDA #LO(initial_player_display_pointer)
     STA player_display_pointer_snapshot_low
     STA player_display_pointer_low
-    LDA #&74
+    LDA #HI(initial_player_display_pointer)
     STA player_display_pointer_snapshot_high
     STA player_display_pointer_high
     LDA #&1C
@@ -8444,9 +8444,9 @@ ORG draw_status_panel_divider
 ; whenever the slots are.
 .draw_status_panel_divider_source
     LDX #&42
-    LDA #&E0
+    LDA #LO(status_panel_divider_start)
     STA graphic_source_pointer_low
-    LDA #&3C
+    LDA #HI(status_panel_divider_start)
     STA graphic_source_pointer_high
     LDY #&00
 
@@ -9885,9 +9885,9 @@ ORG draw_and_initialise_room
 .draw_and_initialise_room_source
     LDA #&01
     STA alternate_palette_selector
-    LDA #&80
+    LDA #LO(room_render_display_start)
     STA display_pointer_low
-    LDA #&41
+    LDA #HI(room_render_display_start)
     STA display_pointer_high
     LDA #&00
     STA shared_workspace_a3
@@ -9932,9 +9932,9 @@ ORG draw_and_initialise_room
 .draw_room_body
     JSR draw_room_row_cells
     LDX #&50
-    LDA #&80
+    LDA #LO(room_render_display_start)
     STA graphic_source_pointer_low
-    LDA #&41
+    LDA #HI(room_render_display_start)
     STA graphic_source_pointer_high
 
 .draw_and_initialise_room_branch_2
