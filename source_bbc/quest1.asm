@@ -2423,11 +2423,11 @@ ORG match_packed_record_against_references
 ; Testing the cheaper half first is what makes this affordable to call in a
 ; scan: 890 of 907 calls fail, 801 of them on the first comparison.
 .match_packed_record_against_references_source
-    LDA (&13),Y
+    LDA (packed_record_pointer_low),Y
     AND #&3F
     CMP reference_pair_secondary_value
     BNE report_no_match
-    LDA (&13),Y
+    LDA (packed_record_pointer_low),Y
     LSR A
     LSR A
     LSR A
@@ -2436,11 +2436,11 @@ ORG match_packed_record_against_references
     AND #&FE
     STA shared_workspace_31
     INY
-    LDA (&13),Y
+    LDA (packed_record_pointer_low),Y
     AND #&0F
     CMP reference_pair_primary_value
     BNE report_no_match
-    LDA (&13),Y
+    LDA (packed_record_pointer_low),Y
     LSR A
     LSR A
     LSR A
@@ -2979,9 +2979,9 @@ ORG run_terminal_interaction
     CMP #&FE
     BEQ terminal_stream_access_card_marker
     CMP #&FD
-    BEQ &2146
+    BEQ process_terminal_password_markers
     CMP #&FC
-    BEQ &216B
+    BEQ terminal_password_list_marker
     JSR OSWRCH
     INX
     JMP terminal_stream_next_byte
@@ -3001,7 +3001,7 @@ ORG run_terminal_interaction
     BCC wait_for_terminal_space_release
     JSR draw_and_initialise_room
     LDA terminal_interaction_result
-    BEQ &20B1
+    BEQ terminal_interaction_no_result_exit
     LDA #&00
     STA shared_workspace_6e
 
@@ -3355,7 +3355,7 @@ ORG store_byte_through_saved_pointer
 ; becomes reachable.
 .store_byte_through_saved_pointer_source
     LDY shared_workspace_02
-    STA (&00),Y
+    STA (indirect_write_pointer_low),Y
     RTS
 .store_byte_through_saved_pointer_source_end
 
@@ -4078,7 +4078,7 @@ ORG advance_bounded_tick_target
     LDA #&10
     SBC bounded_tick_target_value
     CMP bounded_tick_target_delay_counter
-    BPL &24F3
+    BPL bounded_tick_delay_not_elapsed_exit
     LDA #&00
     STA bounded_tick_target_delay_counter
     CLC
@@ -4577,7 +4577,7 @@ ORG move_player_right_with_collision
     CLC
     ADC #&08
     STA player_display_pointer_low
-    BCC &2781
+    BCC player_right_pointer_no_carry_exit
     INC player_display_pointer_high
     RTS
 .move_player_right_with_collision_source_end
@@ -5323,7 +5323,7 @@ ORG test_item_code_matches_either_slot
     CMP item_slot_first
     BEQ item_code_matches_slot
     CMP item_slot_second
-    BNE &212A
+    BNE terminal_return_carry_clear
 
 .item_code_matches_slot
     SEC
@@ -5380,7 +5380,7 @@ ORG process_terminal_password_markers
 
 .test_next_terminal_password_flag
     LDA collected_password_flags,X
-    BEQ &218B
+    BEQ terminal_password_flag_absent_step
     JSR print_inline_vdu_stream
 .terminal_password_list_cursor_source
     EQUB &1F, &1B, &00
@@ -6425,18 +6425,18 @@ ORG drop_carried_item
 ; Items $3A/$3E have the exact additional state gates retained below.
 .drop_carried_item_source
     LDA shared_workspace_88
-    BNE &2CD5
+    BNE drop_carried_item_unavailable_exit
     LDA #&32
     STA sound_block_pitch
     JSR prepare_player_relative_display_scan
     LDA shared_workspace_0b
-    BEQ &2CD5
+    BEQ drop_carried_item_unavailable_exit
     JSR sample_markers_below_player
-    BCS &2CD5
+    BCS drop_carried_item_unavailable_exit
     LDA player_vertical_position
     LSR A
     CMP #&09
-    BMI &2CD5
+    BMI drop_carried_item_unavailable_exit
     LDX #&01
 
 .find_occupied_item_slot_to_drop
@@ -6458,7 +6458,7 @@ ORG drop_carried_item
     PLA
     TAX
     LDA shared_workspace_0b
-    BNE &2CD5
+    BNE drop_carried_item_unavailable_exit
     LDA #&00
     STA item_slot_first,X
     LDA shared_workspace_34
@@ -6833,7 +6833,7 @@ ORG draw_graphic_selector_sequence
     TAY
 
 .draw_next_graphic_sequence_selector
-    LDA (&7E),Y
+    LDA (graphic_sequence_pointer_low),Y
     JSR apply_mirror_flag_then_copy_graphic
     INY
     DEX
@@ -6930,7 +6930,7 @@ ORG draw_repeated_87_blank_pairs_by_state
     JSR draw_blank_tile_run
     LDX shared_workspace_a2
     CPX #&00
-    BEQ &158E
+    BEQ record_87_pair_run_finished_exit
 
 .draw_next_87_blank_pair
     LDA #&87
@@ -8082,9 +8082,9 @@ ORG alternate_indexed_pair_countdown_update
 
 .alternate_indexed_pair_countdown_loop
     LDA shared_workspace_80,X
-    BEQ &3003
+    BEQ draw_then_decrement_alternate_indexed_pair
     CMP #&02
-    BEQ &3003
+    BEQ draw_then_decrement_alternate_indexed_pair
 .decrement_alternate_indexed_pair_countdown
     DEC shared_workspace_80,X
     BNE advance_alternate_indexed_pair_selector
@@ -8125,7 +8125,7 @@ ORG handle_matching_alternate_indexed_pair
 ; sourced player/candidate overlap guard.
 .handle_matching_alternate_indexed_pair_source
     JSR test_indexed_pair_matches_reference
-    BCC &3034
+    BCC alternate_indexed_pair_mismatch_return
     LDA indexed_pair_value_field,X
     STA indexed_pair_output_value
     LDA indexed_pair_offset_field,X
@@ -8252,10 +8252,10 @@ ORG toggle_first_indexed_pair_mode_when_positions_match
 .toggle_first_indexed_pair_mode_when_positions_match_source
     LDA indexed_pair_value_field
     CMP indexed_pair_value_field+2
-    BNE &30AB
+    BNE indexed_pair_positions_differ_return
     LDA indexed_pair_offset_field
     CMP indexed_pair_offset_field+2
-    BNE &30AB
+    BNE indexed_pair_positions_differ_return
     LDA indexed_pair_mode_field
     CMP #&02
     BNE set_first_indexed_pair_mode_two
@@ -8842,7 +8842,7 @@ ORG write_indexed_terminal_activation_value
     STA shared_workspace_01
     LDY #&00
     LDA terminal_activation_records+2,X
-    STA (&00),Y
+    STA (indirect_write_pointer_low),Y
     RTS
 .write_indexed_terminal_activation_value_source_end
 
@@ -8938,7 +8938,7 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
 .configure_and_emit_dynamic_room_object_vdu_stream_source
     PLA
     CMP #&07
-    BNE &1973
+    BNE dynamic_room_object_wrong_column_return
     LDA #&01
     STA dynamic_object_vdu_vertical_step_high
     LDA #&4B
@@ -10142,7 +10142,7 @@ ORG advance_76_77_pointer_by_40
     LDA room_data_pointer_low
     ADC #ROOM_LEVEL_ROW_PLANE_BYTES
     STA room_data_pointer_low
-    BCC &1CA8
+    BCC room_row_pointer_no_carry_return
     INC room_data_pointer_high
     RTS
 .advance_76_77_pointer_by_40_source_end
@@ -11036,7 +11036,7 @@ CLEAR music_tune_sequence_source, music_tune_sequence_source_end
 ORG active_room_moving_object_pointer_table
 ; Runtime 0B5F-0B66: four pointers populated during room initialisation.
 .active_room_moving_object_pointer_table_source
-    EQUW &0000, &0000, &0000, &0000
+    EQUW NULL_POINTER, NULL_POINTER, NULL_POINTER, NULL_POINTER
 .active_room_moving_object_pointer_table_source_end
 ASSERT active_room_moving_object_pointer_table_source = active_room_moving_object_pointer_table
 ASSERT active_room_moving_object_pointer_table_source_end = &0B67
@@ -11892,7 +11892,7 @@ CLEAR transient_stack_page_padding_source, transient_stack_page_padding_source_e
 
 ORG chained_irq1v_vector
 .irq_workspace_prefix_source
-    EQUW &0000                      ; replaced with the previous IRQ1V by loader
+    EQUW NULL_POINTER               ; replaced with the previous IRQ1V by loader
     EQUB &00                        ; lower-screen palette base initial value
 .irq_workspace_prefix_source_end
 ASSERT irq_workspace_prefix_source_end = irq1v_handler
