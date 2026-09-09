@@ -2908,7 +2908,7 @@ ORG terminal_activation_records
 .terminal_activation_records_source_end
 ASSERT terminal_activation_records_source = terminal_activation_records
 ASSERT terminal_activation_records_source_end = restore_item_and_goal_records
-COPYBLOCK terminal_activation_records_source, terminal_activation_records_source_end, &4A2D
+COPYBLOCK terminal_activation_records_source, terminal_activation_records_source_end, terminal_activation_records+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR terminal_activation_records_source, terminal_activation_records_source_end
 
 ORG status_panel_alignment_padding
@@ -2918,7 +2918,7 @@ ORG status_panel_alignment_padding
 .status_panel_alignment_padding_source_end
 ASSERT status_panel_alignment_padding_source = status_panel_alignment_padding
 ASSERT status_panel_alignment_padding_source_end = warp_to_room_3_4
-COPYBLOCK status_panel_alignment_padding_source, status_panel_alignment_padding_source_end, &49FF
+COPYBLOCK status_panel_alignment_padding_source, status_panel_alignment_padding_source_end, status_panel_alignment_padding+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR status_panel_alignment_padding_source, status_panel_alignment_padding_source_end
 
 ORG warp_entry_alignment_nop
@@ -2928,7 +2928,7 @@ ORG warp_entry_alignment_nop
 .warp_entry_alignment_nop_source_end
 ASSERT warp_entry_alignment_nop_source = warp_entry_alignment_nop
 ASSERT warp_entry_alignment_nop_source_end = write_indexed_terminal_activation_value
-COPYBLOCK warp_entry_alignment_nop_source, warp_entry_alignment_nop_source_end, &4A13
+COPYBLOCK warp_entry_alignment_nop_source, warp_entry_alignment_nop_source_end, warp_entry_alignment_nop+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR warp_entry_alignment_nop_source, warp_entry_alignment_nop_source_end
 
 ORG item_restore_alignment_nop
@@ -2938,7 +2938,7 @@ ORG item_restore_alignment_nop
 .item_restore_alignment_nop_source_end
 ASSERT item_restore_alignment_nop_source = item_restore_alignment_nop
 ASSERT item_restore_alignment_nop_source_end = print_inline_vdu_stream
-COPYBLOCK item_restore_alignment_nop_source, item_restore_alignment_nop_source_end, &4A55
+COPYBLOCK item_restore_alignment_nop_source, item_restore_alignment_nop_source_end, item_restore_alignment_nop+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR item_restore_alignment_nop_source, item_restore_alignment_nop_source_end
 
 ORG inline_printer_alignment_padding
@@ -2948,7 +2948,7 @@ ORG inline_printer_alignment_padding
 .inline_printer_alignment_padding_source_end
 ASSERT inline_printer_alignment_padding_source = inline_printer_alignment_padding
 ASSERT inline_printer_alignment_padding_source_end = stamp_map_bytes_and_store
-COPYBLOCK inline_printer_alignment_padding_source, inline_printer_alignment_padding_source_end, &4A7E
+COPYBLOCK inline_printer_alignment_padding_source, inline_printer_alignment_padding_source_end, inline_printer_alignment_padding+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR inline_printer_alignment_padding_source, inline_printer_alignment_padding_source_end
 
 ORG sound_block_channel
@@ -2963,7 +2963,7 @@ ORG sound_block_channel
 .initial_sound_parameter_block_source_end
 ASSERT initial_sound_parameter_block_source = sound_block_channel
 ASSERT initial_sound_parameter_block_source_end = test_display_pointer_in_xor_draw_window
-COPYBLOCK initial_sound_parameter_block_source, initial_sound_parameter_block_source_end, &4AA0
+COPYBLOCK initial_sound_parameter_block_source, initial_sound_parameter_block_source_end, sound_block_channel+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR initial_sound_parameter_block_source, initial_sound_parameter_block_source_end
 
 ORG music_tune_progress
@@ -2973,7 +2973,7 @@ ORG music_tune_progress
 .music_tune_progress_source_end
 ASSERT music_tune_progress_source = music_tune_progress
 ASSERT music_tune_progress_source_end = &32C0
-COPYBLOCK music_tune_progress_source, music_tune_progress_source_end, &4ABF
+COPYBLOCK music_tune_progress_source, music_tune_progress_source_end, music_tune_progress+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR music_tune_progress_source, music_tune_progress_source_end
 
 ORG place_initial_map_objects
@@ -3039,7 +3039,7 @@ ORG place_initial_map_objects
 
 ASSERT place_initial_map_objects_source = place_initial_map_objects
 ASSERT place_initial_map_objects_source_end = &0800
-COPYBLOCK place_initial_map_objects_source, place_initial_map_objects_source_end, &2080
+COPYBLOCK place_initial_map_objects_source, place_initial_map_objects_source_end, place_initial_map_objects+LOW_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $0780-$07FF overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2080-$20FF.
@@ -3071,7 +3071,7 @@ ORG apply_player_energy_delta_to_budget
 
 ASSERT apply_player_energy_delta_to_budget_source = apply_player_energy_delta_to_budget
 ASSERT apply_player_energy_delta_to_budget_source_end = continue_after_negative_energy_delta_budget
-COPYBLOCK apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_budget_source_end, &3DC4
+COPYBLOCK apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_budget_source_end, apply_player_energy_delta_to_budget+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Release the runtime range after copying it into the loaded transport image.
 CLEAR apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_budget_source_end
@@ -3089,7 +3089,7 @@ ORG osbyte_81_inkey
 
 ASSERT osbyte_81_inkey_source = osbyte_81_inkey
 ASSERT osbyte_81_inkey_source_end = &2797
-COPYBLOCK osbyte_81_inkey_source, osbyte_81_inkey_source_end, &3F90
+COPYBLOCK osbyte_81_inkey_source, osbyte_81_inkey_source_end, osbyte_81_inkey+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2790-$2796 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3F90-$3F96.
@@ -3111,7 +3111,7 @@ ORG advance_record_counter_then_dispatch
 
 ASSERT advance_record_counter_then_dispatch_source = advance_record_counter_then_dispatch
 ASSERT advance_record_counter_then_dispatch_source_end = &2401
-COPYBLOCK advance_record_counter_then_dispatch_source, advance_record_counter_then_dispatch_source_end, &3BF6
+COPYBLOCK advance_record_counter_then_dispatch_source, advance_record_counter_then_dispatch_source_end, advance_record_counter_then_dispatch+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $23F6-$2400 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3BF6-$3C00.
@@ -3131,7 +3131,7 @@ ORG store_byte_through_saved_pointer
 
 ASSERT store_byte_through_saved_pointer_source = store_byte_through_saved_pointer
 ASSERT store_byte_through_saved_pointer_source_end = &2453
-COPYBLOCK store_byte_through_saved_pointer_source, store_byte_through_saved_pointer_source_end, &3C4E
+COPYBLOCK store_byte_through_saved_pointer_source, store_byte_through_saved_pointer_source_end, store_byte_through_saved_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $244E-$2452 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3C4E-$3C52.
@@ -3173,7 +3173,7 @@ ORG game_entry_jump_table
 
 ASSERT game_entry_jump_table_source = game_entry_jump_table
 ASSERT game_entry_jump_table_source_end = &2222
-COPYBLOCK game_entry_jump_table_source, game_entry_jump_table_source_end, &3A00
+COPYBLOCK game_entry_jump_table_source, game_entry_jump_table_source_end, game_entry_jump_table+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2200-$2221 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3A00-$3A21.
@@ -3220,7 +3220,7 @@ ORG update_lift_and_hazard_slots
 
 ASSERT update_lift_and_hazard_slots_source = update_lift_and_hazard_slots
 ASSERT update_lift_and_hazard_slots_source_end = &22FE
-COPYBLOCK update_lift_and_hazard_slots_source, update_lift_and_hazard_slots_source_end, &3AD6
+COPYBLOCK update_lift_and_hazard_slots_source, update_lift_and_hazard_slots_source_end, update_lift_and_hazard_slots+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $22D6-$22FD overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3AD6-$3AFD.
@@ -3247,7 +3247,7 @@ ORG update_one_lift_or_hazard
 
 ASSERT update_one_lift_or_hazard_source = update_one_lift_or_hazard
 ASSERT update_one_lift_or_hazard_source_end = &230D
-COPYBLOCK update_one_lift_or_hazard_source, update_one_lift_or_hazard_source_end, &3AFE
+COPYBLOCK update_one_lift_or_hazard_source, update_one_lift_or_hazard_source_end, update_one_lift_or_hazard+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $22FE-$230C overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3AFE-$3B0C.
@@ -3324,7 +3324,7 @@ ORG apply_moving_entity_to_player
 
 ASSERT apply_moving_entity_to_player_source = apply_moving_entity_to_player
 ASSERT apply_moving_entity_to_player_source_end = &235C
-COPYBLOCK apply_moving_entity_to_player_source, apply_moving_entity_to_player_source_end, &3B0D
+COPYBLOCK apply_moving_entity_to_player_source, apply_moving_entity_to_player_source_end, apply_moving_entity_to_player+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $230D-$235B overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B0D-$3B5B.
@@ -3370,7 +3370,7 @@ ORG reverse_lift_or_hazard_delta_at_limits
 
 ASSERT reverse_lift_or_hazard_delta_at_limits_source = reverse_lift_or_hazard_delta_at_limits
 ASSERT reverse_lift_or_hazard_delta_at_limits_source_end = &2394
-COPYBLOCK reverse_lift_or_hazard_delta_at_limits_source, reverse_lift_or_hazard_delta_at_limits_source_end, &3B75
+COPYBLOCK reverse_lift_or_hazard_delta_at_limits_source, reverse_lift_or_hazard_delta_at_limits_source_end, reverse_lift_or_hazard_delta_at_limits+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2375-$2393 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B75-$3B93.
@@ -3414,7 +3414,7 @@ ORG advance_lift_or_hazard_vertical_position
 
 ASSERT advance_lift_or_hazard_vertical_position_source = advance_lift_or_hazard_vertical_position
 ASSERT advance_lift_or_hazard_vertical_position_source_end = &23BF
-COPYBLOCK advance_lift_or_hazard_vertical_position_source, advance_lift_or_hazard_vertical_position_source_end, &3B94
+COPYBLOCK advance_lift_or_hazard_vertical_position_source, advance_lift_or_hazard_vertical_position_source_end, advance_lift_or_hazard_vertical_position+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2394-$23BE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B94-$3BBE.
@@ -3478,7 +3478,7 @@ ORG xor_draw_lift_or_hazard
 
 ASSERT xor_draw_lift_or_hazard_source = xor_draw_lift_or_hazard
 ASSERT xor_draw_lift_or_hazard_source_end = &23F6
-COPYBLOCK xor_draw_lift_or_hazard_source, xor_draw_lift_or_hazard_source_end, &3BBF
+COPYBLOCK xor_draw_lift_or_hazard_source, xor_draw_lift_or_hazard_source_end, xor_draw_lift_or_hazard+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $23BF-$23F5 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3BBF-$3BF5.
@@ -3520,7 +3520,7 @@ ORG test_lift_or_hazard_hit_player
 
 ASSERT test_lift_or_hazard_hit_player_source = test_lift_or_hazard_hit_player
 ASSERT test_lift_or_hazard_hit_player_source_end = &2375
-COPYBLOCK test_lift_or_hazard_hit_player_source, test_lift_or_hazard_hit_player_source_end, &3B5C
+COPYBLOCK test_lift_or_hazard_hit_player_source, test_lift_or_hazard_hit_player_source_end, test_lift_or_hazard_hit_player+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $235C-$2374 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3B5C-$3B74.
@@ -3538,7 +3538,7 @@ ORG prepare_player_relative_display_scan
 
 ASSERT prepare_player_relative_display_scan_source = prepare_player_relative_display_scan
 ASSERT prepare_player_relative_display_scan_source_end = &2899
-COPYBLOCK prepare_player_relative_display_scan_source, prepare_player_relative_display_scan_source_end, &4093
+COPYBLOCK prepare_player_relative_display_scan_source, prepare_player_relative_display_scan_source_end, prepare_player_relative_display_scan+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2893-$2898 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4093-$4098.
@@ -3564,7 +3564,7 @@ ORG draw_record_three_from_alternate_bank
 
 ASSERT draw_record_three_from_alternate_bank_source = draw_record_three_from_alternate_bank
 ASSERT draw_record_three_from_alternate_bank_source_end = &24D2
-COPYBLOCK draw_record_three_from_alternate_bank_source, draw_record_three_from_alternate_bank_source_end, &3CC2
+COPYBLOCK draw_record_three_from_alternate_bank_source, draw_record_three_from_alternate_bank_source_end, draw_record_three_from_alternate_bank+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $24C2-$24D1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3CC2-$3CD1.
@@ -3594,7 +3594,7 @@ ORG erase_collected_icon
 
 ASSERT erase_collected_icon_source = erase_collected_icon
 ASSERT erase_collected_icon_source_end = &24C2
-COPYBLOCK erase_collected_icon_source, erase_collected_icon_source_end, &3CB3
+COPYBLOCK erase_collected_icon_source, erase_collected_icon_source_end, erase_collected_icon+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $24B3-$24C1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3CB3-$3CC1.
@@ -3632,7 +3632,7 @@ ORG write_system_clock_via_osword_02
 ASSERT write_system_clock_via_osword_02_source = write_system_clock_via_osword_02
 ASSERT print_packed_bcd_byte_source = print_packed_bcd_byte
 ASSERT write_system_clock_via_osword_02_source_end = &0BBD
-COPYBLOCK write_system_clock_via_osword_02_source, write_system_clock_via_osword_02_source_end, &24A0
+COPYBLOCK write_system_clock_via_osword_02_source, write_system_clock_via_osword_02_source_end, write_system_clock_via_osword_02+LOW_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $0BA0-$0BBC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $24A0-$24BC.
@@ -3649,7 +3649,7 @@ ORG enter_add_collected_icon
 
 ASSERT enter_add_collected_icon_source = enter_add_collected_icon
 ASSERT enter_add_collected_icon_source_end = &0BC0
-COPYBLOCK enter_add_collected_icon_source, enter_add_collected_icon_source_end, &24BD
+COPYBLOCK enter_add_collected_icon_source, enter_add_collected_icon_source_end, enter_add_collected_icon+LOW_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $0BBD-$0BBF overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $24BD-$24BF.
