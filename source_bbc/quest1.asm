@@ -1977,11 +1977,11 @@ ORG test_player_in_range_and_set_direction
     LDA player_horizontal_position
     ADC candidate_range_horizontal_extent
     CMP candidate_horizontal_position
-    BMI return_carry_clear_2b9c
+    BMI player_range_no_overlap_return
     LDA candidate_horizontal_position
     ADC candidate_range_horizontal_extent
     CMP player_horizontal_position
-    BMI return_carry_clear_2b9c
+    BMI player_range_no_overlap_return
 
 .test_vertical_range
     LDA player_vertical_position
@@ -1989,12 +1989,12 @@ ORG test_player_in_range_and_set_direction
     SEC
     SBC candidate_range_above_extent
     CMP candidate_half_vertical_position
-    BPL return_carry_clear_2b9c
+    BPL player_range_no_overlap_return
     LDA player_vertical_position
     LSR A
     ADC candidate_range_below_extent
     CMP candidate_half_vertical_position
-    BMI return_carry_clear_2b9c
+    BMI player_range_no_overlap_return
 
 .set_direction_toward_player
     SEC
@@ -3283,7 +3283,7 @@ ORG apply_player_energy_delta_to_budget
     LDA player_energy_delta_budget
     SBC observed_player_energy_delta
     STA player_energy_delta_budget
-    BPL return_from_25c4_via_25c3
+    BPL return_without_energy_budget_update
     STA slow_damage_countdown
 .apply_player_energy_delta_to_budget_source_end
 
@@ -5023,7 +5023,7 @@ ORG scan_display_column_for_blocking_byte
 .scan_display_column_for_blocking_byte_source_end
 
 ASSERT scan_display_column_for_blocking_byte_source = scan_display_column_for_blocking_byte
-ASSERT shared_display_scan_rts = return_via_292e
+ASSERT shared_display_scan_rts = shared_display_scan_return
 ASSERT scan_display_column_for_blocking_byte_source_end = adjust_display_pointer_then_scan_markers
 COPYBLOCK scan_display_column_for_blocking_byte_source, scan_display_column_for_blocking_byte_source_end, &410B
 
@@ -5154,7 +5154,7 @@ ORG scan_four_display_bytes_for_markers
     STY water_environment_flag
     STY display_marker_scan_auxiliary_state
     JSR test_display_pointer_in_xor_draw_window
-    BCS return_via_292e
+    BCS shared_display_scan_return
 
 .scan_next_display_byte
     LDA (display_pointer_low),Y
@@ -5188,7 +5188,7 @@ ORG scan_four_display_bytes_for_markers
     BNE scan_next_display_byte
     LDA display_marker_deferred_damage_flag
     CLC
-    BEQ return_via_292e
+    BEQ shared_display_scan_return
     JSR apply_player_damage_and_redraw_energy
     CLC
     RTS
@@ -5223,7 +5223,7 @@ ORG check_player_relative_display_pattern_15
     STA display_pointer_high
     LDA #GRAPHIC_COLUMN_JUNCTION
     JSR display_pattern_test
-    BCC return_carry_clear_2a34
+    BCC player_cell_interaction_no_match_return
     JMP display_pattern_match_tail_entry
 .check_player_relative_display_pattern_15_source_end
 
@@ -5448,24 +5448,24 @@ ORG check_player_candidate_bounds_overlap
     LDA player_horizontal_position
     ADC #&03
     CMP candidate_horizontal_position
-    BMI return_carry_clear_2b35
+    BMI player_candidate_no_overlap_return
 
     CLC
     LDA candidate_horizontal_position
     ADC #&03
     CMP player_horizontal_position
-    BMI return_carry_clear_2b35
+    BMI player_candidate_no_overlap_return
 
     LDA player_vertical_position
     LSR A
     CMP candidate_half_vertical_position
-    BPL return_carry_clear_2b35
+    BPL player_candidate_no_overlap_return
 
     LDA player_vertical_position
     LSR A
     ADC xor_graphic_character_rows_remaining
     CMP candidate_half_vertical_position
-    BMI return_carry_clear_2b35
+    BMI player_candidate_no_overlap_return
 .check_player_candidate_bounds_overlap_source_end
 
 ASSERT check_player_candidate_bounds_overlap_source = check_player_candidate_bounds_overlap
@@ -5981,7 +5981,7 @@ ORG enter_room_above
 ; room above rather than a move within one room.
 .enter_room_above_source
     LSR vertical_room_transition_cell_flag
-    BCS return_carry_clear_2b35
+    BCS player_candidate_no_overlap_return
     JSR set_player_pointer_from_horizontal_position
     LDA #PLAYER_BOTTOM_EDGE_VERTICAL_POSITION
     STA player_vertical_position
@@ -6250,7 +6250,7 @@ ORG draw_curved_bowl_before_alternating_suffix
 ; prefix layout below.
 .draw_curved_bowl_before_alternating_suffix_source
     LDY #GRAPHIC_CURVED_BOWL
-    STY temporary_display_byte_7ffb
+    STY single_tile_room_graphic_selector
 .draw_curved_bowl_before_alternating_suffix_body
     TAX
     LDA #ROOM_COLUMN_LAST
@@ -6258,7 +6258,7 @@ ORG draw_curved_bowl_before_alternating_suffix
     SBC room_graphics_column
     TAX
     JSR draw_blank_tile_run
-    LDA temporary_display_byte_7ffb
+    LDA single_tile_room_graphic_selector
     JSR apply_mirror_flag_then_copy_graphic
     LDX room_graphics_column
     JMP draw_alternating_tile_run
@@ -6270,11 +6270,11 @@ ORG draw_curved_bowl_after_alternating_prefix
 ; selected column, one curved-bowl tile, then the remaining blank tiles.
 .draw_curved_bowl_after_alternating_prefix_source
     LDY #GRAPHIC_CURVED_BOWL
-    STY temporary_display_byte_7ffb
+    STY single_tile_room_graphic_selector
 .draw_curved_bowl_after_alternating_prefix_body
     TAX
     JSR draw_alternating_tile_run
-    LDA temporary_display_byte_7ffb
+    LDA single_tile_room_graphic_selector
     JSR apply_mirror_flag_then_copy_graphic
     LDA #ROOM_COLUMN_LAST
     SEC
@@ -7258,7 +7258,7 @@ ORG handle_matching_cross_room_robot_ghost
 ; the adjacent field into $3C, and tail-transfers to the sourced $2B57 guard.
 .handle_matching_cross_room_robot_ghost_source
     JSR test_cross_room_robot_ghost_matches_reference
-    BCC return_carry_clear_2e7a
+    BCC cross_room_robot_ghost_mismatch_return
     LDA cross_room_robot_ghost_value_field,X
     STA candidate_horizontal_position
     LDA cross_room_robot_ghost_offset_field,X
@@ -7325,7 +7325,7 @@ ORG draw_directional_ghost_if_reference_matches
     LDA #CROSS_ROOM_GHOST_CHARACTER_ROWS
     JMP configure_cross_room_robot_ghost_draw_rows
 
-ASSERT P% = restore_cross_room_robot_ghost_x_and_return_2ea7
+ASSERT P% = restore_cross_room_robot_ghost_x_and_return
     PLA
     TAX
     RTS
@@ -7366,7 +7366,7 @@ ORG draw_cross_room_robot_ghost_if_reference_matches
     PLA
     TAX
     JSR test_cross_room_robot_ghost_matches_reference
-    BCC restore_cross_room_robot_ghost_x_and_return_2ea7
+    BCC restore_cross_room_robot_ghost_x_and_return
 
     LDA cross_room_robot_ghost_display_pointer_high,X
     STA display_pointer_high
@@ -7746,21 +7746,21 @@ COPYBLOCK test_cross_room_robot_ghost_matches_reference_source, test_cross_room_
 ; copying its bytes to loaded $46DD-$46ED.
 CLEAR test_cross_room_robot_ghost_matches_reference_source, test_cross_room_robot_ghost_matches_reference_source_end
 
-ORG return_carry_clear_2b9c
+ORG player_range_no_overlap_return
 
 ; Shared no-overlap exit for the player range test: clear carry and return.
-.return_carry_clear_2b9c_source
+.player_range_no_overlap_return_source
     CLC
     RTS
-.return_carry_clear_2b9c_source_end
+.player_range_no_overlap_return_source_end
 
-ASSERT return_carry_clear_2b9c_source = return_carry_clear_2b9c
-ASSERT return_carry_clear_2b9c_source_end = &2B9E
-COPYBLOCK return_carry_clear_2b9c_source, return_carry_clear_2b9c_source_end, &439C
+ASSERT player_range_no_overlap_return_source = player_range_no_overlap_return
+ASSERT player_range_no_overlap_return_source_end = &2B9E
+COPYBLOCK player_range_no_overlap_return_source, player_range_no_overlap_return_source_end, &439C
 
 ; Runtime $2B9C-$2B9D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $439C-$439D.
-CLEAR return_carry_clear_2b9c_source, return_carry_clear_2b9c_source_end
+CLEAR player_range_no_overlap_return_source, player_range_no_overlap_return_source_end
 
 
 ORG set_cross_room_robot_ghost_value_delta_at_thresholds
@@ -7774,7 +7774,7 @@ ORG set_cross_room_robot_ghost_value_delta_at_thresholds
     BNE check_negative_delta_selector
     LDA cross_room_robot_ghost_value_field,X
     CMP cross_room_robot_ghost_positive_delta_threshold
-    BPL return_preserving_comparison_flags_2eeb
+    BPL return_preserving_comparison_flags
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
 .store_cross_room_robot_ghost_value_delta
     STA cross_room_robot_ghost_value_delta_field,X
@@ -7782,10 +7782,10 @@ ORG set_cross_room_robot_ghost_value_delta_at_thresholds
 
 .check_negative_delta_selector
     CMP cross_room_robot_ghost_negative_delta_selector
-    BNE return_preserving_comparison_flags_2eeb
+    BNE return_preserving_comparison_flags
     LDA cross_room_robot_ghost_value_field,X
     CMP cross_room_robot_ghost_negative_delta_threshold
-    BMI return_preserving_comparison_flags_2eeb
+    BMI return_preserving_comparison_flags
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
     JMP store_cross_room_robot_ghost_value_delta
 .set_cross_room_robot_ghost_value_delta_at_thresholds_source_end
@@ -8548,12 +8548,12 @@ ORG draw_blank_marker_and_column_gated_rows
 ; This contiguous room-cell handler cluster contains the two mirrored blank-marker layouts and cell types $36-$3A. Cells $36/$37 draw alternating rows only in columns three-or-seven / column three; $38 uses only column seven; $39 uses columns four-seven. Cell $3A optionally saves the cell/display pointers in column four, draws a blank row, then leaves A stacked for the shared $19E8 continuation. Natural room traces cover the marker, $38-$3A and shared alternating tails; focused real-dispatch fixtures cover every $36/$37 comparison and outcome with exact authority/rebuild parity.
 .draw_blank_marker_and_column_gated_rows_source
     LDY #&00
-    STY temporary_display_byte_7ffb
+    STY single_tile_room_graphic_selector
     JMP draw_curved_bowl_before_alternating_suffix_body
 
 .draw_blank_marker_after_alternating_prefix_source
     LDY #&00
-    STY temporary_display_byte_7ffb
+    STY single_tile_room_graphic_selector
     JMP draw_curved_bowl_after_alternating_prefix_body
 
 .draw_alternating_only_in_columns_three_or_seven_source
