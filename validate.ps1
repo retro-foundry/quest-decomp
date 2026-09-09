@@ -68,6 +68,12 @@ if ($numericInstructions.Count -ne 0) {
     $firstNumericInstruction = $numericInstructions[0].Value.Trim()
     throw "Raw numeric operand in quest1.asm; use a named constant or label: $firstNumericInstruction"
 }
+$relativeNumericOperandPattern = '(?im)^\s*(?:ADC|AND|ASL|BIT|CMP|CPX|CPY|DEC|EOR|INC|JMP|JSR|LDA|LDX|LDY|LSR|ORA|ROL|ROR|SBC|STA|STX|STY)\s+.*[A-Z_][A-Z0-9_]*[+-][0-9]+(?:\s*,\s*[XY])?\s*(?:;.*)?$'
+$relativeNumericOperands = [regex]::Matches($assemblyText, $relativeNumericOperandPattern)
+if ($relativeNumericOperands.Count -ne 0) {
+    $firstRelativeNumericOperand = $relativeNumericOperands[0].Value.Trim()
+    throw "Raw symbol-relative operand in quest1.asm; use a named offset or alias: $firstRelativeNumericOperand"
+}
 
 $variantDefinitions = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools\reconstruction\variants') -Filter '*.json' -File
 if ($variantDefinitions.Count -eq 0) {

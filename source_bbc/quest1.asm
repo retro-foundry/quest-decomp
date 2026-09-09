@@ -1659,7 +1659,7 @@ ORG copy_16_byte_graphic_to_display
     LDA graphic_source_base_pointers,X
     ADC graphic_record_byte_offset_low
     STA graphic_source_pointer_low
-    LDA graphic_source_base_pointers+1,X
+    LDA graphic_source_base_pointers+WORD_HIGH_BYTE_OFFSET,X
     ADC graphic_record_byte_offset_high
     STA graphic_source_pointer_high
 
@@ -4124,7 +4124,7 @@ ORG run_startup_room_sequence_until_space
     LDY #STARTUP_ROOM_SEQUENCE_COUNT
 
 .select_next_startup_room
-    LDA startup_room_sequence_table-1,Y
+    LDA startup_room_sequence_byte_before,Y
     STA startup_packed_room_reference
     AND #PACKED_ROOM_PRIMARY_MASK
     STA reference_pair_primary_value
@@ -5577,7 +5577,7 @@ ORG dispatch_room_cell
 .dispatch_through_vector_table
     ASL room_cell_type_index
     LDX room_cell_type_index
-    LDA room_cell_draw_dispatch_table+1,X
+    LDA room_cell_draw_dispatch_table+WORD_HIGH_BYTE_OFFSET,X
     PHA
     LDA room_cell_draw_dispatch_table,X
     PHA
@@ -7677,7 +7677,7 @@ ORG advance_cross_room_robot_ghost_value_and_display_pointer
     LDA cross_room_robot_ghost_primary_field,X
     BEQ reverse_cross_room_robot_ghost_delta_positive
     DEC cross_room_robot_ghost_primary_field,X
-    LDA #CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_WRAP_POSITION-1
+    LDA #CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_LAST_POSITION
     STA cross_room_robot_ghost_value_field,X
     CLC
     LDA cross_room_robot_ghost_display_pointer_low,X
@@ -7780,7 +7780,7 @@ ORG select_graphic_then_xor_draw
     PHA
     LDA active_room_moving_object_pointer_table,X
     STA graphic_source_pointer_low
-    LDA active_room_moving_object_pointer_table+1,X
+    LDA active_room_moving_object_pointer_table+WORD_HIGH_BYTE_OFFSET,X
     STA graphic_source_pointer_high
     PLA
 .select_graphic_then_xor_draw_source_end
@@ -10260,7 +10260,7 @@ ORG draw_item_graphic_pair
     ADC #ITEM_CODE_KEY_1
     JSR copy_16_byte_graphic_to_display
     CLC
-    ADC #ITEM_GRAPHIC_RECORDS_PER_PAIR-1
+    ADC #ITEM_GRAPHIC_SECOND_RECORD_INDEX
     JMP copy_16_byte_graphic_to_display
 .draw_item_graphic_pair_source_end
 
@@ -11657,7 +11657,7 @@ ORG RELOCATION_LOADER_SOURCE_STAGING_ADDRESS
     LDA #LO(evntv_read_interval_timer)
     STA EVNTV
     LDA #HI(evntv_read_interval_timer)
-    STA EVNTV+1
+    STA EVNTV+WORD_HIGH_BYTE_OFFSET
     LDA #OSBYTE_SET_ESCAPE_BREAK_EFFECT
     LDX #ESCAPE_BREAK_EFFECT_DISABLE_ESCAPE
     JSR OSBYTE
@@ -11666,13 +11666,13 @@ ORG RELOCATION_LOADER_SOURCE_STAGING_ADDRESS
     JSR OSBYTE
     LDA IRQ1V
     STA chained_irq1v_vector
-    LDA IRQ1V+1
-    STA chained_irq1v_vector+1
+    LDA IRQ1V+WORD_HIGH_BYTE_OFFSET
+    STA chained_irq1v_vector+WORD_HIGH_BYTE_OFFSET
     SEI
     LDA #LO(irq1v_handler)
     STA IRQ1V
     LDA #HI(irq1v_handler)
-    STA IRQ1V+1
+    STA IRQ1V+WORD_HIGH_BYTE_OFFSET
     CLI
     LDA #VIA_DISABLE_ALL_INTERRUPTS
     STA USER_VIA_INTERRUPT_ENABLE
