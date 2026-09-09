@@ -7534,37 +7534,38 @@ CLEAR advance_cross_room_robot_ghost_offset_and_display_pointer_source, advance_
 
 
 ORG draw_room_sign_or_collect_password
-; Runtime $16EA-$1795, shared by room-cell types $1E-$2D. Columns two onward
+; Shared by the named room-sign cell types. Columns two onward
 ; draw blanks. The first two columns patch the Level/Sector sign, position and
 ; colour the VDU cursor, then print the selected 16-byte room sign as two
 ; eight-character halves. A zero in the PASSWORD prompt instead maps the room
 ; column to a password number, marks it collected, and prints '=' plus the
-; corresponding five-letter overlapping password. Cell $28 changes to the
-; PASSWORD prompt only while item $3C is carried. The inline byte sequences
+; corresponding five-letter overlapping password. The Oracle sign changes to
+; the PASSWORD prompt only while the eye is carried. The inline byte sequences
 ; below are source VDU/string data, not 6502 instructions.
 .draw_room_sign_or_collect_password_source
-    CMP #&02
+    CMP #ROOM_SIGN_DRAW_COLUMN_COUNT
     BMI prepare_room_sign_text
     JMP draw_eight_blank_tiles
 
 .prepare_room_sign_text
     LDA reference_pair_secondary_value
     CLC
-    ADC #&30
+    ADC #ASCII_DIGIT_ZERO
     STA level_sign_level_digit
     LDA reference_pair_primary_value
-    ADC #&41
+    ADC #ASCII_UPPERCASE_A
     STA level_sign_sector_letter
     CLC
     LDA display_pointer_low
-    ADC #&80
+    ADC #ROOM_SIGN_DISPLAY_ROW_STRIDE_LOW
     STA display_pointer_low
     LDA display_pointer_high
     ADC #&00
     STA display_pointer_high
     JSR print_inline_vdu_stream
 .room_sign_cursor_prefix
-    EQUB VDU_TEXT_COLOUR, &02, VDU_TEXT_COLOUR, &83, VDU_TEXT_AT, &00
+    EQUB VDU_TEXT_COLOUR, ROOM_SIGN_FIRST_LINE_FOREGROUND
+    EQUB VDU_TEXT_COLOUR, ROOM_SIGN_FIRST_LINE_BACKGROUND, VDU_TEXT_AT, ROOM_COLUMN_FIRST
 .room_sign_cursor_prefix_end
 
     LDA room_graphics_x_high
@@ -7574,7 +7575,7 @@ ORG draw_room_sign_or_collect_password
     JSR OSWRCH
     LDA room_graphics_y_low
     SEC
-    SBC #&01
+    SBC #ROOM_SIGN_TEXT_ROW_ADJUSTMENT
     JSR OSWRCH
     LDA room_graphics_column
     ASL A
@@ -7593,19 +7594,20 @@ ORG draw_room_sign_or_collect_password
     JSR test_item_code_matches_either_slot
     LDA #ROOM_CELL_ORACLE_SIGN
     BCC select_room_sign_record
-    LDA #&2D
+    LDA #ROOM_CELL_PASSWORD_PROMPT
 
 .select_room_sign_record
     STA room_interaction_code
     SEC
     SBC #ROOM_CELL_MUSIC_ROOM_SIGN
+    ; Multiply the zero-based sign number by ROOM_SIGN_TEXT_RECORD_LENGTH.
     ASL A
     ASL A
     ASL A
     ASL A
     ADC inline_vdu_stream_pointer_low
     TAY
-    LDX #&00
+    LDX #ROOM_COLUMN_FIRST
 
 .print_next_room_sign_character
     LDA room_sign_text_table,Y
@@ -7613,13 +7615,14 @@ ORG draw_room_sign_or_collect_password
     JSR OSWRCH
     INY
     INX
-    CPX #&08
+    CPX #ROOM_SIGN_LINE_CHARACTER_COUNT
     BNE print_next_room_sign_character
 
 .finish_room_sign_line
     JSR print_inline_vdu_stream
 .room_sign_second_line_cursor
-    EQUB VDU_TEXT_COLOUR, &01, VDU_TEXT_COLOUR, &80, INLINE_VDU_STREAM_END
+    EQUB VDU_TEXT_COLOUR, ROOM_SIGN_SECOND_LINE_FOREGROUND
+    EQUB VDU_TEXT_COLOUR, ROOM_SIGN_SECOND_LINE_BACKGROUND, INLINE_VDU_STREAM_END
 .room_sign_second_line_cursor_end
     RTS
 
@@ -7628,9 +7631,9 @@ ORG draw_room_sign_or_collect_password
     LDA across_to_password_number,X
     TAX
     CLC
-    ADC #&31
+    ADC #PASSWORD_NUMBER_CHARACTER_BIAS
     JSR OSWRCH
-    LDA #&01
+    LDA #PASSWORD_COLLECTED
     STA collected_password_flags,X
     TXA
     STA inline_vdu_stream_pointer_low
@@ -7643,7 +7646,7 @@ ORG draw_room_sign_or_collect_password
     EQUS "="
     EQUB &00
 .password_equals_inline_text_end
-    LDY #&05
+    LDY #PASSWORD_CHARACTER_COUNT
 
 .print_next_password_letter
     LDA password_letters,X
