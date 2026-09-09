@@ -4149,19 +4149,11 @@ CLEAR collect_power_crystal_and_refill_energy_source, collect_power_crystal_and_
 ORG initialise_new_game
 
 ; Runtime $0BC8-$0BFF. Set up a new game.
-; Three subroutines run first, then the starting room is chosen: the primary
-; reference at $90 is set to 1 and the secondary at $8F to 0, which is the room
-; the game opens in. Named across then down, that is room 1,0.
-; $A0 and the pointer at level_room_map_offset_low/high are cleared, the clock at $32C3 and $32C4 is
-; seeded with $44 and $10 - BCD minutes and hours, which $376F advances and the
-; status row shows as a time - and the graphic bank selector is set to the
-; alternate pointer.
-; One LDA #$00 at $0BD5 serves four stores: $8F, $A0, $70 and $71. That matters
-; to anything replacing this run, because a substitute has to leave zero in A
-; for the last three or reload it; see Deliberate modifications at the head of
-; this file. The rest of the starting state is written after this routine, at
-; $0C29 and $0C39, which are not reconstructed yet: the display pointer, $35,
-; $2C and the two item slots at $0C and $0D.
+; Three subroutines run first, then the primary and secondary room references
+; select B0. The special-item flag and level-map offset are cleared, the packed
+; BCD clock is seeded, and the graphic bank selector chooses status graphics.
+; One load of zero deliberately serves all five adjacent stores; a variant that
+; displaces part of this sequence must still preserve zero for the remainder.
 ; The status row is then initialised: collected_icon_count is set to twelve and
 ; the display pointer selects the first icon position. The loop that follows
 ; clears water_environment_flag and runs once per icon.
@@ -4172,16 +4164,16 @@ ORG initialise_new_game
     JSR place_initial_map_objects
     JSR restore_item_and_goal_records
     JSR run_startup_room_sequence_until_space
-    LDA #&01
+    LDA #NEW_GAME_START_COLUMN
     STA reference_pair_primary_value
-    LDA #&00
+    LDA #NEW_GAME_START_LEVEL
     STA reference_pair_secondary_value
     STA special_item_3e_activation_flag
     STA level_room_map_offset_low
     STA level_room_map_offset_high
-    LDA #&44
+    LDA #NEW_GAME_CLOCK_LOW_BCD
     STA bcd_counter_low
-    LDA #&10
+    LDA #NEW_GAME_CLOCK_HIGH_BCD
     STA bcd_counter_high
     LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
@@ -4228,9 +4220,9 @@ ORG initialise_new_game
     LDA #HI(initial_player_display_pointer)
     STA player_display_pointer_snapshot_high
     STA player_display_pointer_high
-    LDA #&1C
+    LDA #NEW_GAME_PLAYER_HORIZONTAL_POSITION
     STA player_horizontal_position
-    LDA #&B0
+    LDA #NEW_GAME_PLAYER_VERTICAL_POSITION
     STA player_vertical_position
     JSR enter_main_gameplay_loop
     JMP initialise_new_game
@@ -9857,19 +9849,20 @@ ORG draw_and_initialise_room
 ; to 8.
 ; Among those cleared flags is jet_boots_enabled_this_room at $1BAA, so every
 ; room begins with the jet boots disabled and a room has to grant them back.
-; It does that at $167A, which writes 1 into the flag while one particular cell
-; is drawn - the triangle symbol a room shows when flight is allowed in it. The
-; poller at $2685 skips both thrust polls while the flag is zero, so in a room
-; without the symbol the boots do nothing at all. The level base at $70/$71 is copied into $72/$73, which
-; set_room_data_pointer then combines with the sector to reach the room cells,
-; biased back by $28 so the draw starts one row above.
+; The triangle-symbol room-cell handler writes one into the flag while drawing,
+; visibly marking rooms where flight is allowed. The
+; control poller skips both thrust keys while the flag is zero, so in a room
+; without the symbol the boots do nothing. The current level-map offset is
+; copied into the room-cell level base; set_room_data_pointer combines it with
+; the room column and backs up one row plane before drawing.
 ; The appearance byte is fetched for the room above and again for this one,
 ; which is what gives the top edge the neighbouring room colours. A secondary
 ; reference of zero has no room above, so that case fills the top row with
 ; blank tiles instead.
-; The body is then drawn a row at a time: eight cells per row through $1284,
-; stepping the room pointer 40 bytes per row, until the row counter reaches
-; $1F. Records, enemies, and lifts/hazards are initialised from their
+; The body is then drawn a row at a time through draw_room_row_cells,
+; stepping the room pointer by ROOM_LEVEL_ROW_PLANE_BYTES, until
+; room_graphics_y_low reaches ROOM_GRAPHICS_Y_FINAL_ROW. Records, enemies, and
+; lifts/hazards are initialised from their
 ; three tables, the keyboard buffers are reset, and the player position and
 ; display pointer are snapshotted into the named walk-target and room-setup
 ; fields. Finally, levels below CROSS_ROOM_GHOST_FIRST_LEVEL initialise the
@@ -9895,9 +9888,9 @@ ORG draw_and_initialise_room
     STA horizontal_band_velocity_effect_state
     STA room_interaction_code
     STA music_tune_progress
-    LDA #&01
+    LDA #ROOM_INITIAL_VERTICAL_VELOCITY_STEP
     STA vertical_velocity_step
-    LDA #&08
+    LDA #ROOM_INITIAL_TICK_TARGET
     STA bounded_tick_target_value
     LDA level_room_map_offset_low
     STA room_cell_level_base_low
@@ -9909,7 +9902,7 @@ ORG draw_and_initialise_room
     JSR set_room_data_pointer
     LDA room_data_pointer_low
     SEC
-    SBC #&28
+    SBC #ROOM_LEVEL_ROW_PLANE_BYTES
     STA room_data_pointer_low
     LDA room_data_pointer_high
     SBC #&00
@@ -9923,7 +9916,7 @@ ORG draw_and_initialise_room
 
 .draw_room_body
     JSR draw_room_row_cells
-    LDX #&50
+    LDX #ROOM_TOP_EDGE_CLEAR_BYTE_COUNT
     LDA #LO(room_render_display_start)
     STA graphic_source_pointer_low
     LDA #HI(room_render_display_start)
@@ -9932,7 +9925,7 @@ ORG draw_and_initialise_room
 .draw_and_initialise_room_branch_2
     LDY #&00
     LDA (graphic_source_pointer_low),Y
-    CMP #&C0
+    CMP #DISPLAY_MARKER_WATER
     BEQ draw_and_initialise_room_branch_3
     LDA #&00
     STA (graphic_source_pointer_low),Y
@@ -9957,7 +9950,7 @@ ORG draw_and_initialise_room
     JSR draw_room_row_cells
     INC room_graphics_column
     LDA room_graphics_column
-    CMP #&08
+    CMP #ROOM_COLUMN_COUNT
     BNE draw_next_row_cell
     LDA room_graphics_y_low
     CMP #ROOM_GRAPHICS_Y_FINAL_ROW
@@ -9968,10 +9961,10 @@ ORG draw_and_initialise_room
     JSR initialise_lifts_and_hazards_from_table
     LDA #&00
     STA alternate_palette_selector
-    LDX #&03
-    LDA #&09
+    LDX #ROOM_PALETTE_FLASH_PERIOD
+    LDA #OSBYTE_SET_FLASH_MARK_PERIOD
     JSR OSBYTE
-    LDA #&0A
+    LDA #OSBYTE_SET_FLASH_SPACE_PERIOD
     JSR OSBYTE
     LDA player_horizontal_position
     STA player_walk_target_horizontal_position
@@ -9997,7 +9990,7 @@ ORG draw_and_initialise_room
     JMP write_system_clock_via_osword_02
 
 .fill_top_row_when_no_room_above
-    LDX #&28
+    LDX #ROOM_TOP_ROW_TILE_COUNT
     JSR draw_blank_tile_run
     JMP reload_appearance_for_this_room
 .draw_and_initialise_room_source_end
