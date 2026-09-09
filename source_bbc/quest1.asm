@@ -2245,7 +2245,7 @@ ORG run_game_tick_with_player_contact_flag_cleared
 ; directly into dispatch_game_tick_updates. The dispatcher retains the JSR
 ; return address established by the gameplay loop.
 .run_game_tick_with_player_contact_flag_cleared_source
-    LDA #&00
+    LDA #PLAYER_CONTACT_FLAG_CLEAR
     STA player_contact_or_damage_flag
 .run_game_tick_with_player_contact_flag_cleared_source_end
 
@@ -2466,13 +2466,13 @@ ORG load_room_palette_and_tile_pair
 
 ; Set the palette and the tile pairs for the current room
 ; from one appearance byte.
-; The room is addressed as the level at $8F times eight plus the sector at $90,
-; which indexes the table at $09B0: eight rooms to a level, matching the sector
+; The room is addressed as the secondary reference times eight plus the primary
+; reference, which indexes room_appearance_table: eight rooms to a level, matching the sector
 ; range A to H the title program describes.
 ; That byte carries two fields. Its low nibble becomes the lower-screen palette
-; value at $0382, which the IRQ handler writes to the Video ULA after its timer
+; value in lower_screen_palette_base, which the IRQ handler writes to the Video ULA after its timer
 ; split. Its upper bits, shifted down twice and masked to $FC, index the
-; four-byte tile pair sets at $1D90, which are copied into $7FFC to $7FFF, the
+; four-byte room_tile_pair_sets, which are copied into the named primary and alternate pairs that
 ; stored pairs draw_alternating_tile_run chooses between.
 ; So a single byte decides both what colour a room is below the raster split and
 ; which two tiles its walls are built from.
@@ -2491,14 +2491,14 @@ ORG load_room_palette_and_tile_pair
     LSR A
     AND #ROOM_APPEARANCE_TILE_OFFSET_MASK
     TAX
-    LDY #&00
+    LDY #ROOM_TILE_PAIR_FIRST_BYTE_INDEX
 
 .copy_next_tile_pair_byte
     LDA room_tile_pair_sets,X
     STA primary_tile_pair_first,Y
     INY
     INX
-    CPY #&04
+    CPY #ROOM_TILE_PAIR_SET_BYTES
     BNE copy_next_tile_pair_byte
     RTS
 .load_room_palette_and_tile_pair_source_end
@@ -2521,7 +2521,7 @@ ORG advance_bcd_counter_and_print
 ; it is written directly to the named G0 map cell. The continuation prints the
 ; high and low two-digit bytes at the named cursor, separated by a horizontal tab.
 .advance_bcd_counter_and_print_source
-    LDA #&00
+    LDA #GAME_CLOCK_TICK_CONSUMED
     STA game_clock_tick_pending
     SED
     CLC
@@ -2621,7 +2621,7 @@ ORG shift_four_row_display_block_right
     TAY
     DEX
     BNE copy_next_cell_right
-    LDA #&00
+    LDA #DISPLAY_SHIFT_CLEAR_BYTE
     TAY
     STA (display_pointer_low),Y
     INC display_pointer_low
@@ -2770,7 +2770,7 @@ ORG initialise_room_enemy_from_table
     TAY
 
 .copy_entity_descriptor
-    LDX #&00
+    LDX #ENEMY_GRAPHIC_DESCRIPTOR_FIRST_BYTE_INDEX
 
 .copy_next_descriptor_byte
     LDA enemy_graphic_descriptor_table,Y
@@ -2832,7 +2832,7 @@ ORG initialise_lifts_and_hazards_from_table
     STA packed_record_pointer_low
     LDA #HI(lift_and_hazard_room_record_table)
     STA packed_record_pointer_high
-    LDX #&00
+    LDX #LIFT_HAZARD_FIRST_RECORD_INDEX
 
 .test_next_lift_or_hazard_record
     TXA
@@ -2856,7 +2856,7 @@ ORG initialise_lifts_and_hazards_from_table
     STA lift_and_hazard_slot_limit
     LDA packed_record_type_field
     STA active_lift_or_hazard_class
-    LDA #&01
+    LDA #LIFT_HAZARD_ACTIVE
     STA lift_and_hazard_active
     INY
     LDA lift_and_hazard_room_record_table,Y
