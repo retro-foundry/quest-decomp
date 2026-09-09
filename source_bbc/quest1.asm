@@ -1836,9 +1836,9 @@ ORG print_item_slot_label
     SBC #ITEM_LABEL_CODE_BIAS
 
 .print_item_slot_label_zero_code
-    STA shared_workspace_33
+    STA item_label_index_unscaled
     ASL A
-    ADC shared_workspace_33
+    ADC item_label_index_unscaled
     TAY
 
 .print_item_slot_label_emit
@@ -1870,7 +1870,7 @@ ORG copy_16_byte_graphic_to_display
 ; index is zero and $79 is nonzero, record $12 is selected instead. X and Y are
 ; preserved, while A returns the original masked record index.
 .copy_16_byte_graphic_to_display_source
-    STA shared_workspace_33
+    STA graphic_record_selector_flags
     AND #GRAPHIC_RECORD_INDEX_MASK
     STA shared_workspace_31
     PHA
@@ -1904,12 +1904,12 @@ ORG copy_16_byte_graphic_to_display
     ADC shared_workspace_32
     STA graphic_source_pointer_high
 
-    ASL shared_workspace_33
+    ASL graphic_record_selector_flags
     BCC copy_16_graphic_without_xor
     LDA #&01
     STA shared_workspace_75
 .copy_16_graphic_without_xor
-    ASL shared_workspace_33
+    ASL graphic_record_selector_flags
     BCS copy_16_graphic_halves_reversed
 
     LDY #&00
@@ -1956,33 +1956,34 @@ ORG test_player_in_range_and_set_direction
 
 ; Runtime $2B9E-$2BFD. Test whether the player is within range of the indexed
 ; candidate and, if so, report which way the player lies.
-; The $2B9E entry presets the box to $08 horizontally and $0A above by $19
-; below; $2BAA is the entry for callers supplying their own. Four comparisons
-; follow, the horizontal pair against $11 and the vertical pair against $3C,
-; each leaving through the shared no-overlap exit at $2B9C with carry clear.
+; The ordinary entry presets the named horizontal, above and below extents;
+; test_range_with_supplied_box is the entry for callers supplying their own.
+; Four comparisons follow, the horizontal pair against indexed_pair_output_value
+; and the vertical pair against indexed_pair_output_half_offset. Each failure
+; leaves through the shared no-overlap return with carry clear.
 ; Only if all four pass does it compute the direction: the sign of the
-; horizontal difference sets $31 and $33 to +1 and -1 or the reverse, and the
-; sign of the vertical difference sets $32 to +2 or -2. Carry set means both in
-; range and direction reported.
+; horizontal difference sets opposite signed horizontal steps, and the sign of
+; the vertical difference selects a signed double-unit step. Carry set means
+; both in range and direction reported.
 ; Those are the same signed unit and double-unit deltas the indexed entity
 ; setters write, so what this produces is a step toward the player rather than a
 ; plain yes or no.
 .test_player_in_range_and_set_direction_source
-    LDA #&08
-    STA shared_workspace_31
-    LDA #&0A
-    STA shared_workspace_32
-    LDA #&19
-    STA shared_workspace_33
+    LDA #PLAYER_RANGE_DEFAULT_HORIZONTAL_EXTENT
+    STA candidate_range_horizontal_extent
+    LDA #PLAYER_RANGE_DEFAULT_ABOVE_EXTENT
+    STA candidate_range_above_extent
+    LDA #PLAYER_RANGE_DEFAULT_BELOW_EXTENT
+    STA candidate_range_below_extent
 
 .test_range_with_supplied_box
     CLC
     LDA player_horizontal_position
-    ADC shared_workspace_31
+    ADC candidate_range_horizontal_extent
     CMP indexed_pair_output_value
     BMI return_carry_clear_2b9c
     LDA indexed_pair_output_value
-    ADC shared_workspace_31
+    ADC candidate_range_horizontal_extent
     CMP player_horizontal_position
     BMI return_carry_clear_2b9c
 
@@ -1990,12 +1991,12 @@ ORG test_player_in_range_and_set_direction
     LDA player_vertical_position
     LSR A
     SEC
-    SBC shared_workspace_32
+    SBC candidate_range_above_extent
     CMP indexed_pair_output_half_offset
     BPL return_carry_clear_2b9c
     LDA player_vertical_position
     LSR A
-    ADC shared_workspace_33
+    ADC candidate_range_below_extent
     CMP indexed_pair_output_half_offset
     BMI return_carry_clear_2b9c
 
@@ -2004,35 +2005,35 @@ ORG test_player_in_range_and_set_direction
     LDA indexed_pair_output_value
     SBC player_horizontal_position
     BPL set_direction_leftward
-    LDA #&01
-    STA shared_workspace_31
-    LDA #&FF
-    STA shared_workspace_33
+    LDA #ENTITY_HORIZONTAL_STEP_POSITIVE
+    STA candidate_horizontal_step
+    LDA #ENTITY_HORIZONTAL_STEP_NEGATIVE
+    STA candidate_horizontal_opposite_step
     JMP set_vertical_direction
 
 .set_direction_leftward
-    LDA #&FF
-    STA shared_workspace_31
-    LDA #&01
-    STA shared_workspace_33
+    LDA #ENTITY_HORIZONTAL_STEP_NEGATIVE
+    STA candidate_horizontal_step
+    LDA #ENTITY_HORIZONTAL_STEP_POSITIVE
+    STA candidate_horizontal_opposite_step
 
 .set_vertical_direction
     CLC
     LDA player_vertical_position
-    ADC #&14
+    ADC #PLAYER_VERTICAL_CENTRE_BIAS
     SEC
     LSR A
     SBC indexed_pair_output_half_offset
     BPL set_vertical_direction_downward
-    LDA #&FE
+    LDA #ENTITY_VERTICAL_STEP_NEGATIVE
 
 .store_vertical_direction
-    STA shared_workspace_32
+    STA candidate_vertical_step
     SEC
     RTS
 
 .set_vertical_direction_downward
-    LDA #&02
+    LDA #ENTITY_VERTICAL_STEP_POSITIVE
     JMP store_vertical_direction
 .test_player_in_range_and_set_direction_source_end
 
@@ -2693,9 +2694,9 @@ ORG initialise_room_enemy_from_table
     TXA
     ASL A
     CLC
-    STA shared_workspace_33
+    STA packed_record_index_scaled
     TXA
-    ADC shared_workspace_33
+    ADC packed_record_index_scaled
     ASL A
     TAY
     JSR match_packed_record_against_references
@@ -2835,9 +2836,9 @@ ORG initialise_lifts_and_hazards_from_table
     TXA
     ASL A
     ASL A
-    STA shared_workspace_33
+    STA packed_record_index_scaled
     TXA
-    ADC shared_workspace_33
+    ADC packed_record_index_scaled
     TAY
     JSR match_packed_record_against_references
     BCS unpack_matched_lift_or_hazard_record
@@ -3282,12 +3283,12 @@ ORG apply_player_energy_delta_to_budget
     LDA player_energy_snapshot
     SBC player_energy
     BEQ reset_player_energy_delta_budget
-    STA shared_workspace_33
+    STA observed_player_energy_delta
     LDA player_energy
     STA player_energy_snapshot
     SEC
     LDA player_energy_delta_budget
-    SBC shared_workspace_33
+    SBC observed_player_energy_delta
     STA player_energy_delta_budget
     BPL return_from_25c4_via_25c3
     STA shared_workspace_9f
@@ -5363,7 +5364,7 @@ ORG process_terminal_password_markers
     PHA
     LDX #&00
     LDA #&15
-    STA shared_workspace_33
+    STA terminal_password_cursor_row
 
 .test_next_terminal_password_flag
     LDA collected_password_flags,X
@@ -5371,9 +5372,9 @@ ORG process_terminal_password_markers
     JSR print_inline_vdu_stream
 .terminal_password_list_cursor_source
     EQUB VDU_TEXT_AT, &1B, &00
-    LDA shared_workspace_33
+    LDA terminal_password_cursor_row
     JSR OSWRCH
-    INC shared_workspace_33
+    INC terminal_password_cursor_row
     TXA
     PHA
     JSR print_password_number_and_text
@@ -9713,7 +9714,7 @@ ORG update_and_draw_room_moving_objects
     BEQ advance_indexed_xor_graphic
     CMP item_slot_second
     BEQ advance_indexed_xor_graphic
-    LDA shared_workspace_33                         ; candidate helper scratch/fallback value
+    LDA room_moving_object_missing_item_delta
     STA indexed_xor_graphic_selector_delta,Y
     JMP advance_indexed_xor_graphic
 .update_and_draw_room_moving_objects_source_end
@@ -10059,13 +10060,13 @@ ORG set_room_data_pointer
     STA shared_workspace_32
     LDA room_cell_level_base_high
     ADC #&00
-    STA shared_workspace_33
+    STA room_data_map_offset_high
     LDA #LO(room_cell_map)
     CLC
     ADC shared_workspace_32
     STA room_data_pointer_low
     LDA #HI(room_cell_map)
-    ADC shared_workspace_33
+    ADC room_data_map_offset_high
     STA room_data_pointer_high
     RTS
 .set_room_data_pointer_source_end
@@ -10173,7 +10174,7 @@ ORG reflect_indexed_entity_at_obstacles
     LDA #&01
     STA shared_workspace_32
     LDA #&10
-    STA shared_workspace_33
+    STA candidate_range_below_extent
     JMP enter_test_range_with_supplied_box
 .reflect_indexed_entity_at_obstacles_source_end
 
@@ -10808,9 +10809,9 @@ ORG initialise_room_moving_objects
     TXA
     ASL A
     ASL A
-    STA shared_workspace_33
+    STA packed_record_index_scaled
     TXA
-    ADC shared_workspace_33
+    ADC packed_record_index_scaled
     TAY
     JSR match_packed_record_against_references
     BCS load_matched_indexed_xor_record
