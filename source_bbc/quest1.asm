@@ -4056,43 +4056,44 @@ CLEAR set_velocity_step_from_horizontal_band_source, set_velocity_step_from_hori
 ORG advance_bounded_tick_target
 
 ; Runtime $24F9-$252C plus mutable bytes $252D/$252E. Increment the delay
-; counter and return through the preceding routine's RTS while it remains at or
-; below $10-$4F. On expiry, clear the counter and add the signed delta to $4F.
-; Reaching either bound, $10 or $03, reads the interval timer and negates the
-; delta with EOR $FF / INC. The two bytes immediately following the RTS are
+; counter and return through the preceding routine's RTS until the upper target
+; minus the current target is smaller than the counter. On expiry, clear the
+; counter and add the signed delta to bounded_tick_target_value. Reaching either
+; named endpoint reads the interval timer and negates the delta with one's
+; complement followed by INC. The two bytes immediately following the RTS are
 ; data despite forming a plausible but unreachable 6502 instruction in the
 ; original image.
 .advance_bounded_tick_target_source
     INC bounded_tick_target_delay_counter
     SEC
-    LDA #&10
+    LDA #BOUNDED_TICK_TARGET_UPPER
     SBC bounded_tick_target_value
     CMP bounded_tick_target_delay_counter
     BPL bounded_tick_delay_not_elapsed_exit
-    LDA #&00
+    LDA #BOUNDED_TICK_DELAY_RESET
     STA bounded_tick_target_delay_counter
     CLC
     LDA bounded_tick_target_value
     ADC bounded_tick_target_delta
     STA bounded_tick_target_value
     LDA bounded_tick_target_value
-    CMP #&10
+    CMP #BOUNDED_TICK_TARGET_UPPER
     BEQ reverse_bounded_tick_target_delta
-    CMP #&03
+    CMP #BOUNDED_TICK_TARGET_LOWER
     BEQ reverse_bounded_tick_target_delta
     RTS
 
 .reverse_bounded_tick_target_delta
     JSR evntv_read_interval_timer
     LDA bounded_tick_target_delta
-    EOR #&FF
+    EOR #BYTE_ONES_COMPLEMENT_MASK
     STA bounded_tick_target_delta
     INC bounded_tick_target_delta
     RTS
 
 .bounded_tick_target_initial_data
-    EQUB &01
-    EQUB &08
+    EQUB BOUNDED_TICK_TARGET_INITIAL_DELTA
+    EQUB BOUNDED_TICK_TARGET_INITIAL_DELAY
 .advance_bounded_tick_target_source_end
 
 ASSERT advance_bounded_tick_target_source = advance_bounded_tick_target
