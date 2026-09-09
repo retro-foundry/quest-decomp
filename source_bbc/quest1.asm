@@ -1010,10 +1010,10 @@ ORG irq1v_handler
 ; so that timer expires part-way down the frame, then writes the twelve
 ; palette entries for the upper part of the display.
 ; On the resulting User VIA timer 2 interrupt it clears the flag by writing the
-; mask back to the flag register, spins a short fixed delay so the change lands
-; on a stable raster position, and writes four more palette entries from
-; $0382. When $A7 is nonzero it instead writes sixteen entries as four groups
-; biased by $00, $A0, $20 and $80.
+; timer-2 mask back to the flag register, spins a short fixed delay so the
+; change lands on a stable raster position, and writes four more entries based
+; on lower_screen_palette_base. When alternate_palette_selector is nonzero it
+; instead writes sixteen entries as four selector groups.
 ; Every path restores X and the MOS accumulator save at $FC and leaves through
 ; the chained IRQ1V vector at $0380, so other interrupt sources are unaffected.
 .irq1v_handler_source
@@ -1022,30 +1022,30 @@ ORG irq1v_handler
     TXA
     PHA
     LDA SYSTEM_VIA_INTERRUPT_FLAGS
-    AND #&82
-    CMP #&82
+    AND #SYSTEM_VIA_VSYNC_INTERRUPT_MASK
+    CMP #SYSTEM_VIA_VSYNC_INTERRUPT_MASK
     BNE check_user_via_timer2
-    LDA #&E0
+    LDA #RASTER_TIMER2_COUNTER_LOW
     STA USER_VIA_TIMER2_COUNTER_LOW
-    LDA #&10
+    LDA #RASTER_TIMER2_COUNTER_HIGH
     STA USER_VIA_TIMER2_COUNTER_HIGH
     JSR write_twelve_video_ula_palette_entries
 
 .check_user_via_timer2
     LDA USER_VIA_INTERRUPT_FLAGS
-    AND #&A0
-    CMP #&A0
+    AND #USER_VIA_TIMER2_INTERRUPT_MASK
+    CMP #USER_VIA_TIMER2_INTERRUPT_MASK
     BNE restore_and_chain_to_previous_irq1v
     STA USER_VIA_INTERRUPT_FLAGS
     LDA alternate_palette_selector
     BNE write_sixteen_entry_palette_set
-    LDX #&0A
+    LDX #RASTER_STABILISE_DELAY_ITERATIONS
 
 .await_stable_raster_position
     DEX
     BNE await_stable_raster_position
     LDA lower_screen_palette_base
-    ORA #&A0
+    ORA #VIDEO_ULA_PALETTE_GROUP_1
     JSR write_four_video_ula_palette_entries
 
 .restore_and_chain_to_previous_irq1v
@@ -1056,19 +1056,19 @@ ORG irq1v_handler
     JMP (chained_irq1v_vector)
 
 .write_sixteen_entry_palette_set
-    LDA #&00
+    LDA #VIDEO_ULA_PALETTE_GROUP_0
     PHA
     JSR write_four_video_ula_palette_entries
     PLA
     PHA
-    ORA #&A0
+    ORA #VIDEO_ULA_PALETTE_GROUP_1
     JSR write_four_video_ula_palette_entries
     PLA
     PHA
-    ORA #&20
+    ORA #VIDEO_ULA_PALETTE_GROUP_2
     JSR write_four_video_ula_palette_entries
     PLA
-    ORA #&80
+    ORA #VIDEO_ULA_PALETTE_GROUP_3
     JSR write_four_video_ula_palette_entries
     JMP restore_and_chain_to_previous_irq1v
 .irq1v_handler_source_end
@@ -1086,18 +1086,18 @@ ORG draw_record_row_pairs
 
 ; Runtime $2496-$24B2. Draw X rows of two graphic records each, stepping down one
 ; Mode 1 character row between rows.
-; Each iteration draws the record in $34 twice through the blitter vector, which
+; Each iteration draws record_row_graphic_index twice through the blitter vector, which
 ; advances the display pointer by $10 per call, then adds $0260. The two
 ; additions come to $0280, which is one character row, so the constant is the
 ; row stride less the two tiles already drawn.
 ; $2496 presets the record to zero, drawing blank rows; $249A is the entry for
 ; callers that have already chosen a record.
 .draw_record_row_pairs_source
-    LDA #&00
-    STA shared_workspace_34
+    LDA #GRAPHIC_RECORD_BLANK
+    STA record_row_graphic_index
 
 .draw_next_record_row
-    LDA shared_workspace_34
+    LDA record_row_graphic_index
     JSR enter_copy_16_byte_graphic_to_display
     JSR enter_copy_16_byte_graphic_to_display
     CLC
@@ -1123,22 +1123,20 @@ CLEAR draw_record_row_pairs_source, draw_record_row_pairs_source_end
 
 ORG remove_last_icon_and_stamp_room_cell
 
-; Runtime $2471-$2495. Erase the icon that the count at $2A no longer needs, then
+; Runtime $2471-$2495. Erase the icon that power_crystals_remaining no longer needs, then
 ; mark the room cell the count was spent on.
-; The icon address is $3CF0 plus the count times sixteen, so the icons sit
+; The icon address is status_icon_row_base plus the count times sixteen, so the icons sit
 ; sixteen bytes apart in one row near the top of the display; record 3 from the
 ; alternate bank is drawn over the one at the current count, which erases it.
-; The display pointer is then taken from the saved cell position at $1243/$1244
-; and $0D is written into that cell through the saved pointer.
+; The display pointer is then restored from saved_effect_display_pointer and
+; ROOM_CELL_COLUMN_PATTERNS is written through it.
 ; There is no terminator: the block runs off its last instruction into
-; draw_record_row_pairs at $2496, which blanks a two-by-two block of records
-; over that cell with X still holding the 2 set here.
-; So the room keeps a $0D where the action happened and the status row loses one
-; icon. replace_saved_cell_then_play_sound writes $0C to a cell the same way, so
-; $0C and $0D are two different marks left in the room map.
+; draw_record_row_pairs, which blanks a two-by-two block of records over that
+; cell with X still holding ROOM_CELL_STAMP_CHARACTER_ROWS. The room therefore
+; keeps the named column-pattern marker and the status row loses one icon.
 .remove_last_icon_and_stamp_room_cell_source
-    LDX #&02
-    LDA power_crystals_remaining
+    LDX #ROOM_CELL_STAMP_CHARACTER_ROWS
+    LDA power_crystals_remaining ; scaled below by STATUS_ICON_BYTE_STRIDE
     ASL A
     ASL A
     ASL A
@@ -11829,7 +11827,7 @@ ORG &8100
     LDA #&0B
     STA EVNTV+1
     LDA #OSBYTE_SET_ESCAPE_BREAK_EFFECT
-    LDX #&02
+    LDX #ESCAPE_BREAK_EFFECT_DISABLE_ESCAPE
     JSR OSBYTE
     LDA #OSBYTE_ENABLE_EVENT
     LDX #&05
