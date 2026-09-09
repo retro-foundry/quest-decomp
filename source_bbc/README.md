@@ -336,13 +336,13 @@ instruction, 16-cycle state transition and its two zero-page writes. The
 second static caller at `$3544` remains unobserved. See
 `analysis/reconstruction/configure_two_row_repeated_xor_graphic_contract.md`.
 
-The room-moving-object delta-limit helper compares Y-indexed selector state with the
+The room-moving-object delta-limit helper compares the selected room-moving-object graphic state with the
 inclusive `$1D/$46` limits. Ten committed calls prove its no-match path, while
 focused calls 52 and 77 in the same no-input replay naturally prove reversal
 to `$01` at the lower limit and `$FF` at the upper limit. Both write paths,
 register/flag effects, and absence of display/hardware effects match the
 authority exactly. See
-`analysis/reconstruction/reverse_indexed_xor_graphic_delta_at_limits_contract.md`.
+`analysis/reconstruction/reverse_room_moving_object_graphic_delta_at_limits_contract.md`.
 
 The room-moving-object draw wrapper maps Y-indexed `$122A/$64` state to all four observed
 even graphic selectors, loads a Y-indexed display pointer from `$43/$44`, and
@@ -350,7 +350,7 @@ tail-calls the proven selector and renderer. The no-input trace contains 20
 complete calls split across callers `$33C7/$3403`; focused captures cover
 opposite selector branches and exact two-row display effects. The global
 one-row bypass remains static-only. See
-`analysis/reconstruction/draw_indexed_xor_graphic_contract.md`.
+`analysis/reconstruction/draw_room_moving_object_graphic_contract.md`.
 
 The adjacent room-moving-object updater adds its Y-indexed `$01/$FF` delta to selector state and
 moves the paired 16-bit display pointer by `+8/-8` according to delta sign.
@@ -358,7 +358,7 @@ All ten no-input calls are checked byte for byte; they split 5/5 by direction
 and include a positive pointer-page carry. Focused calls prove both directions
 and no display/hardware side effect. Negative borrow and other delta/Y values
 remain static-only. See
-`analysis/reconstruction/advance_indexed_xor_graphic_state_and_pointer_contract.md`.
+`analysis/reconstruction/advance_room_moving_object_graphic_state_and_pointer_contract.md`.
 
 The indexed-entity collision dispatcher chooses one of two vertical probes,
 uses the vertical mover when clear, and otherwise probes in the signed

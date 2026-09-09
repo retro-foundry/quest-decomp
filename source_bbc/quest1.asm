@@ -1489,7 +1489,7 @@ COPYBLOCK display_action_jump_table_source, display_action_jump_table_source_end
 CLEAR display_action_jump_table_source, display_action_jump_table_source_end
 
 
-ORG indexed_xor_graphic_state
+ORG room_moving_object_graphic_state
 
 ; Runtime $121D-$1225. Mutable room-render and entity setup state. The initial
 ; image is all zero. $121D-$1220 is written as an indexed four-byte state set;
@@ -1498,7 +1498,7 @@ ORG indexed_xor_graphic_state
 ; consumers run. Keeping each byte explicit documents the intentional overlap
 ; and prevents these variables being mistaken for 6502 instructions.
 .room_render_state_source
-    EQUB &00                         ; $121D indexed XOR state element 0
+    EQUB &00                         ; room-moving-object selector state, slot 0
     EQUB &00                         ; $121E lower selector limit / element 1
     EQUB &00                         ; $121F upper selector limit / element 2
     EQUB &00                         ; $1220 room-moving-object room selector / element 3
@@ -1509,7 +1509,7 @@ ORG indexed_xor_graphic_state
     EQUB &00                         ; $1225 complete current room cell
 .room_render_state_source_end
 
-ASSERT room_render_state_source = indexed_xor_graphic_state
+ASSERT room_render_state_source = room_moving_object_graphic_state
 ASSERT room_render_state_source_end = enter_copy_16_byte_graphic_to_display
 COPYBLOCK room_render_state_source, room_render_state_source_end, &2A1D
 CLEAR room_render_state_source, room_render_state_source_end
@@ -1526,7 +1526,7 @@ ORG &1216
 .display_action_state_alignment_source_end
 
 ASSERT display_action_state_alignment_source = &1216
-ASSERT display_action_state_alignment_source_end = indexed_xor_graphic_state
+ASSERT display_action_state_alignment_source_end = room_moving_object_graphic_state
 COPYBLOCK display_action_state_alignment_source, display_action_state_alignment_source_end, &2A16
 CLEAR display_action_state_alignment_source, display_action_state_alignment_source_end
 
@@ -1633,7 +1633,7 @@ ORG enter_copy_16_byte_graphic_to_display
 ; Runtime $1226-$1228. A single JMP vector into the 16-byte graphic blitter,
 ; sitting between named runtime variables rather than in the table at $1200.
 ; The bytes either side are data: $1225 is read by the character renderer and
-; the IRQ handler, and $122A holds the indexed XOR selector delta.
+; the IRQ handler, and room_moving_object_graphic_selector_delta holds the first room-object selector step.
 .enter_copy_16_byte_graphic_to_display_source
     JMP copy_16_byte_graphic_to_display
 .enter_copy_16_byte_graphic_to_display_source_end
@@ -2146,7 +2146,7 @@ ORG update_and_draw_room_enemies
     LDY active_enemy_last_slot_index
 
 .update_next_room_enemy
-    LDA indexed_xor_erase_previous_graphic
+    LDA erase_previous_xor_sprite_flag
     BEQ dispatch_room_enemy_behavior
     JSR draw_room_enemy_with_xor_graphic
 
@@ -2358,7 +2358,7 @@ ORG dispatch_game_tick_updates
 
 .dispatch_game_tick_updates_branch_14
     LDX #&01
-    STX indexed_xor_erase_previous_graphic
+    STX erase_previous_xor_sprite_flag
     DEX
     STX reset_cross_room_robot_ghost_countdowns
 
@@ -2393,7 +2393,7 @@ ORG apply_mirror_flag_then_copy_graphic
 ; path branches to that same address.
 .apply_mirror_flag_then_copy_graphic_source
     PHA
-    LDA indexed_xor_display_pointer_low
+    LDA xor_sprite_display_pointer_low
     ROL A
     PLA
     BCC copy_16_byte_graphic_to_display
@@ -3899,7 +3899,7 @@ ORG update_lift_and_hazard_group
     LDY #&08
 
 .draw_update_next_slot
-    LDA indexed_xor_erase_previous_graphic
+    LDA erase_previous_xor_sprite_flag
     BEQ update_this_slot
     JSR draw_lift_or_hazard_without_slot_check
 
@@ -5251,7 +5251,7 @@ COPYBLOCK check_player_relative_display_pattern_15_source, check_player_relative
 ; copying its bytes to loaded $4235-$424D.
 CLEAR check_player_relative_display_pattern_15_source, check_player_relative_display_pattern_15_source_end
 
-ORG indexed_xor_graphic_state_block
+ORG room_moving_object_graphic_state_block
 
 ; Runtime $1229-$124A. Zero-initialised mutable workspace used by the indexed
 ; XOR renderer, the two room-entity update clusters and the timed room effect.
@@ -5261,13 +5261,13 @@ ORG indexed_xor_graphic_state_block
 ; padding/state bytes are retained explicitly because indexed accesses can
 ; address them even where no stronger gameplay meaning is yet proved.
 .room_entity_and_effect_state_source
-    EQUB &00                         ; $1229 indexed-XOR workspace byte 0
+    EQUB &00                         ; room-moving-object workspace byte 0
     EQUB &00                         ; $122A selector delta slot 0
-    EQUB &00                         ; $122B indexed-XOR workspace byte 2
+    EQUB &00                         ; room-moving-object workspace byte 2
     EQUB &00                         ; $122C selector delta slot 1
-    EQUB &00                         ; $122D indexed-XOR workspace byte 4
+    EQUB &00                         ; room-moving-object workspace byte 4
     EQUB &00                         ; $122E selector delta slot 2
-    EQUB &00                         ; $122F indexed-XOR workspace byte 6
+    EQUB &00                         ; room-moving-object workspace byte 6
     EQUB &00                         ; $1230 selector delta slot 3
     SKIP 9                          ; $1231-$1239 primary entity fields/dispatcher
     SKIP 8                          ; $123A-$1241 secondary room enemy fields
@@ -5276,7 +5276,7 @@ ORG indexed_xor_graphic_state_block
     SKIP 6                          ; $1245-$124A room effect/entity state
 .room_entity_and_effect_state_source_end
 
-ASSERT room_entity_and_effect_state_source = indexed_xor_graphic_state_block
+ASSERT room_entity_and_effect_state_source = room_moving_object_graphic_state_block
 ASSERT room_entity_and_effect_state_source_end = enter_run_terminal_interaction
 COPYBLOCK room_entity_and_effect_state_source, room_entity_and_effect_state_source_end, &2A29
 CLEAR room_entity_and_effect_state_source, room_entity_and_effect_state_source_end
@@ -5681,7 +5681,7 @@ ORG draw_room_row_cells
 
 .draw_next_cell
     LDA #&00
-    STA indexed_xor_display_pointer_low
+    STA room_cell_mirror_state
     LDA (room_data_pointer_low),Y
     STA current_room_cell
     AND #ROOM_CELL_TYPE_MASK
@@ -5809,7 +5809,7 @@ ORG dispatch_room_cell
     SBC room_graphics_column
     STA room_graphics_column
     LDA #&FF
-    STA indexed_xor_display_pointer_low
+    STA room_cell_mirror_state
 
 .return_column_counter
     LDA room_graphics_column
@@ -7174,7 +7174,7 @@ ORG update_and_draw_two_cross_room_robot_ghosts
 .process_cross_room_robot_ghost_update
     LDA #XOR_GRAPHIC_REPEAT_ENABLED
     STA xor_graphic_repeat_source_scanlines
-    LDA indexed_xor_erase_previous_graphic
+    LDA erase_previous_xor_sprite_flag
     BEQ update_cross_room_robot_ghost_state
     JSR draw_cross_room_robot_ghost_if_reference_matches
     DEC cross_room_robot_ghost_redraw_countdown,X
@@ -8074,7 +8074,7 @@ ORG ghost_countdown_steering_update
     BNE advance_ghost_selector
     LDA #CROSS_ROOM_GHOST_COUNTDOWN_RESET
     STA cross_room_robot_ghost_redraw_countdown,X
-    LDA indexed_xor_erase_previous_graphic
+    LDA erase_previous_xor_sprite_flag
     BEQ update_ghost_state
     JSR draw_directional_ghost_if_reference_matches
 
@@ -8775,7 +8775,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     LDA #&07
     SBC room_graphics_column
     LSR A
-    STA indexed_xor_graphic_selector_state
+    STA room_pattern_selector_state
     TAX
     JSR draw_blank_tile_run
     LDA room_graphics_column
@@ -8783,7 +8783,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     TAX
     INX
     JSR draw_alternating_tile_run
-    LDX indexed_xor_graphic_selector_state
+    LDX room_pattern_selector_state
     INX
     JMP draw_blank_tile_run
 
@@ -8945,7 +8945,7 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
     STA dynamic_object_vdu_first_plot_y_low
     LDA #&00
     STA dynamic_object_vdu_first_plot_y_high
-    LDA indexed_xor_display_pointer_low
+    LDA room_cell_mirror_state
     BPL convert_dynamic_object_coordinate_to_vdu_units
     SEC
     LDA #&00
@@ -9545,27 +9545,27 @@ CLEAR draw_character_row_as_tiles_source, draw_character_row_as_tiles_source_end
 
 ORG reverse_room_moving_object_delta_at_limits
 
-; Runtime $343A-$3452. Keep the Y-indexed selector state moving between the
-; inclusive limits at $121E/$121F. A lower-limit match selects delta +1; an
-; upper-limit match selects delta -1; an interior value leaves the delta
+; Runtime $343A-$3452. Keep the selected room-moving-object graphic state moving between the
+; inclusive selector limits. A lower-limit match selects the positive movement
+; step; an upper-limit match selects the negative step; an interior value leaves the delta
 ; unchanged. X and Y are preserved.
 .reverse_room_moving_object_delta_at_limits_source
-    LDA indexed_xor_graphic_selector_state,Y
-    CMP indexed_xor_graphic_selector_lower_limit
-    BEQ indexed_xor_select_positive_delta
-    CMP indexed_xor_graphic_selector_upper_limit
-    BEQ indexed_xor_select_negative_delta
+    LDA room_moving_object_graphic_selector_state,Y
+    CMP room_moving_object_graphic_selector_lower_limit
+    BEQ room_moving_object_select_positive_delta
+    CMP room_moving_object_graphic_selector_upper_limit
+    BEQ room_moving_object_select_negative_delta
     RTS
 
-.indexed_xor_select_positive_delta
-    LDA #&01
-.indexed_xor_store_reversed_delta
-    STA indexed_xor_graphic_selector_delta,Y
+.room_moving_object_select_positive_delta
+    LDA #ROOM_MOVING_OBJECT_STEP_POSITIVE
+.room_moving_object_store_reversed_delta
+    STA room_moving_object_graphic_selector_delta,Y
     RTS
 
-.indexed_xor_select_negative_delta
-    LDA #&FF
-    JMP indexed_xor_store_reversed_delta
+.room_moving_object_select_negative_delta
+    LDA #ROOM_MOVING_OBJECT_STEP_NEGATIVE
+    JMP room_moving_object_store_reversed_delta
 .reverse_room_moving_object_delta_at_limits_source_end
 
 ASSERT reverse_room_moving_object_delta_at_limits_source = reverse_room_moving_object_delta_at_limits
@@ -9648,7 +9648,8 @@ ORG update_and_draw_room_moving_objects
 
 ; Runtime $33C1-$3439. Update the room's active caterpillar, fish, mouse or
 ; lift graphics. Each instance occupies an even Y index because its display pointer is a two-byte
-; zero-page entry. When $61 is nonzero the old image is XOR-erased first; the
+; zero-page entry. When erase_previous_xor_sprite_flag is nonzero the old image
+; is XOR-erased first; the
 ; selector is then reflected at its configured limits, advanced together with
 ; its display pointer, and drawn in the new position.
 ;
@@ -9662,79 +9663,79 @@ ORG update_and_draw_room_moving_objects
 .update_and_draw_room_moving_objects_source
     LDY #&00
 
-.indexed_xor_update_loop
-    LDA indexed_xor_erase_previous_graphic
-    BEQ indexed_xor_old_image_removed
+.room_moving_object_update_loop
+    LDA erase_previous_xor_sprite_flag
+    BEQ room_moving_object_old_image_removed
     JSR draw_room_moving_object
 
-.indexed_xor_old_image_removed
+.room_moving_object_old_image_removed
     LDA current_room_cell
-    BEQ advance_indexed_xor_graphic
+    BEQ advance_room_moving_object_graphic
     CMP #ROOM_MOVING_OBJECT_LIFT
-    BEQ advance_indexed_xor_graphic
+    BEQ advance_room_moving_object_graphic
     SEC
-    LDA indexed_xor_graphic_selector_state,Y
-    SBC #&01
+    LDA room_moving_object_graphic_selector_state,Y
+    SBC #ROOM_MOVING_OBJECT_CANDIDATE_POSITION_BIAS
     STA candidate_horizontal_position
-    LDA indexed_xor_graphic_state
+    LDA room_moving_object_graphic_state
     ASL A
     ASL A
     STA candidate_half_vertical_position
     JSR enter_test_player_in_range_and_set_direction
-    BCC advance_indexed_xor_graphic
+    BCC advance_room_moving_object_graphic
 
     ; Static-only carry-set path: retain the candidate delta when the required
     ; item is carried, otherwise replace it with the helper's scratch result.
     LDA candidate_horizontal_step
-    STA indexed_xor_graphic_selector_delta,Y
+    STA room_moving_object_graphic_selector_delta,Y
     LDA current_room_cell
     CMP #ROOM_MOVING_OBJECT_FISH
-    BNE indexed_xor_require_item_38
+    BNE room_moving_object_require_item_38
     LDA #ITEM_CODE_WORM
-    JMP indexed_xor_test_required_item
+    JMP room_moving_object_test_required_item
 
-.indexed_xor_require_item_38
+.room_moving_object_require_item_38
     LDA #ITEM_CODE_CHEESE
-    JMP indexed_xor_test_required_item
+    JMP room_moving_object_test_required_item
 
-.advance_indexed_xor_graphic
+.advance_room_moving_object_graphic
     JSR reverse_room_moving_object_delta_at_limits
     JSR advance_room_moving_object_state_and_pointer
     JSR draw_room_moving_object
     LDA current_room_cell
-    BNE indexed_xor_next_instance
-    LDA indexed_xor_graphic_selector_state,Y
+    BNE room_moving_object_next_instance
+    LDA room_moving_object_graphic_selector_state,Y
     STA candidate_horizontal_position
-    LDA indexed_xor_graphic_state
+    LDA room_moving_object_graphic_state
     ASL A
     ASL A
     STA candidate_half_vertical_position
-    LDA #&12
+    LDA #ROOM_MOVING_OBJECT_CATERPILLAR_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
 
-.indexed_xor_next_instance
+.room_moving_object_next_instance
     INY
     INY
     CPY room_moving_object_slot_limit
-    BMI indexed_xor_update_loop
+    BMI room_moving_object_update_loop
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
     RTS
 
-.indexed_xor_test_required_item
+.room_moving_object_test_required_item
     CMP item_slot_first
-    BEQ advance_indexed_xor_graphic
+    BEQ advance_room_moving_object_graphic
     CMP item_slot_second
-    BEQ advance_indexed_xor_graphic
+    BEQ advance_room_moving_object_graphic
     LDA room_moving_object_missing_item_delta
-    STA indexed_xor_graphic_selector_delta,Y
-    JMP advance_indexed_xor_graphic
+    STA room_moving_object_graphic_selector_delta,Y
+    JMP advance_room_moving_object_graphic
 .update_and_draw_room_moving_objects_source_end
 
 ASSERT update_and_draw_room_moving_objects_source = update_and_draw_room_moving_objects
 ASSERT update_and_draw_room_moving_objects_source_end = reverse_room_moving_object_delta_at_limits
-ASSERT indexed_xor_test_required_item = &342A
+ASSERT room_moving_object_test_required_item = &342A
 COPYBLOCK update_and_draw_room_moving_objects_source, update_and_draw_room_moving_objects_source_end, &4BC1
 
 ; Runtime $33C1-$3439 overlaps the loaded transport image. Release it after
@@ -9806,37 +9807,37 @@ ORG draw_room_moving_object
 ; the initial one-row count in place. The final jump tail-calls the proven
 ; graphic selector and XOR renderer.
 .draw_room_moving_object_source
-    LDA #&01
+    LDA #ROOM_MOVING_OBJECT_DEFAULT_GRAPHIC_ROWS
     STA xor_graphic_character_rows_remaining
     LDX #&00
-    LDA indexed_xor_graphic_selector_delta,Y
-    CMP #&FF
-    BNE indexed_xor_test_selector_state
-    LDX #&02
+    LDA room_moving_object_graphic_selector_delta,Y
+    CMP #ROOM_MOVING_OBJECT_STEP_NEGATIVE
+    BNE room_moving_object_test_selector_state
+    LDX #ROOM_MOVING_OBJECT_REVERSE_FRAME_OFFSET
 
-.indexed_xor_test_selector_state
-    LDA indexed_xor_graphic_selector_state,Y
+.room_moving_object_test_selector_state
+    LDA room_moving_object_graphic_selector_state,Y
     ROR A
     ROR A
     ROR A
-    BCS indexed_xor_selector_ready
+    BCS room_moving_object_selector_ready
     INX
     INX
     INX
     INX
 
-.indexed_xor_selector_ready
+.room_moving_object_selector_ready
     LDA current_room_cell
-    BNE indexed_xor_load_display_pointer
+    BNE room_moving_object_load_display_pointer
     LDA room_moving_object_slot_limit
-    CMP #&05
-    BPL indexed_xor_load_display_pointer
+    CMP #ROOM_MOVING_OBJECT_TWO_ROW_SLOT_LIMIT
+    BPL room_moving_object_load_display_pointer
     JSR configure_two_row_repeated_xor_graphic
 
-.indexed_xor_load_display_pointer
-    LDA indexed_xor_display_pointer_high,Y
+.room_moving_object_load_display_pointer
+    LDA room_moving_object_display_pointer_high,Y
     STA display_pointer_high
-    LDA indexed_xor_display_pointer_low,Y
+    LDA room_moving_object_display_pointer_low,Y
     JMP select_graphic_then_xor_draw
 .draw_room_moving_object_source_end
 
@@ -9889,7 +9890,7 @@ ORG draw_and_initialise_room
     STA room_tick_update_selector
     STA room_update_suppression_state
     STA timed_effect_selector
-    STA indexed_xor_erase_previous_graphic
+    STA erase_previous_xor_sprite_flag
     STA lift_and_hazard_active
     STA horizontal_band_velocity_effect_state
     STA room_interaction_code
@@ -10017,30 +10018,30 @@ ORG advance_room_moving_object_state_and_pointer
 ; Delta sign alone chooses +8 or -8. X and Y are preserved; A returns the
 ; updated display-pointer high byte.
 .advance_room_moving_object_state_and_pointer_source
-    LDA indexed_xor_graphic_selector_state,Y
+    LDA room_moving_object_graphic_selector_state,Y
     CLC
-    ADC indexed_xor_graphic_selector_delta,Y
-    STA indexed_xor_graphic_selector_state,Y
-    LDA indexed_xor_graphic_selector_delta,Y
-    BMI indexed_xor_move_display_pointer_left
+    ADC room_moving_object_graphic_selector_delta,Y
+    STA room_moving_object_graphic_selector_state,Y
+    LDA room_moving_object_graphic_selector_delta,Y
+    BMI room_moving_object_move_display_pointer_left
 
     CLC
-    LDA indexed_xor_display_pointer_low,Y
+    LDA room_moving_object_display_pointer_low,Y
     ADC #MODE1_CELL_COLUMN_BYTES
-    STA indexed_xor_display_pointer_low,Y
-    LDA indexed_xor_display_pointer_high,Y
+    STA room_moving_object_display_pointer_low,Y
+    LDA room_moving_object_display_pointer_high,Y
     ADC #&00
-    STA indexed_xor_display_pointer_high,Y
+    STA room_moving_object_display_pointer_high,Y
     RTS
 
-.indexed_xor_move_display_pointer_left
+.room_moving_object_move_display_pointer_left
     SEC
-    LDA indexed_xor_display_pointer_low,Y
+    LDA room_moving_object_display_pointer_low,Y
     SBC #MODE1_CELL_COLUMN_BYTES
-    STA indexed_xor_display_pointer_low,Y
-    LDA indexed_xor_display_pointer_high,Y
+    STA room_moving_object_display_pointer_low,Y
+    LDA room_moving_object_display_pointer_high,Y
     SBC #&00
-    STA indexed_xor_display_pointer_high,Y
+    STA room_moving_object_display_pointer_high,Y
     RTS
 .advance_room_moving_object_state_and_pointer_source_end
 
@@ -10823,7 +10824,7 @@ ORG initialise_room_moving_objects
     LDA #HI(room_moving_object_record_table)
     STA packed_record_pointer_high
 
-.test_next_indexed_xor_record
+.test_next_room_moving_object_record
     TXA
     ASL A
     ASL A
@@ -10832,13 +10833,13 @@ ORG initialise_room_moving_objects
     ADC packed_record_index_scaled
     TAY
     JSR match_packed_record_against_references
-    BCS load_matched_indexed_xor_record
+    BCS load_matched_room_moving_object_record
     INX
     CPX #ROOM_MOVING_OBJECT_RECORD_COUNT
-    BNE test_next_indexed_xor_record
+    BNE test_next_room_moving_object_record
     RTS
 
-.load_matched_indexed_xor_record
+.load_matched_room_moving_object_record
     LDA packed_record_type_field
     STA current_room_cell
     LDX packed_record_even_field
@@ -10849,51 +10850,51 @@ ORG initialise_room_moving_objects
     CMP #ROOM_MOVING_OBJECT_FISH
     BEQ test_existing_special_xor_state
     CMP #ROOM_MOVING_OBJECT_MOUSE
-    BNE initialise_indexed_xor_record
+    BNE initialise_room_moving_object_record
 
 .test_existing_special_xor_state
     LDA room_moving_object_puzzle_state
-    BEQ initialise_indexed_xor_record
+    BEQ initialise_room_moving_object_record
     RTS
 
-.initialise_indexed_xor_record
+.initialise_room_moving_object_record
     LDX #ROOM_MOVING_OBJECT_ACTIVE
     STX room_moving_objects_active
     DEX
 
-.copy_indexed_xor_record_fields
+.copy_room_moving_object_record_fields
     INY
     LDA room_moving_object_record_table,Y
-    STA indexed_xor_graphic_state,X
+    STA room_moving_object_graphic_state,X
     INX
     CPX #ROOM_MOVING_OBJECT_RECORD_FIELDS
-    BNE copy_indexed_xor_record_fields
+    BNE copy_room_moving_object_record_fields
     CLC
-    LDA indexed_xor_graphic_selector_lower_limit
-    STA indexed_xor_graphic_selector_state
-    ADC indexed_xor_graphic_selector_upper_limit
+    LDA room_moving_object_graphic_selector_lower_limit
+    STA room_moving_object_graphic_selector_state
+    ADC room_moving_object_graphic_selector_upper_limit
     ROR A
     ADC #ROOM_MOVING_OBJECT_CENTRE_BIAS
     STA room_moving_object_inner_horizontal_position
     STA moving_entity_horizontal_position
-    LDA indexed_xor_graphic_selector_upper_limit
+    LDA room_moving_object_graphic_selector_upper_limit
     STA moving_entity_second_horizontal_position
     LDX #&00
 
-.build_indexed_xor_display_pointers
-    LDA indexed_xor_graphic_state
+.build_xor_sprite_display_pointers
+    LDA room_moving_object_graphic_state
     STA display_grid_row
-    LDA indexed_xor_graphic_selector_state,X
+    LDA room_moving_object_graphic_selector_state,X
     STA display_grid_column
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA indexed_xor_display_pointer_low,X
+    STA room_moving_object_display_pointer_low,X
     LDA display_pointer_high
-    STA indexed_xor_display_pointer_high,X
+    STA room_moving_object_display_pointer_high,X
     INX
     INX
     CPX #ROOM_MOVING_OBJECT_SLOT_END
-    BNE build_indexed_xor_display_pointers
+    BNE build_xor_sprite_display_pointers
     LDA current_room_cell
     ASL A
     ASL A
@@ -10901,15 +10902,15 @@ ORG initialise_room_moving_objects
     TAY
     LDX #&00
 
-.copy_indexed_xor_graphic_pointers
+.copy_room_moving_object_graphic_pointers
     LDA room_moving_object_pointer_sets,Y
     STA active_room_moving_object_pointer_table,X
     INY
     INX
     CPX #ROOM_MOVING_OBJECT_POINTER_SET_BYTES
-    BNE copy_indexed_xor_graphic_pointers
+    BNE copy_room_moving_object_graphic_pointers
     LDA #ROOM_MOVING_OBJECT_STEP_POSITIVE
-    STA indexed_xor_graphic_selector_delta
+    STA room_moving_object_graphic_selector_delta
     STA room_moving_object_delta_slot_2
     LDA #ROOM_MOVING_OBJECT_STEP_NEGATIVE
     STA room_moving_object_delta_slot_1

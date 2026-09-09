@@ -894,7 +894,7 @@
      "source_file": "source_bbc/quest1.asm",
       "meaning_level": "behavioral",
       "evidence": [
-        "$1EB0 writes the four-byte indexed state rooted at $121D; the indexed XOR updater consumes it and the proved limits at $121E/$121F",
+        "$1EB0 writes the four-byte indexed state rooted at $121D; the room-moving-object updater consumes it and the proved limits at $121E/$121F",
         "room initialisation and rendering populate and consume $1220-$1225, including the complete room-cell byte at $1225",
         "the original initial image is nine zero bytes and the block is mutable runtime state, not instructions"
       ]
@@ -908,7 +908,7 @@
      "source_file": "source_bbc/quest1.asm",
       "meaning_level": "behavioral",
       "evidence": [
-        "$122A/$122C/$122E/$1230 are the four indexed selector-delta slots written during indexed-XOR setup",
+        "$122A/$122C/$122E/$1230 are the four room-moving-object selector-delta slots written during room-moving-object setup",
         "$1231-$123D are read and written as interleaved room enemy fields by the $35xx-$37xx update cluster",
         "$1242-$1244 are the proved timed-effect selector and saved display pointer; room initialisation zeroes related selectors at $1239/$1245",
         "the original initial image is 34 zero bytes and the entire span is mutable runtime state"
@@ -3940,7 +3940,7 @@
         }
       ],
       "evidence": [
-        "pcode/game.pcode.json function $33C1 has 55 instructions, sole caller $2258, and calls the indexed-XOR limit, advance, draw and candidate-overlap helpers",
+        "pcode/game.pcode.json function $33C1 has 55 instructions, sole caller $2258, and calls the room-moving-object limit, advance, draw and candidate-overlap helpers",
         "committed runtime traces enter the routine 1,487 times and execute 39 instructions, including both type-zero/type-three bypasses and 48 carry-clear candidate tests",
         "Y advances by two through the two-byte display-pointer arrays until room_moving_object_slot_limit, proving the even-indexed instance loop",
         "the traced type-zero path derives candidate fields from selector state and indexed state, sets height $12, and calls the player-bounds overlap entry before clearing the repeat-source flag"
