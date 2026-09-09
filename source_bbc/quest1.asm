@@ -2656,33 +2656,28 @@ ORG initialise_room_enemy_from_table
 
 ; Runtime $1F2F-$1FDE. Find the entity record for the current room and unpack it
 ; into every field the entity system reads.
-; The table at $0A00 holds twenty six-byte records: X counts up to $14 and is
-; multiplied by six. The first two bytes are the packed match tested by
-; match_packed_record_against_references, which also leaves the graphic
-; selectors in $31 and $32; those become active_enemy_last_slot_index and
+; room_enemy_record_table holds ROOM_ENEMY_RECORD_COUNT records of
+; ROOM_ENEMY_RECORD_BYTES. The first two bytes are decoded by
+; match_packed_record_against_references into active_enemy_last_slot_index and
 ; active_enemy_species.
 ; The remaining four bytes are two grid positions, each read, scaled by eight
-; into a movement limit, and converted to a display pointer:
-; the first with a bias of $0A goes to $1237, $1231, $68 and the pointer room_enemy_display_pointer_low/high
-; the second with a bias of -6 and -3 goes to $1236, $1233, $1238, $1235, $6A
-; and the pointer $49/$4A
-; Four bytes are then copied from the table at $1FDF into $0B67, selected by
-; active_enemy_species times four unless $79 is set, and the deltas at $123A to $123D are
-; seeded with 1 and 2.
+; into named movement limits and converted to the two room-enemy display
+; pointers. The species selects one four-byte frame-pointer descriptor, unless
+; the descriptor override selects the jellyfish pair. Finally the two signed
+; movement-delta slots are seeded from their indexes.
 ; Everything written here is read back by routines this source already owns:
-; the limits by both delta clamps, the pointers by the probes, $68 by the pair
-; loader, and the active species/last-slot fields by the enemy draw.
+; the limits by both delta clamps, the pointers by collision probes, the moving
+; entity positions by the pair loader, and the species/slot fields by drawing.
 ;
 ; This is the enemy table. The chain is: this routine writes the active species,
-; last slot, $68 and $47/$48; draw_room_enemy_with_xor_graphic reads those four;
+; last slot, position and display pointer; draw_room_enemy_with_xor_graphic reads them;
 ; and suppressing that renderer was tested in play and made the enemy robots
 ; disappear while leaving the lifts alone. Every one of the twenty records
 ; resolves to a room inside the grid, and the set contains every room the
 ; player's account calls out for an enemy.
 ;
-; active_enemy_species selects the four-byte graphic descriptor copied from
-; $1FDF. The three
-; selected graphic pairs and their rooms are
+; active_enemy_species selects a four-byte graphic descriptor. The selected
+; graphic pairs and their rooms are
 ;   bat                       B5 D0 A1 G2 E3 D6
 ;   small bouncing robot      C3 F1 C1 B3 B6 E2 A2 C7
 ;   moth/hazard               C5 E5 F4 E4 H7 D7
@@ -2690,7 +2685,7 @@ ORG initialise_room_enemy_from_table
 ; them. These are decoded graphic identities; the shared state machine means a
 ; visual identity alone must not be used to infer movement or collision rules.
 .initialise_room_enemy_from_table_source
-    LDX #&00
+    LDX #ROOM_ENEMY_FIRST_RECORD_INDEX
     LDA #LO(room_enemy_record_table)
     STA packed_record_pointer_low
     LDA #HI(room_enemy_record_table)
@@ -2717,7 +2712,7 @@ ORG initialise_room_enemy_from_table
     STA active_enemy_last_slot_index
     LDA packed_record_type_field
     STA active_enemy_species
-    LDA #&01
+    LDA #ROOM_ENEMY_ACTIVE
     STA room_tick_update_selector
     INY
     LDA room_enemy_record_table,Y
@@ -2808,26 +2803,20 @@ ORG initialise_lifts_and_hazards_from_table
 
 ; Runtime $1FEF-$2081. Initialise the room's vertical lifts or moth-shaped
 ; hazards from their dedicated table and state fields.
-; The table at $0A96 holds twenty five-byte records: X counts up to $14 and is
-; multiplied by five. The packed match leaves the graphic selectors in $31 and
-; $32, which go to $124A biased by $0A and to $1249. The three remaining bytes
-; are grid coordinates, each biased before use, scaled by eight into $1246 and
-; $1247, and converted once to a display pointer kept in $59/$5A.
-; The four-byte descriptor is copied from the table at $2082 into $0B6B, four
-; bytes past the $0B67 slot initialise_room_enemy_from_table fills, so the two
-; routines populate adjacent descriptor slots.
-; The three record tables tile exactly: $0A00 plus twenty six-byte records ends
-; at $0A78 where indexed_pair_record_table begins, and its ten three-byte
-; records end at $0A96 where this table begins. Each stride is confirmed by the
-; next table starting where the previous one ends.
+; lift_and_hazard_room_record_table holds LIFT_HAZARD_RECORD_COUNT records of
+; LIFT_HAZARD_RECORD_BYTES. The packed match supplies the slot limit and class;
+; the other fields supply the horizontal extent and two vertical limits. Those
+; coordinates are converted into the initial slot positions and display
+; pointers. The selected four-byte frame descriptor is copied beside the active
+; room-enemy descriptor.
 ;
 ; This is the table the moving platforms and the room hazards come from.
 ; Suppressing its renderer, xor_draw_lift_or_hazard, was tested in play and made
 ; the vertical lifts disappear while leaving the enemy robots alone.
 ;
-; The $1249 this routine writes, from the high nibble of the record's second
-; byte, is what decides which of the two a room gets. test_lift_or_hazard_hit_player
-; charges energy only when $1249 is exactly 1, and update_lift_or_hazard_by_class
+; active_lift_or_hazard_class decides which of the two a room gets.
+; test_lift_or_hazard_hit_player charges energy only for the hazard class, and
+; update_lift_or_hazard_by_class
 ; sends LIFT_OR_HAZARD_HAZARD to the player-overlap test and a lift to
 ; apply_moving_entity_to_player, which carries or pushes the player instead of
 ; hurting them. Decoding all twenty records splits them
@@ -2913,7 +2902,7 @@ ORG initialise_lifts_and_hazards_from_table
     ASL A
     ASL A
     TAY
-    LDX #&00
+    LDX #LIFT_HAZARD_FIRST_RECORD_INDEX
 
 .copy_next_lift_or_hazard_descriptor_byte
     LDA lift_and_hazard_graphic_descriptor_table,Y
@@ -3526,7 +3515,7 @@ ORG apply_moving_entity_to_player
     JSR adjust_display_pointer_then_scan_markers
     JSR test_lift_or_hazard_hit_player
     BNE restore_y_and_exit
-    LDA #&01
+    LDA #LIFT_HAZARD_ACTIVE
     JSR step_up_by_count
     JMP test_overlap_damage
 
@@ -11661,6 +11650,7 @@ ORG room_enemy_record_table
     EQUB &47, &23, &04, &00, &19, &41 ; E2 small bouncing robot
 .room_enemy_record_table_source_end
 ASSERT room_enemy_record_table_source = room_enemy_record_table
+ASSERT room_enemy_record_table_source_end-room_enemy_record_table_source = ROOM_ENEMY_RECORD_COUNT*ROOM_ENEMY_RECORD_BYTES
 ASSERT room_enemy_record_table_source_end = &0A78
 COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, &2300
 CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
@@ -11713,6 +11703,7 @@ ORG lift_and_hazard_room_record_table
     EQUB &45, &13, &38, &11, &16 ; D5 moth-shaped hazard
 .lift_and_hazard_room_record_table_source_end
 ASSERT lift_and_hazard_room_record_table_source = lift_and_hazard_room_record_table
+ASSERT lift_and_hazard_room_record_table_source_end-lift_and_hazard_room_record_table_source = LIFT_HAZARD_RECORD_COUNT*LIFT_HAZARD_RECORD_BYTES
 ASSERT lift_and_hazard_room_record_table_source_end = &0AFA
 COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end, &2396
 CLEAR lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end
