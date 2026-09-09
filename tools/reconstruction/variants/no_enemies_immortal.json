@@ -3,7 +3,7 @@
   "description": "Enemies never drawn, both lift kinds visible, and the player never loses energy or dies.",
   "evidence": [
     "obstruction is decided by what is present in the display, because $290B reads (display_pointer),Y and treats any byte that is neither zero nor $C0 as solid, so a sprite that is never drawn cannot block the player",
-    "four separate routines draw moving sprites: $23BF for second-class entities, $3532 for indexed entities, $2EAA for indexed pairs and $3453 for indexed XOR graphics",
+    "four separate routines draw moving sprites: $23BF for lifts and moth-shaped hazards, $3532 for room-local bat/small-robot/moth enemies, $2EAA for cross-room robots/ghosts and $3453 for caterpillar/fish/mouse/lift room objects",
     "xor_draw_player_two_parts at $2A89 draws the player and is deliberately left alone",
     "the damage routine has two entries: $2B88 sets up and falls through, and $2B8F is a separate lifted function entry, so patching only $2B88 leaves callers entering lower down unaffected",
     "$2B8F decrements the energy count at $3B, and $2B93 loads 1 into the death flag at $62 when that decrement reaches zero",
@@ -11,11 +11,12 @@
     "loading 0 rather than 1 before the death store makes it harmless even if some path reaches it, which covers the case where a caller enters below the decrement"
   ],
   "qualifications": [
-    "the indexed entity draw at $3532 draws the enemy robots: re-enabling it made them visible again, so it is suppressed. The indexed pair draw at $2EAA is left enabled as the next candidate for the horizontally moving lifts",
-    "the lift/hazard draw at $23C7 is deliberately left enabled: update_lift_or_hazard_by_class routes lifts to apply_moving_entity_to_player, the push that carries the player. Disabling it alone was reported to leave the other visible enemies unchanged",
-    "the indexed entity draw at $3532 is left enabled because those are the only entities with a horizontal mover: advance_indexed_entity_horizontal_position steps $123A and carries the $47/$48 pointer 8 bytes with it, while the second class has only a vertical mover. The player reported vertical lifts visible and horizontal ones missing, which matches that split",
+    "draw_room_enemy_with_xor_graphic at $3532 is suppressed because its descriptor selects the room-local bat, small bouncing robot or moth frames",
+    "draw_cross_room_robot_ghost_if_reference_matches at $2EAA is suppressed because levels 0-7 select small bouncing robots and levels 8-9 select ghosts; this subsystem is not a lift class",
+    "the shared lift/hazard renderer at $23C7 remains enabled so vertical lifts still carry the player; moth-shaped hazards drawn by the same renderer also remain visible",
+    "draw_room_moving_object at $3453 remains enabled because it owns caterpillar, fish, mouse and lift graphics rather than the room-enemy descriptor",
     "an earlier attempt disabled only $23BF and the player reported no visible change, which is what identifies the visible enemies as belonging to one of the other three systems",
-    "this suppresses all four rather than identifying which, so scenery or objects animated through the same routines will also disappear",
+    "this variant suppresses the two proven enemy-only render paths; shared lift/hazard and room-object paths remain active",
     "drawing and erasing are the same XOR call, so any sprite already on screen when this takes effect is never erased; entities are drawn fresh on room entry so a clean start should be unaffected",
     "the entities still exist and still move, and anything reading their coordinates rather than the display still sees them",
     "$2732 also writes the death flag, inside the control poller and reached by a key nothing has ever pressed, so it is left alone",
@@ -25,16 +26,16 @@
   ],
   "patches": [
     {
-      "name": "no_indexed_entities",
+      "name": "no_room_enemies",
       "runtime_address": "3532",
       "expect": "a9 01",
       "write": "60 01"
     },
     {
-      "name": "no_indexed_xor_graphics",
-      "runtime_address": "3453",
-      "expect": "a9 01",
-      "write": "60 01"
+      "name": "no_cross_room_robot_ghosts",
+      "runtime_address": "2EAA",
+      "expect": "bd 2f",
+      "write": "60 2f"
     },
     {
       "name": "no_energy_loss",

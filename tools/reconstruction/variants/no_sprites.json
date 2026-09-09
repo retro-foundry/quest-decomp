@@ -3,7 +3,7 @@
   "description": "Suppress every entity draw routine, leaving only the player and the room.",
   "evidence": [
     "obstruction is decided by what is present in the display, because $290B reads (display_pointer),Y and treats any byte that is neither zero nor $C0 as solid, so a sprite that is never drawn cannot block the player",
-    "four separate routines draw moving sprites: $23BF for second-class entities, $3532 for indexed entities, $2EAA for indexed pairs and $3453 for indexed XOR graphics",
+    "four separate routines draw moving sprites: $23BF for lifts and moth-shaped hazards, $3532 for room-local bat/small-robot/moth enemies, $2EAA for cross-room robots/ghosts and $3453 for caterpillar/fish/mouse/lift room objects",
     "xor_draw_player_two_parts at $2A89 draws the player and is deliberately left alone"
   ],
   "qualifications": [
@@ -13,10 +13,10 @@
     "the entities still exist and still move, and anything reading their coordinates rather than the display still sees them"
   ],
   "patches": [
-    { "name": "no_second_class_entities", "runtime_address": "23C7", "expect": "a2 0c", "write": "60 0c" },
-    { "name": "no_indexed_entities", "runtime_address": "3532", "expect": "a9 01", "write": "60 01" },
-    { "name": "no_indexed_pairs", "runtime_address": "2EAA", "expect": "bd 2f", "write": "60 2f" },
-    { "name": "no_indexed_xor_graphics", "runtime_address": "3453", "expect": "a9 01", "write": "60 01" },
+    { "name": "no_lifts_or_moth_hazards", "runtime_address": "23C7", "expect": "a2 0c", "write": "60 0c" },
+    { "name": "no_room_enemies", "runtime_address": "3532", "expect": "a9 01", "write": "60 01" },
+    { "name": "no_cross_room_robot_ghosts", "runtime_address": "2EAA", "expect": "bd 2f", "write": "60 2f" },
+    { "name": "no_room_moving_objects", "runtime_address": "3453", "expect": "a9 01", "write": "60 01" },
     { "name": "pause_on_f2", "runtime_address": "26B5", "expect": "a2 96", "write": "a2 8d" },
     { "name": "resume_on_f3", "runtime_address": "26BC", "expect": "a2 a6", "write": "a2 8c" }
   ]

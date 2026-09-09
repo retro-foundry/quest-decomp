@@ -284,8 +284,8 @@
       "meaning_level": "behavioral",
       "record_size": 2,
       "evidence": [
-        "draw_indexed_pair_if_reference_matches uses X=$10/$12 relative to $0B5F and selects the two small-bouncing-robot frame pointers",
-        "draw_directional_indexed_pair_if_matching uses X=$14/$16 relative to $0B5F and selects the two ghost frame pointers on the alternate levels-8-and-9 path"
+        "draw_cross_room_robot_ghost_if_reference_matches uses X=$10/$12 relative to $0B5F and selects the two small-bouncing-robot frame pointers",
+        "draw_directional_ghost_if_reference_matches uses X=$14/$16 relative to $0B5F and selects the two ghost frame pointers on the alternate levels-8-and-9 path"
       ]
     },
     {
@@ -523,7 +523,7 @@
       "meaning_level": "behavioral",
       "record_size": 3,
       "evidence": [
-        "initialise_indexed_pair_from_record selects one of ten three-byte records by the secondary reference"
+        "initialise_cross_room_robot_ghost_from_record selects one of ten three-byte records by the secondary reference"
       ]
     },
     {
@@ -658,7 +658,7 @@
       ]
     },
     {
-      "name": "unused_indexed_pair_return",
+      "name": "unused_ghost_update_return",
       "runtime_start": 12418,
       "runtime_end_exclusive": 12419,
       "loaded_start": 18562,
@@ -731,14 +731,14 @@
       "evidence": ["redraw_energy_bar_segment indexes these four partial fill masks by (energy AND 7) divided by two"]
     },
     {
-     "name": "indexed_pair_initial_state",
+     "name": "cross_room_robot_ghost_initial_state",
      "runtime_start": 8742,
      "runtime_end_exclusive": 8759,
      "loaded_start": 14886,
      "loaded_end_exclusive": 14903,
      "source_file": "source_bbc/quest1.asm",
       "meaning_level": "behavioral",
-      "evidence": ["initial bytes backing the interleaved indexed-pair fields at $222B-$2236 before initialise_indexed_pair_from_record populates them"]
+      "evidence": ["initial bytes backing the interleaved cross-room robot/ghost fields at $222B-$2236 before initialise_cross_room_robot_ghost_from_record populates them"]
     },
     {
       "name": "last_chance_chord_inkey_codes",
@@ -2165,7 +2165,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all thirty-three instructions 57 times, driving the seven-shift and three-shift loops 399 and 171 times, which is 57 times 7 and 57 times 3",
         "the 5 then 128 multiplication is exactly $0280, the character row stride scan_display_column_for_blocking_byte and draw_record_row_pairs already use, and 8 is the cell stride the one-cell steps use",
-        "initialise_indexed_pair_from_record writes $0A and $0B from a packed record and then calls display_action_jump_table, whose first vector targets this address"
+        "initialise_cross_room_robot_ghost_from_record writes $0A and $0B from a packed record and then calls display_action_jump_table, whose first vector targets this address"
       ]
     },
     {
@@ -2261,7 +2261,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all ninety-three instructions: 16 entries driving 263 record tests against a table of 20, with 5 matches unpacked",
         "the times-six index and the four INY-separated reads past the match confirm a six-byte record stride",
-        "every destination it writes is a field an already-reconstructed routine reads: $1235 and $1236 by reverse_indexed_123a_delta_at_limits, $1237 and $1238 by reverse_indexed_123b_delta_at_limits, $47/$48 by the column probes, $68 by load_indexed_pair_output_from_y_tables, and active_enemy_species/active_enemy_last_slot_index by draw_room_enemy_with_xor_graphic",
+        "every destination it writes is a field an already-reconstructed routine reads: $1235 and $1236 by reverse_indexed_123a_delta_at_limits, $1237 and $1238 by reverse_indexed_123b_delta_at_limits, $47/$48 by the column probes, $68 by load_cross_room_robot_ghost_output_from_y_tables, and active_enemy_species/active_enemy_last_slot_index by draw_room_enemy_with_xor_graphic",
         "the shift-by-three scaling matches the eight-byte character cell the grid conversion uses, so the limits are in the same units as the positions"
       ]
     },
@@ -3350,7 +3350,7 @@
       ]
     },
     {
-     "name": "initialise_indexed_pair_from_record",
+     "name": "initialise_cross_room_robot_ghost_from_record",
      "runtime_start": 11732,
      "runtime_end_exclusive": 11844,
      "loaded_start": 17876,
@@ -3359,12 +3359,12 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all fifty-five instructions 16 times, with the four-iteration preset loop running 64 times",
-        "the times-three index and the three consecutive INY-separated reads prove the record stride, and the fields written are the same ones test_indexed_pair_matches_reference and set_indexed_pair_value_delta_at_thresholds already read",
-        "every field is written to two addresses eight bytes apart in the $222B block and to paired zero-page bytes, matching the two-entity shape update_and_draw_two_indexed_pairs iterates"
+        "the times-three index and the three consecutive INY-separated reads prove the record stride, and the fields written are the same ones test_cross_room_robot_ghost_matches_reference and set_cross_room_robot_ghost_value_delta_at_thresholds already read",
+        "every field is written to two addresses eight bytes apart in the $222B block and to paired zero-page bytes, matching the two-entity shape update_and_draw_two_cross_room_robot_ghosts iterates"
       ]
     },
     {
-      "name": "update_and_draw_two_indexed_pairs",
+      "name": "update_and_draw_two_cross_room_robot_ghosts",
       "runtime_start": 11844,
       "runtime_end_exclusive": 11900,
       "loaded_start": 17988,
@@ -3379,7 +3379,7 @@
       ]
     },
     {
-      "name": "handle_matching_indexed_pair",
+      "name": "handle_matching_cross_room_robot_ghost",
       "runtime_start": 11900,
       "runtime_end_exclusive": 11922,
       "loaded_start": 18044,
@@ -3394,7 +3394,7 @@
       ]
     },
     {
-      "name": "draw_directional_indexed_pair_if_matching",
+      "name": "draw_directional_ghost_if_reference_matches",
       "runtime_start": 11922,
       "runtime_end_exclusive": 11946,
       "loaded_start": 18066,
@@ -3403,13 +3403,13 @@
       "meaning_level": "behavioral",
       "evidence": [
         "pcode/game.pcode.json function 0x2e92 has exact body range 0x2e92-0x2ea9, selects $14/$16 from the sign of indexed delta $222C+X, and tail-enters the existing predicate-and-draw path at $2EBC",
-        "the only static callers are $301F and $302B inside the alternate indexed-pair updater, bracketing its update helpers and therefore forming an XOR erase/redraw pair",
+        "the only static callers are $301F and $302B inside the alternate cross-room robot/ghost updater, bracketing its update helpers and therefore forming an XOR erase/redraw pair",
         "analysis/runtime_trace/startup_prompt_carry/executed_pcs.csv executes all fourteen instructions six times, split evenly between positive and negative delta selectors; startup_outer_countdown adds four complete calls with the same split",
         "the enclosing focused startup calls have exact authority/rebuild registers, complete memory effect, PC sequence, display effect and video hardware; the forced room has no reference match, so the downstream XOR drawing path remains evidenced through its separately sourced ordinary entry"
       ]
     },
     {
-      "name": "draw_indexed_pair_if_reference_matches",
+      "name": "draw_cross_room_robot_ghost_if_reference_matches",
       "runtime_start": 11946,
       "runtime_end_exclusive": 11997,
       "loaded_start": 18090,
@@ -3424,7 +3424,7 @@
       ]
     },
     {
-      "name": "test_indexed_pair_matches_reference",
+      "name": "test_cross_room_robot_ghost_matches_reference",
       "runtime_start": 11997,
       "runtime_end_exclusive": 12014,
       "loaded_start": 18141,
@@ -3439,7 +3439,7 @@
       ]
     },
     {
-      "name": "set_indexed_pair_value_delta_at_thresholds",
+      "name": "set_cross_room_robot_ghost_value_delta_at_thresholds",
       "runtime_start": 12014,
       "runtime_end_exclusive": 12050,
       "loaded_start": 18158,
@@ -3454,7 +3454,7 @@
       ]
     },
     {
-      "name": "advance_indexed_pair_value_and_display_pointer",
+      "name": "advance_cross_room_robot_ghost_value_and_display_pointer",
       "runtime_start": 12050,
       "runtime_end_exclusive": 12175,
       "loaded_start": 18194,
@@ -3470,7 +3470,7 @@
       ]
     },
     {
-      "name": "advance_indexed_pair_offset_and_display_pointer",
+      "name": "advance_cross_room_robot_ghost_offset_and_display_pointer",
       "runtime_start": 12175,
       "runtime_end_exclusive": 12297,
       "loaded_start": 18319,
@@ -3514,7 +3514,7 @@
       ]
     },
     {
-      "name": "alternate_indexed_pair_countdown_update",
+      "name": "ghost_countdown_steering_update",
       "runtime_start": 12297,
       "runtime_end_exclusive": 12341,
       "loaded_start": 18441,
@@ -3524,12 +3524,12 @@
       "evidence": [
         "pcode/game.pcode.json function 0x3009 owns the entry range 0x3009-0x3034 plus the preceding shared block 0x3003-0x3008; this source span deliberately begins at the actual entry and preserves both branches to the original preceding block",
         "analysis/runtime_trace/startup_prompt_carry/executed_pcs.csv and startup_outer_countdown/executed_pcs.csv execute all 21 instructions at 0x3009-0x3034 across both X=0 and X=2 iterations",
-        "analysis/runtime_trace/indexed_pair_player_equal/executed_pcs.csv proves the complete steer, mode-toggle, matching-overlap and redraw chain four times with all callees now behaviorally named",
+        "analysis/runtime_trace/cross_room_robot_ghost_player_equal/executed_pcs.csv proves the complete steer, mode-toggle, matching-overlap and redraw chain four times with all callees now behaviorally named",
         "the focused enclosing startup calls have exact authority/rebuild registers, complete memory effects, PC sequences, displays and video hardware"
       ]
     },
     {
-      "name": "handle_matching_alternate_indexed_pair",
+      "name": "handle_matching_ghost",
       "runtime_start": 12341,
       "runtime_end_exclusive": 12367,
       "loaded_start": 18485,
@@ -3538,13 +3538,13 @@
       "meaning_level": "port-contract",
       "evidence": [
         "pcode/game.pcode.json function 0x3035 has exact body range 0x3035-0x304e, calls the sourced pair/reference predicate, returns through the preceding 0x3034 RTS on mismatch and tail-enters the sourced 0x2b57 overlap guard on match",
-        "analysis/runtime_trace/indexed_pair_player_equal/executed_pcs.csv executes every instruction four times with matching reference fields, copying value zero to $11, computing (offset >> 1) + 12 in $3C and storing extent $17 in $41",
+        "analysis/runtime_trace/cross_room_robot_ghost_player_equal/executed_pcs.csv executes every instruction four times with matching reference fields, copying value zero to $11, computing (offset >> 1) + 12 in $3C and storing extent $17 in $41",
         "analysis/runtime_trace/startup_prompt_carry/executed_pcs.csv separately proves four mismatch returns through 0x3034",
         "the 3,412,409-cycle enclosing equal-position call is exact for authority/rebuild registers, complete memory effect, PC sequence, display and video hardware"
       ]
     },
     {
-      "name": "set_indexed_pair_deltas_from_player_position",
+      "name": "set_ghost_steps_toward_player",
       "runtime_start": 12367,
       "runtime_end_exclusive": 12418,
       "loaded_start": 18511,
@@ -3554,12 +3554,12 @@
       "evidence": [
         "pcode/game.pcode.json assigns 0x304f-0x3081 as the first body range of function 0x304f and excludes the unreachable 0x3082 RTS after the unconditional 0x307f tail jump",
         "analysis/runtime_trace/startup_prompt_carry/executed_pcs.csv proves secondary match with player half-Y below the pair, storing vertical delta -2, plus both reference-mismatch transfers",
-        "analysis/runtime_trace/indexed_pair_player_equal/executed_pcs.csv proves vertical delta +2 and horizontal delta +1 four times; indexed_pair_player_left proves horizontal delta -1 twice",
-        "the external 0x307f block tail-jumps to source-owned advance_indexed_pair_value_and_display_pointer and is covered by the earlier alternate-tail state fixture"
+        "analysis/runtime_trace/cross_room_robot_ghost_player_equal/executed_pcs.csv proves vertical delta +2 and horizontal delta +1 four times; cross_room_robot_ghost_player_left proves horizontal delta -1 twice",
+        "the external 0x307f block tail-jumps to source-owned advance_cross_room_robot_ghost_value_and_display_pointer and is covered by the earlier alternate-tail state fixture"
       ]
     },
     {
-      "name": "apply_indexed_pair_player_axis_mode",
+      "name": "apply_ghost_player_axis_mode",
       "runtime_start": 12419,
       "runtime_end_exclusive": 12460,
       "loaded_start": 18563,
@@ -3569,13 +3569,13 @@
       "meaning_level": "behavioral",
       "evidence": [
         "pcode/game.pcode.json assigns 0x3083-0x30ab as the second body range of function 0x304f, separated from the first range by the original unused RTS at 0x3082",
-        "analysis/runtime_trace/indexed_pair_player_left/executed_pcs.csv executes the 0x3083 negative-delta entry twice, while indexed_pair_player_equal executes both mode-2-to-0 resets and the previously proved traces cover horizontal-mode completion and both horizontal/vertical advance tails",
+        "analysis/runtime_trace/cross_room_robot_ghost_player_left/executed_pcs.csv executes the 0x3083 negative-delta entry twice, while cross_room_robot_ghost_player_equal executes both mode-2-to-0 resets and the previously proved traces cover horizontal-mode completion and both horizontal/vertical advance tails",
         "mode 2 compares player Y with indexed offset and advances through 0x2f8f until equal; other modes compare player X with indexed value and advance through source-owned 0x2f12 until equal, then store mode 2",
         "all contributing enclosing authority/rebuild calls are exact for registers, complete memory effect, PC sequence, display and video hardware"
       ]
     },
     {
-      "name": "toggle_first_indexed_pair_mode_when_positions_match",
+      "name": "toggle_first_ghost_axis_mode_when_positions_match",
       "runtime_start": 12460,
       "runtime_end_exclusive": 12494,
       "loaded_start": 18604,
@@ -3584,7 +3584,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "pcode/game.pcode.json function 0x30ac has exact body range 0x30ac-0x30cd and compares $222F/$2230 with their index-2 counterparts before changing $2233",
-        "its sole static caller is $3025 after the alternate indexed-pair updater has processed both X=0 and X=2 entries",
+        "its sole static caller is $3025 after the alternate cross-room robot/ghost updater has processed both X=0 and X=2 entries",
         "analysis/runtime_trace/startup_prompt_carry/executed_pcs.csv executes all fourteen instructions: four comparisons produce three full matches, with two current-mode-2 stores of 0 and one other-mode store of 2; startup_outer_countdown adds four first-field mismatch returns",
         "both enclosing focused calls have exact authority/rebuild registers, complete memory effect, PC sequence, display effect and video hardware"
       ]
@@ -4032,11 +4032,11 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all seventeen instructions 51 times, taking the two-row configuration on 10 of them and the $0A row count on 26",
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv and the committed edges prove callers 0x356a and 0x35b8",
-        "three of its four callees are already source-owned: configure_two_row_repeated_xor_graphic, load_display_pointer_from_indexed_pair and select_graphic_then_xor_draw"
+        "three of its four callees are already source-owned: configure_two_row_repeated_xor_graphic, load_display_pointer_from_cross_room_robot_ghost and select_graphic_then_xor_draw"
       ]
     },
     {
-     "name": "load_display_pointer_from_indexed_pair",
+     "name": "load_display_pointer_from_cross_room_robot_ghost",
      "runtime_start": 13656,
      "runtime_end_exclusive": 13667,
      "loaded_start": 19800,
@@ -4128,7 +4128,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_exploration_30s/executed_pcs.csv executes all seven instructions 15 times",
-        "both callees are source-owned: load_display_pointer_from_indexed_pair directly, and adjust_display_pointer_then_scan_markers through the game_entry_jump_table vector at 0x220f"
+        "both callees are source-owned: load_display_pointer_from_cross_room_robot_ghost directly, and adjust_display_pointer_then_scan_markers through the game_entry_jump_table vector at 0x220f"
       ]
     },
     {
@@ -4145,7 +4145,7 @@
       ]
     },
     {
-     "name": "load_indexed_pair_output_from_y_tables",
+     "name": "load_cross_room_robot_ghost_output_from_y_tables",
      "runtime_start": 13951,
      "runtime_end_exclusive": 13963,
      "loaded_start": 20095,
@@ -4155,7 +4155,7 @@
       "evidence": [
         "analysis/runtime_trace/initial_render_20_frames/coverage.csv executes all six instructions 20 times",
         "analysis/runtime_trace/initial_render_20_frames/edges.csv proves callers 0x358d and 0x35ae",
-        "the destinations $11 and $3C are the same two fields handle_matching_indexed_pair writes at 0x2e7c, so both paths feed one consumer"
+        "the destinations $11 and $3C are the same two fields handle_matching_cross_room_robot_ghost writes at 0x2e7c, so both paths feed one consumer"
       ]
     },
     {
@@ -4210,7 +4210,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all twelve instructions 4,071 times, with 48 reversals at each limit against 4,014 pass-throughs",
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv proves the caller 0x35a5, adjacent to 0x35a2 which drives the $123A clamp",
-        "the +2 and -2 values match the second delta pair reflect_indexed_entity_at_obstacles drives, and $123B is the field advance_indexed_pair_value_and_display_pointer consumes"
+        "the +2 and -2 values match the second delta pair reflect_indexed_entity_at_obstacles drives, and $123B is the field advance_cross_room_robot_ghost_value_and_display_pointer consumes"
       ]
     },
     {

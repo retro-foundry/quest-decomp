@@ -231,7 +231,7 @@
 ;
 ;   $0A78  cross_room_robot_ghost_record_table, ten three-byte records
 ;          indexed by $8F alone. This one is per level, not per room, and
-;          advance_indexed_pair_value_and_display_pointer carries its objects
+;          advance_cross_room_robot_ghost_value_and_display_pointer carries its objects
 ;          across room boundaries: at horizontal $4D the column increments and
 ;          the position resets to zero, at a negative position the column
 ;          decrements and the position becomes $4C, and the deltas reverse at
@@ -1226,7 +1226,7 @@ ORG main_gameplay_loop
 
 .initialise_gameplay_display_and_entities
     JSR enter_draw_and_initialise_room
-    JSR initialise_indexed_pair_from_record
+    JSR initialise_cross_room_robot_ghost_from_record
     JSR redraw_carried_item_slots
     JSR xor_draw_player_two_parts
     JSR run_energy_bar_sweep
@@ -1727,7 +1727,7 @@ ORG draw_room_enemy_with_xor_graphic
     LDX #&0A
 
 .load_pointer_then_draw_entity
-    JSR load_display_pointer_from_indexed_pair
+    JSR load_display_pointer_from_cross_room_robot_ghost
     JMP select_graphic_then_xor_draw
 .draw_room_enemy_with_xor_graphic_source_end
 
@@ -1754,10 +1754,10 @@ ORG apply_signed_vertical_step_to_pointer
 ; All four paths are covered: 2,038 within-cell against 679 row-crossing
 ; upwards, and 1,673 against 568 downwards.
 .apply_signed_vertical_step_to_pointer_source
-    LDA indexed_pair_output_half_offset
+    LDA cross_room_robot_ghost_output_half_offset
     CLC
     ADC vertical_step_delta
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     LDA vertical_step_delta
     BMI step_pointer_upwards
     LDA vertical_step_pointer_low
@@ -1958,8 +1958,8 @@ ORG test_player_in_range_and_set_direction
 ; candidate and, if so, report which way the player lies.
 ; The ordinary entry presets the named horizontal, above and below extents;
 ; test_range_with_supplied_box is the entry for callers supplying their own.
-; Four comparisons follow, the horizontal pair against indexed_pair_output_value
-; and the vertical pair against indexed_pair_output_half_offset. Each failure
+; Four comparisons follow, the horizontal pair against cross_room_robot_ghost_output_value
+; and the vertical pair against cross_room_robot_ghost_output_half_offset. Each failure
 ; leaves through the shared no-overlap return with carry clear.
 ; Only if all four pass does it compute the direction: the sign of the
 ; horizontal difference sets opposite signed horizontal steps, and the sign of
@@ -1980,9 +1980,9 @@ ORG test_player_in_range_and_set_direction
     CLC
     LDA player_horizontal_position
     ADC candidate_range_horizontal_extent
-    CMP indexed_pair_output_value
+    CMP cross_room_robot_ghost_output_value
     BMI return_carry_clear_2b9c
-    LDA indexed_pair_output_value
+    LDA cross_room_robot_ghost_output_value
     ADC candidate_range_horizontal_extent
     CMP player_horizontal_position
     BMI return_carry_clear_2b9c
@@ -1992,17 +1992,17 @@ ORG test_player_in_range_and_set_direction
     LSR A
     SEC
     SBC candidate_range_above_extent
-    CMP indexed_pair_output_half_offset
+    CMP cross_room_robot_ghost_output_half_offset
     BPL return_carry_clear_2b9c
     LDA player_vertical_position
     LSR A
     ADC candidate_range_below_extent
-    CMP indexed_pair_output_half_offset
+    CMP cross_room_robot_ghost_output_half_offset
     BMI return_carry_clear_2b9c
 
 .set_direction_toward_player
     SEC
-    LDA indexed_pair_output_value
+    LDA cross_room_robot_ghost_output_value
     SBC player_horizontal_position
     BPL set_direction_leftward
     LDA #ENTITY_HORIZONTAL_STEP_POSITIVE
@@ -2023,7 +2023,7 @@ ORG test_player_in_range_and_set_direction
     ADC #PLAYER_VERTICAL_CENTRE_BIAS
     SEC
     LSR A
-    SBC indexed_pair_output_half_offset
+    SBC cross_room_robot_ghost_output_half_offset
     BPL set_vertical_direction_downward
     LDA #ENTITY_VERTICAL_STEP_NEGATIVE
 
@@ -2084,24 +2084,24 @@ ORG draw_fixed_pair_tile_run
     RTS
 
 
-ORG load_display_pointer_from_indexed_pair
+ORG load_display_pointer_from_cross_room_robot_ghost
 
 ; Runtime $3558-$3562. Load the display pointer from the Y-indexed little-endian pair at room_enemy_display_pointer_low/high. The high byte is read first, so the two loads are not interchangeable with respect to Y. X and A are not preserved.
-.load_display_pointer_from_indexed_pair_source
+.load_display_pointer_from_cross_room_robot_ghost_source
     LDA room_enemy_display_pointer_high,Y
     STA display_pointer_high
     LDA room_enemy_display_pointer_low,Y
     STA display_pointer_low
     RTS
-.load_display_pointer_from_indexed_pair_source_end
+.load_display_pointer_from_cross_room_robot_ghost_source_end
 
-ASSERT load_display_pointer_from_indexed_pair_source = load_display_pointer_from_indexed_pair
-ASSERT load_display_pointer_from_indexed_pair_source_end = &3563
-COPYBLOCK load_display_pointer_from_indexed_pair_source, load_display_pointer_from_indexed_pair_source_end, &4D58
+ASSERT load_display_pointer_from_cross_room_robot_ghost_source = load_display_pointer_from_cross_room_robot_ghost
+ASSERT load_display_pointer_from_cross_room_robot_ghost_source_end = &3563
+COPYBLOCK load_display_pointer_from_cross_room_robot_ghost_source, load_display_pointer_from_cross_room_robot_ghost_source_end, &4D58
 
 ; Runtime $3558-$3562 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4D58-$4D62.
-CLEAR load_display_pointer_from_indexed_pair_source, load_display_pointer_from_indexed_pair_source_end
+CLEAR load_display_pointer_from_cross_room_robot_ghost_source, load_display_pointer_from_cross_room_robot_ghost_source_end
 
 
 ORG advance_secondary_reference_and_pointer
@@ -2158,7 +2158,7 @@ ORG update_and_draw_room_enemies
     JSR advance_indexed_entity_with_collision_checks
     JSR reverse_indexed_123b_delta_at_limits
     JSR reverse_indexed_123a_delta_at_limits
-    JSR prepare_indexed_pair_graphic_fields
+    JSR prepare_cross_room_robot_ghost_graphic_fields
     BCC apply_indexed_entity_to_player_and_draw
     JMP apply_player_direction_if_in_range
 
@@ -2167,7 +2167,7 @@ ORG update_and_draw_room_enemies
     JMP apply_player_direction_if_in_range
 
 .prepare_bat_player_range_test
-    JSR load_indexed_pair_output_from_y_tables
+    JSR load_cross_room_robot_ghost_output_from_y_tables
     JSR enter_test_player_in_range_and_set_direction
 
 .apply_player_direction_if_in_range
@@ -2187,7 +2187,7 @@ ORG update_and_draw_room_enemies
     JSR advance_indexed_entity_vertical_position
 
 .apply_indexed_entity_to_player_and_draw
-    JSR load_indexed_pair_output_from_y_tables
+    JSR load_cross_room_robot_ghost_output_from_y_tables
     LDA #ROOM_ENEMY_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
@@ -2273,7 +2273,7 @@ ORG dispatch_game_tick_updates
 ; loop, which submits OSWORD $01 with block $2226 and waits until its returned
 ; signed byte is at least the target at $4F.
 .dispatch_game_tick_updates_source
-    JSR update_and_draw_two_indexed_pairs
+    JSR update_and_draw_two_cross_room_robot_ghosts
     LDA room_tick_update_selector
     BEQ dispatch_game_tick_updates_branch_1
     JSR update_and_draw_room_enemies
@@ -2360,14 +2360,14 @@ ORG dispatch_game_tick_updates
     LDX #&01
     STX indexed_xor_erase_previous_graphic
     DEX
-    STX reset_indexed_pair_countdowns
+    STX reset_cross_room_robot_ghost_countdowns
 
 .dispatch_game_tick_updates_branch_15
     LDA #&01
     LDX #&26
     LDY #&22
     JSR OSWORD
-    LDA indexed_pair_initial_state
+    LDA cross_room_robot_ghost_initial_state
     CMP bounded_tick_target_value
     BMI dispatch_game_tick_updates_branch_15
     RTS
@@ -3057,15 +3057,15 @@ ASSERT horizontal_band_velocity_step_table_source_end = advance_bounded_tick_tar
 COPYBLOCK horizontal_band_velocity_step_table_source, horizontal_band_velocity_step_table_source_end, &3CF4
 CLEAR horizontal_band_velocity_step_table_source, horizontal_band_velocity_step_table_source_end
 
-ORG unused_indexed_pair_return
-; Unreachable RTS separating the two indexed-pair routine bodies.
-.unused_indexed_pair_return_source
+ORG unused_ghost_update_return
+; Unreachable RTS separating the two ghost-update routine bodies.
+.unused_ghost_update_return_source
     RTS
-.unused_indexed_pair_return_source_end
-ASSERT unused_indexed_pair_return_source = unused_indexed_pair_return
-ASSERT unused_indexed_pair_return_source_end = apply_indexed_pair_player_axis_mode
-COPYBLOCK unused_indexed_pair_return_source, unused_indexed_pair_return_source_end, &4882
-CLEAR unused_indexed_pair_return_source, unused_indexed_pair_return_source_end
+.unused_ghost_update_return_source_end
+ASSERT unused_ghost_update_return_source = unused_ghost_update_return
+ASSERT unused_ghost_update_return_source_end = apply_ghost_player_axis_mode
+COPYBLOCK unused_ghost_update_return_source, unused_ghost_update_return_source_end, &4882
+CLEAR unused_ghost_update_return_source, unused_ghost_update_return_source_end
 
 ORG energy_bar_fill_patterns
 ; Four partial energy-bar fill masks, indexed by (energy AND 7) / 2.
@@ -3073,22 +3073,22 @@ ORG energy_bar_fill_patterns
     EQUB &00, &08, &0C, &0E
 .energy_bar_fill_patterns_source_end
 ASSERT energy_bar_fill_patterns_source = energy_bar_fill_patterns
-ASSERT energy_bar_fill_patterns_source_end = indexed_pair_initial_state
+ASSERT energy_bar_fill_patterns_source_end = cross_room_robot_ghost_initial_state
 COPYBLOCK energy_bar_fill_patterns_source, energy_bar_fill_patterns_source_end, &3A22
 CLEAR energy_bar_fill_patterns_source, energy_bar_fill_patterns_source_end
 
-ORG indexed_pair_initial_state
-; Initial zeroed scratch followed by the two interleaved indexed-pair records.
+ORG cross_room_robot_ghost_initial_state
+; Initial zeroed scratch followed by the two interleaved cross-room robot/ghost records.
 ; The final three interleaved bytes initialise delta/mode/delta to $FE/$00/$FE.
-.indexed_pair_initial_state_source
+.cross_room_robot_ghost_initial_state_source
     EQUB &00, &00, &00, &00, &00, &00, &00
     EQUB &00, &00, &00, &00, &00, &00, &00
     EQUB &FE, &00, &FE
-.indexed_pair_initial_state_source_end
-ASSERT indexed_pair_initial_state_source = indexed_pair_initial_state
-ASSERT indexed_pair_initial_state_source_end = run_game_tick_with_player_contact_flag_cleared
-COPYBLOCK indexed_pair_initial_state_source, indexed_pair_initial_state_source_end, &3A26
-CLEAR indexed_pair_initial_state_source, indexed_pair_initial_state_source_end
+.cross_room_robot_ghost_initial_state_source_end
+ASSERT cross_room_robot_ghost_initial_state_source = cross_room_robot_ghost_initial_state
+ASSERT cross_room_robot_ghost_initial_state_source_end = run_game_tick_with_player_contact_flag_cleared
+COPYBLOCK cross_room_robot_ghost_initial_state_source, cross_room_robot_ghost_initial_state_source_end, &3A26
+CLEAR cross_room_robot_ghost_initial_state_source, cross_room_robot_ghost_initial_state_source_end
 
 ORG last_chance_chord_inkey_codes
 ; Six OSBYTE $81 negative key numbers, tested from the last entry to the first.
@@ -3395,7 +3395,7 @@ ORG game_entry_jump_table
     JMP dispatch_game_tick_updates
     NOP
 
-    JMP initialise_indexed_pair_from_record
+    JMP initialise_cross_room_robot_ghost_from_record
 .game_entry_jump_table_source_end
 
 ASSERT game_entry_jump_table_source = game_entry_jump_table
@@ -3619,7 +3619,7 @@ ORG advance_lift_or_hazard_vertical_position
 ; entry, so the clamp and the step bracket each other.
 .advance_lift_or_hazard_vertical_position_source
     LDA moving_entity_position,Y
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     LDA moving_entity_delta,Y
     STA vertical_step_delta
     LDA moving_entity_display_pointer_low,Y
@@ -3627,7 +3627,7 @@ ORG advance_lift_or_hazard_vertical_position
     LDA moving_entity_display_pointer_high,Y
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA indexed_pair_output_half_offset
+    LDA cross_room_robot_ghost_output_half_offset
     STA moving_entity_position,Y
     LDA vertical_step_pointer_low
     STA moving_entity_display_pointer_low,Y
@@ -3956,11 +3956,11 @@ ORG update_lift_or_hazard_by_class
     BNE push_player_with_entity
     LDA moving_entity_position,Y
     LSR A
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     SEC
     LDA lift_or_hazard_horizontal_extent
     SBC lift_hazard_scaled_slot_offset
-    STA indexed_pair_output_value
+    STA cross_room_robot_ghost_output_value
     JSR check_player_candidate_bounds_overlap
     JMP step_entity
 
@@ -4162,9 +4162,9 @@ ORG initialise_new_game
 ; this file. The rest of the starting state is written after this routine, at
 ; $0C29 and $0C39, which are not reconstructed yet: the display pointer, $35,
 ; $2C and the two item slots at $0C and $0D.
-; The status row is then initialised: the icon count at $2A is set to twelve and
-; the display pointer to $3CF0, the first icon position. The loop that follows
-; clears $79 and runs twelve times, once per icon.
+; The status row is then initialised: collected_icon_count is set to twelve and
+; the display pointer selects the first icon position. The loop that follows
+; clears water_environment_flag and runs once per icon.
 ; Those two values are what remove_last_icon_and_stamp_room_cell reads back: it
 ; addresses an icon as $3CF0 plus the count times sixteen, so this is where both
 ; the base and the starting count come from.
@@ -4333,7 +4333,7 @@ ORG run_startup_room_sequence_until_space
 ; through the byte-before base $0CEC, from indexes sixteen through one; its low
 ; nibble becomes the primary room reference and its high nibble the secondary.
 ; The repeated-add loop also forms high nibble times $78 in $70/$71 before the
-; $1206 room-draw vector and indexed-pair initialiser run. Each room is then
+; the room-draw vector and cross-room robot/ghost initialiser run. Each room is then
 ; ticked seventy times. At count $28 the inline VDU stream positions the cursor
 ; and prints " PRESS SPACE "; OSBYTE $81 polls Space after every tick.
 ; A pressed key branches to the shared $0C6B exit, which removes the saved X
@@ -4385,7 +4385,7 @@ ORG run_startup_room_sequence_until_space
     TYA
     PHA
     JSR enter_draw_and_initialise_room
-    JSR enter_initialise_indexed_pair_from_record
+    JSR enter_initialise_cross_room_robot_ghost_from_record
     LDX #&46
 
 .tick_startup_room
@@ -4656,13 +4656,13 @@ ORG advance_player_vertical_position_and_display_pointer
 ; wrapper itself is straight-line and preserves X/Y around the nested call.
 .advance_player_vertical_position_and_display_pointer_source
     LDA player_vertical_position
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     LDA player_display_pointer_low
     STA vertical_step_pointer_low
     LDA player_display_pointer_high
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA indexed_pair_output_half_offset
+    LDA cross_room_robot_ghost_output_half_offset
     STA player_vertical_position
     LDA vertical_step_pointer_low
     STA player_display_pointer_low
@@ -5455,32 +5455,32 @@ ORG check_player_candidate_bounds_overlap
     LDA #&17
     STA xor_graphic_character_rows_remaining
     CLC
-    LDA indexed_pair_output_half_offset
+    LDA cross_room_robot_ghost_output_half_offset
     ADC #&06
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
 
 .candidate_bounds_mode_ready
     CLC
     LDA player_horizontal_position
     ADC #&03
-    CMP indexed_pair_output_value
+    CMP cross_room_robot_ghost_output_value
     BMI return_carry_clear_2b35
 
     CLC
-    LDA indexed_pair_output_value
+    LDA cross_room_robot_ghost_output_value
     ADC #&03
     CMP player_horizontal_position
     BMI return_carry_clear_2b35
 
     LDA player_vertical_position
     LSR A
-    CMP indexed_pair_output_half_offset
+    CMP cross_room_robot_ghost_output_half_offset
     BPL return_carry_clear_2b35
 
     LDA player_vertical_position
     LSR A
     ADC xor_graphic_character_rows_remaining
-    CMP indexed_pair_output_half_offset
+    CMP cross_room_robot_ghost_output_half_offset
     BMI return_carry_clear_2b35
 .check_player_candidate_bounds_overlap_source_end
 
@@ -5664,7 +5664,7 @@ CLEAR xor_draw_player_two_parts_source, xor_draw_player_two_parts_source_end
 ORG draw_room_row_cells
 
 ; Runtime $1284-$12A7. Draw one row of room cells.
-; The column counter at $09 is copied into the tile pair selector at $F8, which
+; room_graphics_column is copied into tile_pair_source_selector, which
 ; is what makes alternating tiles line up across a row. Five cells are then read
 ; through the room data pointer, Y counting 0 to 4, and each is drawn by the
 ; cell dispatcher.
@@ -5781,9 +5781,10 @@ ORG dispatch_room_cell
 ; bits are doubled and used to index the vector table at $12D2, whose entry is
 ; pushed onto the stack and reached by the return, which is how one byte selects
 ; among many tile drawers without a jump table lookup in line.
-; Bit 6 then decides the direction: when set, the column counter at $09 is
-; mirrored by subtracting it from 7 and $43 is set to $FF, which is what draws a
-; cell reversed. The counter is returned in A.
+; Bit 6 then decides the direction: when set, room_graphics_column is
+; mirrored by subtracting it from ROOM_COLUMN_LAST and the XOR display-pointer
+; low byte is set to $FF, which makes the cell draw in reverse. The column is
+; returned in A.
 .dispatch_room_cell_source
     LDA current_room_cell
     ASL A
@@ -5946,7 +5947,7 @@ ORG enter_room_below
 ; that pointer is advanced by $3C80, and the player is placed at vertical
 ; position zero, the top of the new room. The $1209 vector increments the
 ; secondary room reference at $8F and redraws the room; the player is then
-; redrawn. Landing on level 8 additionally tail-calls the indexed-pair
+; redrawn. Landing on level 8 additionally tail-calls the cross-room robot/ghost
 ; initialiser, while every other level returns through the shared RTS at $2ACE.
 .enter_room_below_source
     LSR vertical_room_transition_cell_flag
@@ -5966,7 +5967,7 @@ ORG enter_room_below
     LDA reference_pair_secondary_value
     CMP #CROSS_ROOM_GHOST_FIRST_LEVEL
     BNE return_from_room_transition
-    JMP initialise_indexed_pair_from_record
+    JMP initialise_cross_room_robot_ghost_from_record
 .enter_room_below_source_end
 
 ASSERT enter_room_below_source = enter_room_below
@@ -6810,7 +6811,9 @@ CLEAR consume_matching_item_from_slots_source, consume_matching_item_from_slots_
 
 ORG draw_graphic_selector_sequence
 
-; Runtime $157E-$158E. Multiply the selector index in $09 by two Y-controlled shifts, then draw X consecutive graphic selectors through the pointer at $7E/$7F, applying the mirror flag to every tile.
+; Runtime $157E-$158E. Multiply room_graphics_column by two Y-controlled shifts,
+; then draw X consecutive graphic selectors through graphic_sequence_pointer,
+; applying the mirror flag to every tile.
 .draw_graphic_selector_sequence_source
     LDA room_graphics_column
 
@@ -6939,9 +6942,9 @@ COPYBLOCK draw_repeated_87_blank_pairs_by_state_source, draw_repeated_87_blank_p
 CLEAR draw_repeated_87_blank_pairs_by_state_source, draw_repeated_87_blank_pairs_by_state_source_end
 
 
-ORG initialise_indexed_pair_from_record
+ORG initialise_cross_room_robot_ghost_from_record
 
-; Runtime $2DD4-$2E43. Initialise an indexed pair from its packed record.
+; Runtime $2DD4-$2E43. Initialise the two cross-room robots or ghosts from the packed record for the current level.
 ; reference_pair_secondary_value selects one CROSS_ROOM_ROBOT_GHOST_RECORD_BYTES
 ; record from cross_room_robot_ghost_record_table. The first byte carries two fields:
 ; its low three bits become the primary field, and the byte shifted right and
@@ -6951,7 +6954,7 @@ ORG initialise_indexed_pair_from_record
 ; field.
 ; Almost every unpacked value is written to both interleaved field sets. That is
 ; what makes this a pair: one record initialises two parallel entities, which
-; update_and_draw_two_indexed_pairs then advances together. The deltas are
+; update_and_draw_two_cross_room_robot_ghosts then advances together. The deltas are
 ; preset to opposite signed horizontal steps and all countdown/state bytes are
 ; initialised before the record is read.
 ; The display pointer copied into both field sets is whatever the
@@ -6960,20 +6963,20 @@ ORG initialise_indexed_pair_from_record
 ;
 ; This robot/ghost class is per level, not per room: the record index is the secondary
 ; reference times the record width, so there is one record per level, and each
-; initialises two objects. advance_indexed_pair_value_and_display_pointer then
+; initialises two objects. advance_cross_room_robot_ghost_value_and_display_pointer then
 ; carries them across room boundaries and reverses them at the outer room
 ; columns. Levels before CROSS_ROOM_GHOST_FIRST_LEVEL use the small bouncing
 ; robot frames; the final two levels use the ghost frames. The pair is therefore
 ; two cross-room robots or ghosts, not a platform class.
-.initialise_indexed_pair_from_record_source
+.initialise_cross_room_robot_ghost_from_record_source
     LDA reference_pair_secondary_value
     ASL A
     ADC reference_pair_secondary_value
     TAY
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
-    STA indexed_pair_value_delta_field
+    STA cross_room_robot_ghost_value_delta_field
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
-    STA indexed_pair_secondary_delta_slot_1
+    STA cross_room_robot_ghost_secondary_delta_slot_1
     LDA #CROSS_ROOM_ROBOT_GHOST_INITIAL_COUNTDOWN
     LDX #CROSS_ROOM_ROBOT_GHOST_COUNTDOWN_LAST_INDEX
 
@@ -6983,24 +6986,24 @@ ORG initialise_indexed_pair_from_record
     BPL preset_pair_flags
     LDA cross_room_robot_ghost_record_table,Y
     AND #INDEXED_PAIR_SELECTOR_MASK
-    STA indexed_pair_positive_delta_selector
-    STA indexed_pair_primary_field
+    STA cross_room_robot_ghost_positive_delta_selector
+    STA cross_room_robot_ghost_primary_field
     LDA cross_room_robot_ghost_record_table,Y
     LSR A
     AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
-    STA indexed_pair_positive_delta_threshold
-    STA indexed_pair_value_field
-    STA indexed_pair_runtime_value_slot_0
+    STA cross_room_robot_ghost_positive_delta_threshold
+    STA cross_room_robot_ghost_value_field
+    STA cross_room_robot_ghost_runtime_value_slot_0
     STA display_grid_column
     INY
     LDA cross_room_robot_ghost_record_table,Y
     AND #INDEXED_PAIR_SELECTOR_MASK
-    STA indexed_pair_negative_delta_selector
-    STA indexed_pair_secondary_delta_slot_0
+    STA cross_room_robot_ghost_negative_delta_selector
+    STA cross_room_robot_ghost_secondary_delta_slot_0
     LDA cross_room_robot_ghost_record_table,Y
     LSR A
     AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
-    STA indexed_pair_negative_delta_threshold
+    STA cross_room_robot_ghost_negative_delta_threshold
     INY
     LDA cross_room_robot_ghost_record_table,Y
     AND #INDEXED_PAIR_POSITION_MASK
@@ -7010,28 +7013,28 @@ ORG initialise_indexed_pair_from_record
     ASL A
     SEC
     SBC #CROSS_ROOM_ROBOT_GHOST_VERTICAL_OFFSET_BIAS
-    STA indexed_pair_offset_field
-    STA indexed_pair_runtime_value_slot_1
+    STA cross_room_robot_ghost_offset_field
+    STA cross_room_robot_ghost_runtime_value_slot_1
     JSR display_action_jump_table
     LDA display_pointer_low
-    STA indexed_pair_display_pointer_low
-    STA indexed_pair_second_display_pointer_low
+    STA cross_room_robot_ghost_display_pointer_low
+    STA cross_room_robot_ghost_second_display_pointer_low
     LDA display_pointer_high
-    STA indexed_pair_display_pointer_high
-    STA indexed_pair_second_display_pointer_high
+    STA cross_room_robot_ghost_display_pointer_high
+    STA cross_room_robot_ghost_second_display_pointer_high
     LDA reference_pair_secondary_value
-    STA indexed_pair_secondary_field
-    STA indexed_pair_second_secondary_field
+    STA cross_room_robot_ghost_secondary_field
+    STA cross_room_robot_ghost_second_secondary_field
     RTS
-.initialise_indexed_pair_from_record_source_end
+.initialise_cross_room_robot_ghost_from_record_source_end
 
-ASSERT initialise_indexed_pair_from_record_source = initialise_indexed_pair_from_record
-ASSERT initialise_indexed_pair_from_record_source_end = &2E44
-COPYBLOCK initialise_indexed_pair_from_record_source, initialise_indexed_pair_from_record_source_end, &45D4
+ASSERT initialise_cross_room_robot_ghost_from_record_source = initialise_cross_room_robot_ghost_from_record
+ASSERT initialise_cross_room_robot_ghost_from_record_source_end = &2E44
+COPYBLOCK initialise_cross_room_robot_ghost_from_record_source, initialise_cross_room_robot_ghost_from_record_source_end, &45D4
 
 ; Runtime $2DD4-$2E43 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $45D4-$4643.
-CLEAR initialise_indexed_pair_from_record_source, initialise_indexed_pair_from_record_source_end
+CLEAR initialise_cross_room_robot_ghost_from_record_source, initialise_cross_room_robot_ghost_from_record_source_end
 
 
 ORG draw_narrow_bar_fixture_row
@@ -7152,57 +7155,57 @@ COPYBLOCK draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_patt
 CLEAR draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_row_source_end
 
 
-ORG update_and_draw_two_indexed_pairs
+ORG update_and_draw_two_cross_room_robot_ghosts
 
 ; Runtime $2E44-$2E7B. Process the two cross-room robot/ghost states. Robot levels use
-; this loop; ghost levels tail-transfer to alternate_indexed_pair_countdown_update.
+; this loop; ghost levels tail-transfer to ghost_countdown_steering_update.
 ; Each robot iteration selects
 ; repeated-source drawing, optionally erases the current graphic and advances
 ; a countdown, conditionally updates pair state, then draws the resulting
 ; graphic. The final CLC/RTS is shared with the adjacent matching handler.
-.update_and_draw_two_indexed_pairs_source
+.update_and_draw_two_cross_room_robot_ghosts_source
     LDX #CROSS_ROOM_ROBOT_GHOST_PAIR_FIRST_INDEX
-.indexed_pair_update_loop
+.cross_room_robot_ghost_update_loop
     LDA reference_pair_secondary_value
     CMP #CROSS_ROOM_GHOST_FIRST_LEVEL
-    BMI process_indexed_pair_update
-    JMP alternate_indexed_pair_countdown_update
+    BMI process_cross_room_robot_ghost_update
+    JMP ghost_countdown_steering_update
 
-.process_indexed_pair_update
+.process_cross_room_robot_ghost_update
     LDA #XOR_GRAPHIC_REPEAT_ENABLED
     STA xor_graphic_repeat_source_scanlines
     LDA indexed_xor_erase_previous_graphic
-    BEQ update_indexed_pair_state
-    JSR draw_indexed_pair_if_reference_matches
+    BEQ update_cross_room_robot_ghost_state
+    JSR draw_cross_room_robot_ghost_if_reference_matches
     DEC cross_room_robot_ghost_redraw_countdown,X
-    BNE draw_updated_indexed_pair
+    BNE draw_updated_cross_room_robot_ghost
     LDA #CROSS_ROOM_ROBOT_GHOST_INITIAL_COUNTDOWN
     STA cross_room_robot_ghost_redraw_countdown,X
 
-.update_indexed_pair_state
-    JSR set_indexed_pair_value_delta_at_thresholds
-    JSR handle_matching_indexed_pair
-    BCS draw_updated_indexed_pair
-    JSR advance_indexed_pair_value_and_display_pointer
+.update_cross_room_robot_ghost_state
+    JSR set_cross_room_robot_ghost_value_delta_at_thresholds
+    JSR handle_matching_cross_room_robot_ghost
+    BCS draw_updated_cross_room_robot_ghost
+    JSR advance_cross_room_robot_ghost_value_and_display_pointer
 
-.draw_updated_indexed_pair
-    JSR draw_indexed_pair_if_reference_matches
+.draw_updated_cross_room_robot_ghost
+    JSR draw_cross_room_robot_ghost_if_reference_matches
     INX
     INX
     CPX #CROSS_ROOM_ROBOT_GHOST_PAIR_END_INDEX
-    BNE indexed_pair_update_loop
+    BNE cross_room_robot_ghost_update_loop
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
     CLC
     RTS
-.update_and_draw_two_indexed_pairs_source_end
+.update_and_draw_two_cross_room_robot_ghosts_source_end
 
-ASSERT update_and_draw_two_indexed_pairs_source = update_and_draw_two_indexed_pairs
-ASSERT update_and_draw_two_indexed_pairs_source_end = handle_matching_indexed_pair
-COPYBLOCK update_and_draw_two_indexed_pairs_source, update_and_draw_two_indexed_pairs_source_end, &4644
+ASSERT update_and_draw_two_cross_room_robot_ghosts_source = update_and_draw_two_cross_room_robot_ghosts
+ASSERT update_and_draw_two_cross_room_robot_ghosts_source_end = handle_matching_cross_room_robot_ghost
+COPYBLOCK update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cross_room_robot_ghosts_source_end, &4644
 
 ; Release the runtime range after copying it into the loaded transport image.
-CLEAR update_and_draw_two_indexed_pairs_source, update_and_draw_two_indexed_pairs_source_end
+CLEAR update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cross_room_robot_ghosts_source_end
 
 ORG draw_last_column_special_pair_row
 
@@ -7261,31 +7264,31 @@ COPYBLOCK draw_state_selected_13_center_row_source, draw_state_selected_13_cente
 CLEAR draw_state_selected_13_center_row_source, draw_state_selected_13_center_row_source_end
 
 
-ORG handle_matching_indexed_pair
+ORG handle_matching_cross_room_robot_ghost
 
 ; Runtime $2E7C-$2E91. A failed pair comparison returns carry clear through
 ; the shared exit at $2E7A. A match copies one indexed field to $11, transforms
 ; the adjacent field into $3C, and tail-transfers to the sourced $2B57 guard.
-.handle_matching_indexed_pair_source
-    JSR test_indexed_pair_matches_reference
+.handle_matching_cross_room_robot_ghost_source
+    JSR test_cross_room_robot_ghost_matches_reference
     BCC return_carry_clear_2e7a
-    LDA indexed_pair_value_field,X
-    STA indexed_pair_output_value
-    LDA indexed_pair_offset_field,X
+    LDA cross_room_robot_ghost_value_field,X
+    STA cross_room_robot_ghost_output_value
+    LDA cross_room_robot_ghost_offset_field,X
     CLC
     ADC #&08
     LSR A
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     JMP check_player_candidate_bounds_overlap
-.handle_matching_indexed_pair_source_end
+.handle_matching_cross_room_robot_ghost_source_end
 
-ASSERT handle_matching_indexed_pair_source = handle_matching_indexed_pair
-ASSERT handle_matching_indexed_pair_source_end = &2E92
-COPYBLOCK handle_matching_indexed_pair_source, handle_matching_indexed_pair_source_end, &467C
+ASSERT handle_matching_cross_room_robot_ghost_source = handle_matching_cross_room_robot_ghost
+ASSERT handle_matching_cross_room_robot_ghost_source_end = &2E92
+COPYBLOCK handle_matching_cross_room_robot_ghost_source, handle_matching_cross_room_robot_ghost_source_end, &467C
 
 ; Runtime $2E7C-$2E91 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $467C-$4691.
-CLEAR handle_matching_indexed_pair_source, handle_matching_indexed_pair_source_end
+CLEAR handle_matching_cross_room_robot_ghost_source, handle_matching_cross_room_robot_ghost_source_end
 
 ORG draw_room_flag_then_fixed_pair_row
 
@@ -7311,98 +7314,98 @@ COPYBLOCK draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_p
 CLEAR draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_pair_row_source_end
 
 
-ORG draw_directional_indexed_pair_if_matching
+ORG draw_directional_ghost_if_reference_matches
 
-; Runtime $2E92-$2EA9. Preserve the indexed-pair selector twice for the shared
+; Runtime $2E92-$2EA9. Preserve the ghost selector twice for the shared
 ; drawing tail, choose ghost graphic-pointer offset $14 for a non-negative
 ; value delta or $16 for a negative one, and configure three character rows before entering the
 ; common predicate-and-XOR path at $2EBC. The alternate updater at $3009 calls
 ; this before and after changing each active pair, forming an erase/redraw pair.
 ; $2EA7-$2EA9 is the shared mismatch exit: one saved selector is restored there
-; both for this entry and for draw_indexed_pair_if_reference_matches.
-.draw_directional_indexed_pair_if_matching_source
+; both for this entry and for draw_cross_room_robot_ghost_if_reference_matches.
+.draw_directional_ghost_if_reference_matches_source
     TXA
     PHA
     PHA
-    LDA indexed_pair_value_delta_field,X
+    LDA cross_room_robot_ghost_value_delta_field,X
     LDX #CROSS_ROOM_GHOST_FRAME_0_OFFSET
     CMP #&00
-    BPL directional_indexed_pair_selector_ready
+    BPL directional_ghost_selector_ready
     LDX #CROSS_ROOM_GHOST_FRAME_3_OFFSET
 
-.directional_indexed_pair_selector_ready
-    STX indexed_pair_graphic_pointer_offset
+.directional_ghost_selector_ready
+    STX cross_room_robot_ghost_graphic_pointer_offset
     LDA #CROSS_ROOM_GHOST_CHARACTER_ROWS
-    JMP configure_indexed_pair_draw_rows
+    JMP configure_cross_room_robot_ghost_draw_rows
 
-ASSERT P% = restore_indexed_pair_x_and_return_2ea7
+ASSERT P% = restore_cross_room_robot_ghost_x_and_return_2ea7
     PLA
     TAX
     RTS
-.draw_directional_indexed_pair_if_matching_source_end
+.draw_directional_ghost_if_reference_matches_source_end
 
-ASSERT draw_directional_indexed_pair_if_matching_source = draw_directional_indexed_pair_if_matching
-ASSERT draw_directional_indexed_pair_if_matching_source_end = draw_indexed_pair_if_reference_matches
-COPYBLOCK draw_directional_indexed_pair_if_matching_source, draw_directional_indexed_pair_if_matching_source_end, &4692
+ASSERT draw_directional_ghost_if_reference_matches_source = draw_directional_ghost_if_reference_matches
+ASSERT draw_directional_ghost_if_reference_matches_source_end = draw_cross_room_robot_ghost_if_reference_matches
+COPYBLOCK draw_directional_ghost_if_reference_matches_source, draw_directional_ghost_if_reference_matches_source_end, &4692
 
 ; Runtime $2E92-$2EA9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4692-$46A9.
-CLEAR draw_directional_indexed_pair_if_matching_source, draw_directional_indexed_pair_if_matching_source_end
+CLEAR draw_directional_ghost_if_reference_matches_source, draw_directional_ghost_if_reference_matches_source_end
 
-ORG draw_indexed_pair_if_reference_matches
+ORG draw_cross_room_robot_ghost_if_reference_matches
 
 ; Runtime $2EAA-$2EDC. Select small-bouncing-robot graphic-pointer offset
 ; $10/$12 from bit 1 of the indexed value, configure two renderer rows, and draw only when the indexed
 ; pair matches the reference fields. A mismatch branches to the original
 ; shared PLA/TAX/RTS exit at $2EA7. The $74-controlled state clear is retained
 ; exactly, although committed traces exercise only $74 = 0.
-.draw_indexed_pair_if_reference_matches_source
-    LDA indexed_pair_value_field,X
+.draw_cross_room_robot_ghost_if_reference_matches_source
+    LDA cross_room_robot_ghost_value_field,X
     LSR A
     LSR A
     TXA
     PHA
     PHA
     LDX #CROSS_ROOM_ROBOT_FRAME_0_OFFSET
-    BCC indexed_pair_draw_selector_ready
+    BCC cross_room_robot_ghost_draw_selector_ready
     LDX #CROSS_ROOM_ROBOT_FRAME_1_OFFSET
 
-.indexed_pair_draw_selector_ready
-    STX indexed_pair_graphic_pointer_offset
+.cross_room_robot_ghost_draw_selector_ready
+    STX cross_room_robot_ghost_graphic_pointer_offset
     LDA #CROSS_ROOM_ROBOT_CHARACTER_ROWS
 
-.configure_indexed_pair_draw_rows
+.configure_cross_room_robot_ghost_draw_rows
     STA xor_graphic_character_rows_remaining
     PLA
     TAX
-    JSR test_indexed_pair_matches_reference
-    BCC restore_indexed_pair_x_and_return_2ea7
+    JSR test_cross_room_robot_ghost_matches_reference
+    BCC restore_cross_room_robot_ghost_x_and_return_2ea7
 
-    LDA indexed_pair_display_pointer_high,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     STA display_pointer_high
-    LDA indexed_pair_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_low,X
     PHA
-    LDA reset_indexed_pair_countdowns
-    BEQ indexed_pair_draw_state_ready
+    LDA reset_cross_room_robot_ghost_countdowns
+    BEQ cross_room_robot_ghost_draw_state_ready
     LDA #&00
     STA cross_room_robot_ghost_redraw_countdown,X
 
-.indexed_pair_draw_state_ready
+.cross_room_robot_ghost_draw_state_ready
     PLA
-    LDX indexed_pair_graphic_pointer_offset
+    LDX cross_room_robot_ghost_graphic_pointer_offset
     JSR select_graphic_then_xor_draw
     PLA
     TAX
     RTS
-.draw_indexed_pair_if_reference_matches_source_end
+.draw_cross_room_robot_ghost_if_reference_matches_source_end
 
-ASSERT draw_indexed_pair_if_reference_matches_source = draw_indexed_pair_if_reference_matches
-ASSERT draw_indexed_pair_if_reference_matches_source_end = test_indexed_pair_matches_reference
-COPYBLOCK draw_indexed_pair_if_reference_matches_source, draw_indexed_pair_if_reference_matches_source_end, &46AA
+ASSERT draw_cross_room_robot_ghost_if_reference_matches_source = draw_cross_room_robot_ghost_if_reference_matches
+ASSERT draw_cross_room_robot_ghost_if_reference_matches_source_end = test_cross_room_robot_ghost_matches_reference
+COPYBLOCK draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_robot_ghost_if_reference_matches_source_end, &46AA
 
 ; Runtime $2EAA-$2EDC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $46AA-$46DC.
-CLEAR draw_indexed_pair_if_reference_matches_source, draw_indexed_pair_if_reference_matches_source_end
+CLEAR draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_robot_ghost_if_reference_matches_source_end
 
 ORG draw_two_13_two_beam_two_13_two_pattern
 
@@ -7429,7 +7432,7 @@ ORG draw_two_13_two_beam_two_13_two_pattern
 ASSERT draw_two_13_two_beam_two_13_two_pattern_source = draw_two_13_two_beam_two_13_two_pattern
 ASSERT draw_two_13_two_beam_two_13_two_pattern_source_end = &16DD
 ; The adjacent cell-$1D entry is assembled next; both are copied together
-; after the indexed-pair routines that occupy their loaded destination.
+; after the cross-room robot/ghost routines that occupy their loaded destination.
 
 ORG draw_left_half_sequence_twice_or_13_beam_pattern
 ; Runtime $16DD-$16E9, room-cell type $1D. Columns zero through three draw
@@ -7448,95 +7451,95 @@ ORG draw_left_half_sequence_twice_or_13_beam_pattern
 ASSERT draw_left_half_sequence_twice_or_13_beam_pattern_source = draw_left_half_sequence_twice_or_13_beam_pattern
 ASSERT draw_left_half_sequence_twice_or_13_beam_pattern_source_end = draw_room_sign_or_collect_password
 
-ORG advance_indexed_pair_offset_and_display_pointer
+ORG advance_cross_room_robot_ghost_offset_and_display_pointer
 
-; Runtime $2F8F-$3008. Move an indexed pair vertically by signed step +2/-2.
+; Runtime $2F8F-$3008. Move a cross-room ghost vertically by signed step +2/-2.
 ; Ordinary steps are delegated through apply_signed_vertical_step_to_pointer.
 ; At offset $10 while moving upward, decrement secondary row and wrap to $C0;
 ; at $C0 while moving downward, increment the row and wrap to $10. The display
 ; pointer high byte follows either wrap by +/-$37. Rows 8 and 9 are endpoints:
 ; reaching them reverses the delta instead of crossing the boundary.
-.advance_indexed_pair_offset_and_display_pointer_source
-    LDA indexed_pair_offset_delta_field,X
+.advance_cross_room_robot_ghost_offset_and_display_pointer_source
+    LDA cross_room_robot_ghost_offset_delta_field,X
     CMP #CROSS_ROOM_GHOST_VERTICAL_STEP_DOWN
-    BNE indexed_pair_test_upper_offset
-    LDA indexed_pair_offset_field,X
+    BNE cross_room_robot_ghost_test_upper_offset
+    LDA cross_room_robot_ghost_offset_field,X
     CMP #CROSS_ROOM_GHOST_BOTTOM_OFFSET
-    BNE move_indexed_pair_vertical_step
-    JMP wrap_indexed_pair_to_lower_offset
+    BNE move_cross_room_robot_ghost_vertical_step
+    JMP wrap_cross_room_robot_ghost_to_lower_offset
 
-.indexed_pair_test_upper_offset
-    LDA indexed_pair_offset_field,X
+.cross_room_robot_ghost_test_upper_offset
+    LDA cross_room_robot_ghost_offset_field,X
     CMP #CROSS_ROOM_GHOST_TOP_OFFSET
-    BNE move_indexed_pair_vertical_step
-    JMP wrap_indexed_pair_to_upper_offset
+    BNE move_cross_room_robot_ghost_vertical_step
+    JMP wrap_cross_room_robot_ghost_to_upper_offset
 
-.move_indexed_pair_vertical_step
-    LDA indexed_pair_offset_field,X
-    STA indexed_pair_output_half_offset
-    LDA indexed_pair_offset_delta_field,X
+.move_cross_room_robot_ghost_vertical_step
+    LDA cross_room_robot_ghost_offset_field,X
+    STA cross_room_robot_ghost_output_half_offset
+    LDA cross_room_robot_ghost_offset_delta_field,X
     STA vertical_step_delta
-    LDA indexed_pair_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_low,X
     STA vertical_step_pointer_low
-    LDA indexed_pair_display_pointer_high,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA indexed_pair_output_half_offset
-    STA indexed_pair_offset_field,X
+    LDA cross_room_robot_ghost_output_half_offset
+    STA cross_room_robot_ghost_offset_field,X
     LDA vertical_step_pointer_low
-    STA indexed_pair_display_pointer_low,X
+    STA cross_room_robot_ghost_display_pointer_low,X
     LDA vertical_step_pointer_high
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.wrap_indexed_pair_to_upper_offset
-    LDA indexed_pair_secondary_field,X
+.wrap_cross_room_robot_ghost_to_upper_offset
+    LDA cross_room_robot_ghost_secondary_field,X
     CMP #CROSS_ROOM_GHOST_TOP_LEVEL
-    BEQ reverse_indexed_pair_offset_downward
-    DEC indexed_pair_secondary_field,X
+    BEQ reverse_cross_room_robot_ghost_offset_downward
+    DEC cross_room_robot_ghost_secondary_field,X
     LDA #CROSS_ROOM_GHOST_BOTTOM_OFFSET
-    STA indexed_pair_offset_field,X
+    STA cross_room_robot_ghost_offset_field,X
     CLC
-    LDA indexed_pair_display_pointer_high,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     ADC #CROSS_ROOM_GHOST_LEVEL_WRAP_PAGE_DELTA
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.reverse_indexed_pair_offset_downward
+.reverse_cross_room_robot_ghost_offset_downward
     LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_DOWN
-    STA indexed_pair_offset_delta_field,X
+    STA cross_room_robot_ghost_offset_delta_field,X
     RTS
 
-.wrap_indexed_pair_to_lower_offset
-    LDA indexed_pair_secondary_field,X
+.wrap_cross_room_robot_ghost_to_lower_offset
+    LDA cross_room_robot_ghost_secondary_field,X
     CMP #CROSS_ROOM_GHOST_BOTTOM_LEVEL
-    BEQ reverse_indexed_pair_offset_upward
-    INC indexed_pair_secondary_field,X
+    BEQ reverse_cross_room_robot_ghost_offset_upward
+    INC cross_room_robot_ghost_secondary_field,X
     LDA #CROSS_ROOM_GHOST_TOP_OFFSET
-    STA indexed_pair_offset_field,X
+    STA cross_room_robot_ghost_offset_field,X
     SEC
-    LDA indexed_pair_display_pointer_high,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     SBC #CROSS_ROOM_GHOST_LEVEL_WRAP_PAGE_DELTA
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.reverse_indexed_pair_offset_upward
+.reverse_cross_room_robot_ghost_offset_upward
     LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_UP
-    STA indexed_pair_offset_delta_field,X
+    STA cross_room_robot_ghost_offset_delta_field,X
     RTS
 
 ; Alternate entry used when countdown is zero or two: XOR-draw/erase the pair,
 ; then enter the adjacent countdown routine at its decrement instruction.
-.draw_then_decrement_alternate_indexed_pair_source
-    JSR draw_directional_indexed_pair_if_matching
-    JMP decrement_alternate_indexed_pair_countdown
-.advance_indexed_pair_offset_and_display_pointer_source_end
+.draw_then_decrement_ghost_source
+    JSR draw_directional_ghost_if_reference_matches
+    JMP decrement_ghost_countdown
+.advance_cross_room_robot_ghost_offset_and_display_pointer_source_end
 
-ASSERT advance_indexed_pair_offset_and_display_pointer_source = advance_indexed_pair_offset_and_display_pointer
-ASSERT draw_then_decrement_alternate_indexed_pair_source = draw_then_decrement_alternate_indexed_pair
-ASSERT advance_indexed_pair_offset_and_display_pointer_source_end = alternate_indexed_pair_countdown_update
-COPYBLOCK advance_indexed_pair_offset_and_display_pointer_source, advance_indexed_pair_offset_and_display_pointer_source_end, &478F
-CLEAR advance_indexed_pair_offset_and_display_pointer_source, advance_indexed_pair_offset_and_display_pointer_source_end
+ASSERT advance_cross_room_robot_ghost_offset_and_display_pointer_source = advance_cross_room_robot_ghost_offset_and_display_pointer
+ASSERT draw_then_decrement_ghost_source = draw_then_decrement_ghost
+ASSERT advance_cross_room_robot_ghost_offset_and_display_pointer_source_end = ghost_countdown_steering_update
+COPYBLOCK advance_cross_room_robot_ghost_offset_and_display_pointer_source, advance_cross_room_robot_ghost_offset_and_display_pointer_source_end, &478F
+CLEAR advance_cross_room_robot_ghost_offset_and_display_pointer_source, advance_cross_room_robot_ghost_offset_and_display_pointer_source_end
 
 
 ORG draw_room_sign_or_collect_password
@@ -7722,33 +7725,33 @@ COPYBLOCK left_half_four_tile_graphic_sequences_source, left_half_four_tile_grap
 CLEAR left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_sequences_source_end
 
 
-ORG test_indexed_pair_matches_reference
+ORG test_cross_room_robot_ghost_matches_reference
 
 ; Runtime $2EDD-$2EED. X selects two fields. Return carry set only when both
 ; match their respective reference bytes; otherwise return carry clear at the
 ; first mismatch. X/Y and memory are preserved.
-.test_indexed_pair_matches_reference_source
-    LDA indexed_pair_primary_field,X
+.test_cross_room_robot_ghost_matches_reference_source
+    LDA cross_room_robot_ghost_primary_field,X
     CMP reference_pair_primary_value
-    BNE indexed_pair_mismatch
-    LDA indexed_pair_secondary_field,X
+    BNE cross_room_robot_ghost_mismatch
+    LDA cross_room_robot_ghost_secondary_field,X
     CMP reference_pair_secondary_value
-    BNE indexed_pair_mismatch
+    BNE cross_room_robot_ghost_mismatch
     SEC
     RTS
 
-.indexed_pair_mismatch
+.cross_room_robot_ghost_mismatch
     CLC
     RTS
-.test_indexed_pair_matches_reference_source_end
+.test_cross_room_robot_ghost_matches_reference_source_end
 
-ASSERT test_indexed_pair_matches_reference_source = test_indexed_pair_matches_reference
-ASSERT test_indexed_pair_matches_reference_source_end = &2EEE
-COPYBLOCK test_indexed_pair_matches_reference_source, test_indexed_pair_matches_reference_source_end, &46DD
+ASSERT test_cross_room_robot_ghost_matches_reference_source = test_cross_room_robot_ghost_matches_reference
+ASSERT test_cross_room_robot_ghost_matches_reference_source_end = &2EEE
+COPYBLOCK test_cross_room_robot_ghost_matches_reference_source, test_cross_room_robot_ghost_matches_reference_source_end, &46DD
 
 ; Runtime $2EDD-$2EED overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $46DD-$46ED.
-CLEAR test_indexed_pair_matches_reference_source, test_indexed_pair_matches_reference_source_end
+CLEAR test_cross_room_robot_ghost_matches_reference_source, test_cross_room_robot_ghost_matches_reference_source_end
 
 ORG return_carry_clear_2b9c
 
@@ -7767,132 +7770,132 @@ COPYBLOCK return_carry_clear_2b9c_source, return_carry_clear_2b9c_source_end, &4
 CLEAR return_carry_clear_2b9c_source, return_carry_clear_2b9c_source_end
 
 
-ORG set_indexed_pair_value_delta_at_thresholds
+ORG set_cross_room_robot_ghost_value_delta_at_thresholds
 
 ; Runtime $2EEE-$2F11. Select one of two value thresholds from the indexed
 ; primary field. Store +1 below the positive threshold or -1 at/above the
 ; negative threshold; otherwise return with the last comparison flags.
-.set_indexed_pair_value_delta_at_thresholds_source
-    LDA indexed_pair_primary_field,X
-    CMP indexed_pair_positive_delta_selector
+.set_cross_room_robot_ghost_value_delta_at_thresholds_source
+    LDA cross_room_robot_ghost_primary_field,X
+    CMP cross_room_robot_ghost_positive_delta_selector
     BNE check_negative_delta_selector
-    LDA indexed_pair_value_field,X
-    CMP indexed_pair_positive_delta_threshold
+    LDA cross_room_robot_ghost_value_field,X
+    CMP cross_room_robot_ghost_positive_delta_threshold
     BPL return_preserving_comparison_flags_2eeb
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
-.store_indexed_pair_value_delta
-    STA indexed_pair_value_delta_field,X
+.store_cross_room_robot_ghost_value_delta
+    STA cross_room_robot_ghost_value_delta_field,X
     RTS
 
 .check_negative_delta_selector
-    CMP indexed_pair_negative_delta_selector
+    CMP cross_room_robot_ghost_negative_delta_selector
     BNE return_preserving_comparison_flags_2eeb
-    LDA indexed_pair_value_field,X
-    CMP indexed_pair_negative_delta_threshold
+    LDA cross_room_robot_ghost_value_field,X
+    CMP cross_room_robot_ghost_negative_delta_threshold
     BMI return_preserving_comparison_flags_2eeb
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
-    JMP store_indexed_pair_value_delta
-.set_indexed_pair_value_delta_at_thresholds_source_end
+    JMP store_cross_room_robot_ghost_value_delta
+.set_cross_room_robot_ghost_value_delta_at_thresholds_source_end
 
-ASSERT set_indexed_pair_value_delta_at_thresholds_source = set_indexed_pair_value_delta_at_thresholds
-ASSERT set_indexed_pair_value_delta_at_thresholds_source_end = &2F12
-COPYBLOCK set_indexed_pair_value_delta_at_thresholds_source, set_indexed_pair_value_delta_at_thresholds_source_end, &46EE
+ASSERT set_cross_room_robot_ghost_value_delta_at_thresholds_source = set_cross_room_robot_ghost_value_delta_at_thresholds
+ASSERT set_cross_room_robot_ghost_value_delta_at_thresholds_source_end = &2F12
+COPYBLOCK set_cross_room_robot_ghost_value_delta_at_thresholds_source, set_cross_room_robot_ghost_value_delta_at_thresholds_source_end, &46EE
 
 ; Runtime $2EEE-$2F11 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $46EE-$4711.
-CLEAR set_indexed_pair_value_delta_at_thresholds_source, set_indexed_pair_value_delta_at_thresholds_source_end
+CLEAR set_cross_room_robot_ghost_value_delta_at_thresholds_source, set_cross_room_robot_ghost_value_delta_at_thresholds_source_end
 
-ORG advance_indexed_pair_value_and_display_pointer
+ORG advance_cross_room_robot_ghost_value_and_display_pointer
 
 ; Runtime $2F12-$2F8E. Add the X-indexed signed unit delta to its value, move
 ; the paired display pointer by +8 or -8, wrap the value across indexed primary
 ; fields, and reverse the delta at primary endpoints 0 and 7. The BPL/BMI
 ; decisions deliberately consume the NMOS N flag directly.
-.advance_indexed_pair_value_and_display_pointer_source
-    LDA indexed_pair_value_field,X
+.advance_cross_room_robot_ghost_value_and_display_pointer_source
+    LDA cross_room_robot_ghost_value_field,X
     CLC
-    ADC indexed_pair_value_delta_field,X
-    STA indexed_pair_value_field,X
+    ADC cross_room_robot_ghost_value_delta_field,X
+    STA cross_room_robot_ghost_value_field,X
 
-    LDA indexed_pair_value_delta_field,X
+    LDA cross_room_robot_ghost_value_delta_field,X
     CMP #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
-    BEQ advance_indexed_pair_pointer_negative
+    BEQ advance_cross_room_robot_ghost_pointer_negative
 
-    LDA indexed_pair_value_field,X
+    LDA cross_room_robot_ghost_value_field,X
     CMP #INDEXED_PAIR_HORIZONTAL_WRAP_POSITION
-    BPL indexed_pair_positive_wrap_entry
+    BPL cross_room_robot_ghost_positive_wrap_entry
     CLC
-    LDA indexed_pair_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_low,X
     ADC #MODE1_CELL_COLUMN_BYTES
-    STA indexed_pair_display_pointer_low,X
-    LDA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     ADC #&00
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.advance_indexed_pair_pointer_negative
-    LDA indexed_pair_value_field,X
-    BMI indexed_pair_negative_wrap_entry
+.advance_cross_room_robot_ghost_pointer_negative
+    LDA cross_room_robot_ghost_value_field,X
+    BMI cross_room_robot_ghost_negative_wrap_entry
     SEC
-    LDA indexed_pair_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_low,X
     SBC #MODE1_CELL_COLUMN_BYTES
-    STA indexed_pair_display_pointer_low,X
-    LDA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     SBC #&00
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.indexed_pair_positive_wrap_entry
-    LDA indexed_pair_primary_field,X
+.cross_room_robot_ghost_positive_wrap_entry
+    LDA cross_room_robot_ghost_primary_field,X
     CMP #ROOM_COLUMN_LAST
-    BEQ reverse_indexed_pair_delta_negative
-    INC indexed_pair_primary_field,X
+    BEQ reverse_cross_room_robot_ghost_delta_negative
+    INC cross_room_robot_ghost_primary_field,X
     LDA #&00
-    STA indexed_pair_value_field,X
+    STA cross_room_robot_ghost_value_field,X
     SEC
-    LDA indexed_pair_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_low,X
     SBC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
-    STA indexed_pair_display_pointer_low,X
-    LDA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     SBC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.reverse_indexed_pair_delta_negative
+.reverse_cross_room_robot_ghost_delta_negative
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
-    STA indexed_pair_value_delta_field,X
+    STA cross_room_robot_ghost_value_delta_field,X
     RTS
 
-.indexed_pair_negative_wrap_entry
-    LDA indexed_pair_primary_field,X
-    BEQ reverse_indexed_pair_delta_positive
-    DEC indexed_pair_primary_field,X
+.cross_room_robot_ghost_negative_wrap_entry
+    LDA cross_room_robot_ghost_primary_field,X
+    BEQ reverse_cross_room_robot_ghost_delta_positive
+    DEC cross_room_robot_ghost_primary_field,X
     LDA #INDEXED_PAIR_HORIZONTAL_WRAP_POSITION-1
-    STA indexed_pair_value_field,X
+    STA cross_room_robot_ghost_value_field,X
     CLC
-    LDA indexed_pair_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_low,X
     ADC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
-    STA indexed_pair_display_pointer_low,X
-    LDA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_low,X
+    LDA cross_room_robot_ghost_display_pointer_high,X
     ADC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
-    STA indexed_pair_display_pointer_high,X
+    STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
-.reverse_indexed_pair_delta_positive
+.reverse_cross_room_robot_ghost_delta_positive
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
-    STA indexed_pair_value_delta_field,X
+    STA cross_room_robot_ghost_value_delta_field,X
     RTS
-.advance_indexed_pair_value_and_display_pointer_source_end
+.advance_cross_room_robot_ghost_value_and_display_pointer_source_end
 
-ASSERT advance_indexed_pair_value_and_display_pointer_source = advance_indexed_pair_value_and_display_pointer
-ASSERT advance_indexed_pair_value_and_display_pointer_source_end = &2F8F
-COPYBLOCK advance_indexed_pair_value_and_display_pointer_source, advance_indexed_pair_value_and_display_pointer_source_end, &4712
+ASSERT advance_cross_room_robot_ghost_value_and_display_pointer_source = advance_cross_room_robot_ghost_value_and_display_pointer
+ASSERT advance_cross_room_robot_ghost_value_and_display_pointer_source_end = &2F8F
+COPYBLOCK advance_cross_room_robot_ghost_value_and_display_pointer_source, advance_cross_room_robot_ghost_value_and_display_pointer_source_end, &4712
 
 ; Runtime $2F12-$2F8E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4712-$478E.
-CLEAR advance_indexed_pair_value_and_display_pointer_source, advance_indexed_pair_value_and_display_pointer_source_end
+CLEAR advance_cross_room_robot_ghost_value_and_display_pointer_source, advance_cross_room_robot_ghost_value_and_display_pointer_source_end
 
-; Copy these earlier-assembled room-cell blocks only after the indexed-pair
+; Copy these earlier-assembled room-cell blocks only after the cross-room robot/ghost
 ; routines that occupy the same runtime addresses as their loaded images.
 COPYBLOCK draw_two_13_two_beam_two_13_two_pattern_source, draw_left_half_sequence_twice_or_13_beam_pattern_source_end, &2EC2
 CLEAR draw_two_13_two_beam_two_13_two_pattern_source, draw_left_half_sequence_twice_or_13_beam_pattern_source_end
@@ -8051,213 +8054,213 @@ COPYBLOCK flash_background_colour_with_sound_source, flash_background_colour_wit
 CLEAR flash_background_colour_with_sound_source, flash_background_colour_with_sound_source_end
 
 
-ORG alternate_indexed_pair_countdown_update
+ORG ghost_countdown_steering_update
 
 ; Runtime $3009-$3034. Process indexed entries X=$00/$02 for high-secondary
 ; rooms. Countdown values zero or two take the original preceding erase/step
 ; block at $3003; other values decrement here. On expiry, optionally erase the
 ; directional graphic, steer the pair relative to the player, toggle the first
 ; pair when both pair positions meet, test the tall overlap, and redraw.
-.alternate_indexed_pair_countdown_update_source
+.ghost_countdown_steering_update_source
     LDX #CROSS_ROOM_ROBOT_GHOST_PAIR_FIRST_INDEX
 
-.alternate_indexed_pair_countdown_loop
+.ghost_countdown_loop
     LDA cross_room_robot_ghost_redraw_countdown,X
-    BEQ draw_then_decrement_alternate_indexed_pair
+    BEQ draw_then_decrement_ghost
     CMP #CROSS_ROOM_GHOST_REDRAW_COUNTDOWN
-    BEQ draw_then_decrement_alternate_indexed_pair
-.decrement_alternate_indexed_pair_countdown
+    BEQ draw_then_decrement_ghost
+.decrement_ghost_countdown
     DEC cross_room_robot_ghost_redraw_countdown,X
-    BNE advance_alternate_indexed_pair_selector
+    BNE advance_ghost_selector
     LDA #CROSS_ROOM_GHOST_COUNTDOWN_RESET
     STA cross_room_robot_ghost_redraw_countdown,X
     LDA indexed_xor_erase_previous_graphic
-    BEQ update_alternate_indexed_pair_state
-    JSR draw_directional_indexed_pair_if_matching
+    BEQ update_ghost_state
+    JSR draw_directional_ghost_if_reference_matches
 
-.update_alternate_indexed_pair_state
-    JSR set_indexed_pair_deltas_from_player_position
-    JSR toggle_first_indexed_pair_mode_when_positions_match
-    JSR handle_matching_alternate_indexed_pair
-    JSR draw_directional_indexed_pair_if_matching
+.update_ghost_state
+    JSR set_ghost_steps_toward_player
+    JSR toggle_first_ghost_axis_mode_when_positions_match
+    JSR handle_matching_ghost
+    JSR draw_directional_ghost_if_reference_matches
 
-.advance_alternate_indexed_pair_selector
+.advance_ghost_selector
     INX
     INX
     CPX #CROSS_ROOM_ROBOT_GHOST_PAIR_END_INDEX
-    BNE alternate_indexed_pair_countdown_loop
+    BNE ghost_countdown_loop
     RTS
-.alternate_indexed_pair_countdown_update_source_end
+.ghost_countdown_steering_update_source_end
 
-ASSERT alternate_indexed_pair_countdown_update_source = alternate_indexed_pair_countdown_update
-ASSERT alternate_indexed_pair_countdown_update_source_end = handle_matching_alternate_indexed_pair
-COPYBLOCK alternate_indexed_pair_countdown_update_source, alternate_indexed_pair_countdown_update_source_end, &4809
+ASSERT ghost_countdown_steering_update_source = ghost_countdown_steering_update
+ASSERT ghost_countdown_steering_update_source_end = handle_matching_ghost
+COPYBLOCK ghost_countdown_steering_update_source, ghost_countdown_steering_update_source_end, &4809
 
 ; Runtime $3009-$3034 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4809-$4834.
-CLEAR alternate_indexed_pair_countdown_update_source, alternate_indexed_pair_countdown_update_source_end
+CLEAR ghost_countdown_steering_update_source, ghost_countdown_steering_update_source_end
 
 
-ORG handle_matching_alternate_indexed_pair
+ORG handle_matching_ghost
 
 ; Runtime $3035-$304E. A mismatch returns through the preceding $3034 RTS. A
-; match copies the indexed horizontal value to indexed_pair_output_value,
+; match copies the indexed horizontal value to cross_room_robot_ghost_output_value,
 ; converts the even vertical offset to the collision coordinate, selects the
 ; ghost's tall overlap extent, and tail-enters the player/candidate guard.
-.handle_matching_alternate_indexed_pair_source
-    JSR test_indexed_pair_matches_reference
-    BCC alternate_indexed_pair_mismatch_return
-    LDA indexed_pair_value_field,X
-    STA indexed_pair_output_value
-    LDA indexed_pair_offset_field,X
+.handle_matching_ghost_source
+    JSR test_cross_room_robot_ghost_matches_reference
+    BCC ghost_reference_mismatch_return
+    LDA cross_room_robot_ghost_value_field,X
+    STA cross_room_robot_ghost_output_value
+    LDA cross_room_robot_ghost_offset_field,X
     LSR A
     CLC
     ADC #CROSS_ROOM_GHOST_OVERLAP_VERTICAL_BIAS
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     LDA #CROSS_ROOM_GHOST_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JMP check_player_candidate_bounds_overlap
-.handle_matching_alternate_indexed_pair_source_end
+.handle_matching_ghost_source_end
 
-ASSERT handle_matching_alternate_indexed_pair_source = handle_matching_alternate_indexed_pair
-ASSERT handle_matching_alternate_indexed_pair_source_end = set_indexed_pair_deltas_from_player_position
-COPYBLOCK handle_matching_alternate_indexed_pair_source, handle_matching_alternate_indexed_pair_source_end, &4835
+ASSERT handle_matching_ghost_source = handle_matching_ghost
+ASSERT handle_matching_ghost_source_end = set_ghost_steps_toward_player
+COPYBLOCK handle_matching_ghost_source, handle_matching_ghost_source_end, &4835
 
 ; Runtime $3035-$304E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4835-$484E.
-CLEAR handle_matching_alternate_indexed_pair_source, handle_matching_alternate_indexed_pair_source_end
+CLEAR handle_matching_ghost_source, handle_matching_ghost_source_end
 
 
-ORG set_indexed_pair_deltas_from_player_position
+ORG set_ghost_steps_toward_player
 
 ; Runtime $304F-$3081, the first body range of Ghidra function $304F. Matching
 ; secondary fields set the signed ghost vertical step from the player/pair
 ; half-offset comparison. Matching primary fields set a signed horizontal step. Control then
 ; enters the separately sourced mode block at $3083/$3085/$3088. The external
 ; $307F entry tail-jumps to the sourced horizontal value/pointer step.
-.set_indexed_pair_deltas_from_player_position_source
+.set_ghost_steps_toward_player_source
     LDA reference_pair_secondary_value
-    CMP indexed_pair_secondary_field,X
-    BNE check_indexed_pair_horizontal_reference
-    LDA indexed_pair_offset_field,X
+    CMP cross_room_robot_ghost_secondary_field,X
+    BNE check_cross_room_robot_ghost_horizontal_reference
+    LDA cross_room_robot_ghost_offset_field,X
     LSR A
     STA ghost_half_vertical_position
     LDA player_vertical_position
     LSR A
     CMP ghost_half_vertical_position
-    BPL set_indexed_pair_vertical_delta_positive
+    BPL set_cross_room_robot_ghost_vertical_delta_positive
     LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_UP
-    JMP store_indexed_pair_vertical_delta
+    JMP store_cross_room_robot_ghost_vertical_delta
 
-.set_indexed_pair_vertical_delta_positive
+.set_cross_room_robot_ghost_vertical_delta_positive
     LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_DOWN
 
-.store_indexed_pair_vertical_delta
-    STA indexed_pair_offset_delta_field,X
+.store_cross_room_robot_ghost_vertical_delta
+    STA cross_room_robot_ghost_offset_delta_field,X
 
-.check_indexed_pair_horizontal_reference
+.check_cross_room_robot_ghost_horizontal_reference
     LDA reference_pair_primary_value
-    CMP indexed_pair_primary_field,X
-    BNE apply_indexed_pair_axis_mode
+    CMP cross_room_robot_ghost_primary_field,X
+    BNE apply_cross_room_robot_ghost_axis_mode
     LDA player_horizontal_position
-    CMP indexed_pair_value_field,X
-    BMI apply_indexed_pair_player_axis_mode
+    CMP cross_room_robot_ghost_value_field,X
+    BMI apply_ghost_player_axis_mode
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
-    JMP store_indexed_pair_horizontal_delta
+    JMP store_cross_room_robot_ghost_horizontal_delta
 
-.advance_indexed_pair_horizontal_position
-    JMP advance_indexed_pair_value_and_display_pointer
-.set_indexed_pair_deltas_from_player_position_source_end
+.advance_cross_room_robot_ghost_horizontal_position
+    JMP advance_cross_room_robot_ghost_value_and_display_pointer
+.set_ghost_steps_toward_player_source_end
 
-ASSERT set_indexed_pair_deltas_from_player_position_source = set_indexed_pair_deltas_from_player_position
-ASSERT set_indexed_pair_deltas_from_player_position_source_end = &3082
-COPYBLOCK set_indexed_pair_deltas_from_player_position_source, set_indexed_pair_deltas_from_player_position_source_end, &484F
+ASSERT set_ghost_steps_toward_player_source = set_ghost_steps_toward_player
+ASSERT set_ghost_steps_toward_player_source_end = &3082
+COPYBLOCK set_ghost_steps_toward_player_source, set_ghost_steps_toward_player_source_end, &484F
 
 ; Runtime $304F-$3081 overlaps the loaded transport image. Byte $3082 is an
 ; unreachable RTS outside Ghidra's function body and remains original-owned.
-CLEAR set_indexed_pair_deltas_from_player_position_source, set_indexed_pair_deltas_from_player_position_source_end
+CLEAR set_ghost_steps_toward_player_source, set_ghost_steps_toward_player_source_end
 
 
-ORG apply_indexed_pair_player_axis_mode
+ORG apply_ghost_player_axis_mode
 
 ; Runtime $3083-$30AB, the second body range of Ghidra function $304F. The
 ; entry supplies the negative horizontal step. Vertical mode advances until the
 ; ghost reaches player Y, then selects horizontal mode; horizontal mode advances
 ; until player X is reached, then selects vertical mode.
-.apply_indexed_pair_player_axis_mode_source
+.apply_ghost_player_axis_mode_source
     LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
 
-.store_indexed_pair_horizontal_delta
-    STA indexed_pair_value_delta_field,X
+.store_cross_room_robot_ghost_horizontal_delta
+    STA cross_room_robot_ghost_value_delta_field,X
 
-.apply_indexed_pair_axis_mode
-    LDA indexed_pair_mode_field,X
+.apply_cross_room_robot_ghost_axis_mode
+    LDA cross_room_robot_ghost_mode_field,X
     CMP #CROSS_ROOM_GHOST_MODE_VERTICAL
-    BEQ apply_indexed_pair_vertical_mode
+    BEQ apply_cross_room_robot_ghost_vertical_mode
     LDA player_horizontal_position
-    CMP indexed_pair_value_field,X
-    BNE advance_indexed_pair_horizontal_position
+    CMP cross_room_robot_ghost_value_field,X
+    BNE advance_cross_room_robot_ghost_horizontal_position
     LDA #CROSS_ROOM_GHOST_MODE_VERTICAL
-    STA indexed_pair_mode_field,X
+    STA cross_room_robot_ghost_mode_field,X
     RTS
 
-.advance_indexed_pair_vertical_position
-    JMP advance_indexed_pair_offset_and_display_pointer
+.advance_cross_room_robot_ghost_vertical_position
+    JMP advance_cross_room_robot_ghost_offset_and_display_pointer
 
-.apply_indexed_pair_vertical_mode
+.apply_cross_room_robot_ghost_vertical_mode
     LDA player_vertical_position
-    CMP indexed_pair_offset_field,X
-    BNE advance_indexed_pair_vertical_position
+    CMP cross_room_robot_ghost_offset_field,X
+    BNE advance_cross_room_robot_ghost_vertical_position
     LDA #CROSS_ROOM_GHOST_MODE_HORIZONTAL
-    STA indexed_pair_mode_field,X
+    STA cross_room_robot_ghost_mode_field,X
     RTS
-.apply_indexed_pair_player_axis_mode_source_end
+.apply_ghost_player_axis_mode_source_end
 
-ASSERT apply_indexed_pair_player_axis_mode_source = apply_indexed_pair_player_axis_mode
-ASSERT apply_indexed_pair_player_axis_mode_source_end = toggle_first_indexed_pair_mode_when_positions_match
-COPYBLOCK apply_indexed_pair_player_axis_mode_source, apply_indexed_pair_player_axis_mode_source_end, &4883
+ASSERT apply_ghost_player_axis_mode_source = apply_ghost_player_axis_mode
+ASSERT apply_ghost_player_axis_mode_source_end = toggle_first_ghost_axis_mode_when_positions_match
+COPYBLOCK apply_ghost_player_axis_mode_source, apply_ghost_player_axis_mode_source_end, &4883
 
 ; Runtime $3083-$30AB overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4883-$48AB.
-CLEAR apply_indexed_pair_player_axis_mode_source, apply_indexed_pair_player_axis_mode_source_end
+CLEAR apply_ghost_player_axis_mode_source, apply_ghost_player_axis_mode_source_end
 
 
-ORG toggle_first_indexed_pair_mode_when_positions_match
+ORG toggle_first_ghost_axis_mode_when_positions_match
 
-; Runtime $30AC-$30CD. Compare the value and offset fields of indexed pair 0
+; Runtime $30AC-$30CD. Compare the value and offset fields of ghost 0
 ; with pair 1 (the same arrays at index 2). A mismatch returns through the
 ; preceding shared RTS at $30AB. When both fields match, change the first pair's
 ; mode between the named horizontal and vertical modes. The alternate updater calls
 ; this once after processing both entries, so it detects the two positions
 ; meeting and alternates the first entry's mode.
-.toggle_first_indexed_pair_mode_when_positions_match_source
-    LDA indexed_pair_value_field
-    CMP indexed_pair_value_field+2
-    BNE indexed_pair_positions_differ_return
-    LDA indexed_pair_offset_field
-    CMP indexed_pair_offset_field+2
-    BNE indexed_pair_positions_differ_return
-    LDA indexed_pair_mode_field
+.toggle_first_ghost_axis_mode_when_positions_match_source
+    LDA cross_room_robot_ghost_value_field
+    CMP cross_room_robot_ghost_value_field+2
+    BNE cross_room_robot_ghost_positions_differ_return
+    LDA cross_room_robot_ghost_offset_field
+    CMP cross_room_robot_ghost_offset_field+2
+    BNE cross_room_robot_ghost_positions_differ_return
+    LDA cross_room_robot_ghost_mode_field
     CMP #CROSS_ROOM_GHOST_MODE_VERTICAL
-    BNE set_first_indexed_pair_mode_two
+    BNE set_first_cross_room_robot_ghost_mode_two
     LDA #CROSS_ROOM_GHOST_MODE_HORIZONTAL
 
-.store_first_indexed_pair_mode
-    STA indexed_pair_mode_field
+.store_first_cross_room_robot_ghost_mode
+    STA cross_room_robot_ghost_mode_field
     RTS
 
-.set_first_indexed_pair_mode_two
+.set_first_cross_room_robot_ghost_mode_two
     LDA #CROSS_ROOM_GHOST_MODE_VERTICAL
-    JMP store_first_indexed_pair_mode
-.toggle_first_indexed_pair_mode_when_positions_match_source_end
+    JMP store_first_cross_room_robot_ghost_mode
+.toggle_first_ghost_axis_mode_when_positions_match_source_end
 
-ASSERT toggle_first_indexed_pair_mode_when_positions_match_source = toggle_first_indexed_pair_mode_when_positions_match
-ASSERT toggle_first_indexed_pair_mode_when_positions_match_source_end = run_energy_bar_sweep
-COPYBLOCK toggle_first_indexed_pair_mode_when_positions_match_source, toggle_first_indexed_pair_mode_when_positions_match_source_end, &48AC
+ASSERT toggle_first_ghost_axis_mode_when_positions_match_source = toggle_first_ghost_axis_mode_when_positions_match
+ASSERT toggle_first_ghost_axis_mode_when_positions_match_source_end = run_energy_bar_sweep
+COPYBLOCK toggle_first_ghost_axis_mode_when_positions_match_source, toggle_first_ghost_axis_mode_when_positions_match_source_end, &48AC
 
 ; Runtime $30AC-$30CD overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $48AC-$48CD.
-CLEAR toggle_first_indexed_pair_mode_when_positions_match_source, toggle_first_indexed_pair_mode_when_positions_match_source_end
+CLEAR toggle_first_ghost_axis_mode_when_positions_match_source, toggle_first_ghost_axis_mode_when_positions_match_source_end
 
 
 ORG run_energy_bar_sweep
@@ -8319,8 +8322,8 @@ CLEAR submit_channel_one_sound_with_x_pitch_source, submit_channel_one_sound_wit
 ORG consume_collected_icon_and_apply_effect
 
 ; Runtime $30ED-$3141. Consume one collected status icon unless the count is
-; exactly four, then run the common descending flash effect. A $FF marker at
-; $4E selects the longer cleanup path: remove a second icon, restore the saved
+; exactly four, then run the common descending flash effect.
+; ROOM_INTERACTION_LONG_ICON_EFFECT selects the longer cleanup path: remove a second icon, restore the saved
 ; cell with $53, clear the selected room-appearance byte and effect state, flash
 ; once, then sweep X from 1 through $FF using OSBYTE calls and pitch-X sounds.
 .consume_collected_icon_and_apply_effect_source
@@ -8331,7 +8334,7 @@ ORG consume_collected_icon_and_apply_effect
     LDA collected_icon_count
     JSR erase_collected_icon
     LDA #&01
-    STA reset_indexed_pair_countdowns
+    STA reset_cross_room_robot_ghost_countdowns
     LDA room_interaction_code
     CMP #ROOM_INTERACTION_LONG_ICON_EFFECT
     BNE play_descending_flash_sequence
@@ -8424,7 +8427,7 @@ ORG draw_status_panel_divider
 ; draw_two_item_slots leaves through a tail jump here, so the rule is redrawn
 ; whenever the slots are.
 .draw_status_panel_divider_source
-    LDX #&42
+    LDX #STATUS_PANEL_DIVIDER_CELL_COUNT
     LDA #LO(status_panel_divider_start)
     STA graphic_source_pointer_low
     LDA #HI(status_panel_divider_start)
@@ -8432,7 +8435,7 @@ ORG draw_status_panel_divider
     LDY #&00
 
 .write_next_divider_cell
-    LDA #&F0
+    LDA #STATUS_PANEL_DIVIDER_PIXEL_BYTE
     JSR store_byte_and_advance_source_pointer
     BNE write_next_divider_cell
     RTS
@@ -8452,13 +8455,13 @@ ORG warp_to_room_3_4
 ; set the corresponding level-base offset to 4*$78 = $01E0, then tail-dispatch
 ; through the $1206 vector to draw_and_initialise_room.
 .warp_to_room_3_4_source
-    LDA #&04
+    LDA #HORIZONTAL_WARP_TARGET_LEVEL
     STA reference_pair_secondary_value
-    LDA #&03
+    LDA #HORIZONTAL_WARP_TARGET_COLUMN
     STA reference_pair_primary_value
-    LDA #&E0
+    LDA #LO(HORIZONTAL_WARP_TARGET_LEVEL_MAP_OFFSET)
     STA level_room_map_offset_low
-    LDA #&01
+    LDA #HI(HORIZONTAL_WARP_TARGET_LEVEL_MAP_OFFSET)
     STA level_room_map_offset_high
     JMP enter_draw_and_initialise_room
 .warp_to_room_3_4_source_end
@@ -8482,7 +8485,7 @@ ORG start_saved_display_block_shift_effect
 ; qualified as static dataflow rather than claimed runtime behavior.
 ;
 ; The traced $318E entry decrements the timed-effect countdown. At zero, clear the
-; timed-effect selector and $4E, then return. Otherwise set the working display
+; timed-effect selector and room_interaction_code, then return. Otherwise set the working display
 ; pointer to the saved display position plus $40, shift its eight-cell by
 ; four-row Mode 1 block right by one cell, advance the saved position by eight
 ; bytes with page carry, and tail-call the amplitude-1 sound player with duration
@@ -8497,11 +8500,11 @@ ORG start_saved_display_block_shift_effect
     JSR store_byte_through_saved_pointer
     DEC saved_cell_write_offset
     DEC saved_cell_write_offset
-    LDA #&20
+    LDA #SAVED_DISPLAY_SHIFT_INITIAL_COUNTDOWN
     STA timed_effect_countdown
-    LDA #&04
+    LDA #TIMED_EFFECT_SHIFT_SAVED_DISPLAY_BLOCK
     STA timed_effect_selector
-    LDA #&39
+    LDA #ROOM_CELL_ALTERNATING_RIGHT_HALF
     JMP store_byte_through_saved_pointer
 
 .advance_saved_display_block_shift_effect_source
@@ -8515,7 +8518,7 @@ ORG start_saved_display_block_shift_effect
 .shift_saved_display_block_effect_step
     CLC
     LDA saved_effect_display_pointer_low
-    ADC #&40
+    ADC #SAVED_DISPLAY_SHIFT_ROW_OFFSET_LOW
     STA display_pointer_low
     LDA saved_effect_display_pointer_high
     ADC #&00
@@ -8523,7 +8526,7 @@ ORG start_saved_display_block_shift_effect
     JSR shift_four_row_display_block_right
     CLC
     LDA saved_effect_display_pointer_low
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     STA saved_effect_display_pointer_low
     BCC play_saved_display_block_shift_sound
     INC saved_effect_display_pointer_high
@@ -8532,7 +8535,7 @@ ORG start_saved_display_block_shift_effect
     LDA timed_effect_countdown
     ASL A
     STA sound_block_pitch
-    LDA #&01
+    LDA #SAVED_DISPLAY_SHIFT_SOUND_DURATION
     STA sound_block_duration
     JMP play_sound_with_amplitude
 .start_saved_display_block_shift_effect_source_end
@@ -8620,11 +8623,13 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 ; entries $1904, $1916, $1974, $1981 and $19A0. The bordered painter selects
 ; end/interior graphic records from column zero, seven or the middle columns.
 ; The $1904/$1916 entries gate a record-$26 dynamic-room-object setup on tile-
-; pair selector $07, populate $1246/$1249/$124A, and call the existing object
-; helpers while preserving the display pointer. Cell $2E sets $79, blanks the
+; pair selector $07, populate the dynamic-object slot bound, lower position and
+; class, and call the existing object helpers while preserving the display pointer.
+; Cell $2E enables water_environment_flag and blanks the
 ; selector-matching column and otherwise enters the right-half alternating
 ; handler. Cell $35 draws blanks around an odd alternating run derived from the
-; column. Cell $2F stores $FF in $4E, draws its special row and saves the cell/
+; column. Cell $2F selects ROOM_INTERACTION_LONG_ICON_EFFECT, draws its special
+; row and saves the cell/
 ; display pointers. Natural traces cover the first 95 instructions; three
 ; focused real-dispatch fixtures cover every remaining cell-$2E/$35 instruction
 ; with exact authority/rebuild parity.
@@ -9670,11 +9675,11 @@ ORG update_and_draw_room_moving_objects
     SEC
     LDA indexed_xor_graphic_selector_state,Y
     SBC #&01
-    STA indexed_pair_output_value
+    STA cross_room_robot_ghost_output_value
     LDA indexed_xor_graphic_state
     ASL A
     ASL A
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     JSR enter_test_player_in_range_and_set_direction
     BCC advance_indexed_xor_graphic
 
@@ -9699,11 +9704,11 @@ ORG update_and_draw_room_moving_objects
     LDA current_room_cell
     BNE indexed_xor_next_instance
     LDA indexed_xor_graphic_selector_state,Y
-    STA indexed_pair_output_value
+    STA cross_room_robot_ghost_output_value
     LDA indexed_xor_graphic_state
     ASL A
     ASL A
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     LDA #&12
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
@@ -9985,7 +9990,7 @@ ORG draw_and_initialise_room
     LDA reference_pair_secondary_value
     CMP #CROSS_ROOM_GHOST_FIRST_LEVEL
     BPL finish_room_setup
-    JSR enter_initialise_indexed_pair_from_record
+    JSR enter_initialise_cross_room_robot_ghost_from_record
 
 .finish_room_setup
     JMP write_system_clock_via_osword_02
@@ -10168,15 +10173,15 @@ ORG reflect_indexed_entity_at_obstacles
     JSR load_display_pointer_then_scan_markers
     BCC probe_opposite_vertical
     JSR set_indexed_123b_delta_positive
-    JMP prepare_indexed_pair_graphic_fields
+    JMP prepare_cross_room_robot_ghost_graphic_fields
 
 .probe_opposite_vertical
     JSR scan_markers_below_indexed_entry
-    BCC prepare_indexed_pair_graphic_fields
+    BCC prepare_cross_room_robot_ghost_graphic_fields
     JSR set_indexed_123b_delta_negative
 
-.prepare_indexed_pair_graphic_fields
-    JSR load_indexed_pair_output_from_y_tables
+.prepare_cross_room_robot_ghost_graphic_fields
+    JSR load_cross_room_robot_ghost_output_from_y_tables
     LDA #OBSTACLE_REFLECTION_HORIZONTAL_RANGE
     STA candidate_range_horizontal_extent
     LDA #OBSTACLE_REFLECTION_ABOVE_RANGE
@@ -10462,7 +10467,7 @@ ORG load_display_pointer_then_scan_markers
 ; the call by saving it on the stack. The scan itself does not preserve Y, so
 ; the save is what lets the caller keep iterating over entries.
 .load_display_pointer_then_scan_markers_source
-    JSR load_display_pointer_from_indexed_pair
+    JSR load_display_pointer_from_cross_room_robot_ghost
     TYA
     PHA
     JSR enter_adjust_display_pointer_then_scan_markers
@@ -10526,25 +10531,25 @@ COPYBLOCK scan_markers_below_indexed_entry_source, scan_markers_below_indexed_en
 CLEAR scan_markers_below_indexed_entry_source, scan_markers_below_indexed_entry_source_end
 
 
-ORG load_indexed_pair_output_from_y_tables
+ORG load_cross_room_robot_ghost_output_from_y_tables
 
-; Runtime $367F-$368A. The Y-indexed counterpart of the field load inside handle_matching_indexed_pair: it copies one field to $11 and halves an adjacent field into $3C. The sources are the zero-page table at $68 and the relocated table at $1231 rather than $222F/$2230, and no $08 bias is added before the shift.
-.load_indexed_pair_output_from_y_tables_source
+; Runtime $367F-$368A. The Y-indexed counterpart of the field load inside handle_matching_cross_room_robot_ghost: it copies one field to $11 and halves an adjacent field into $3C. The sources are the zero-page table at $68 and the relocated table at $1231 rather than $222F/$2230, and no $08 bias is added before the shift.
+.load_cross_room_robot_ghost_output_from_y_tables_source
     LDA moving_entity_horizontal_position,Y
-    STA indexed_pair_output_value
+    STA cross_room_robot_ghost_output_value
     LDA primary_entity_runtime_block,Y
     LSR A
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     RTS
-.load_indexed_pair_output_from_y_tables_source_end
+.load_cross_room_robot_ghost_output_from_y_tables_source_end
 
-ASSERT load_indexed_pair_output_from_y_tables_source = load_indexed_pair_output_from_y_tables
-ASSERT load_indexed_pair_output_from_y_tables_source_end = &368B
-COPYBLOCK load_indexed_pair_output_from_y_tables_source, load_indexed_pair_output_from_y_tables_source_end, &4E7F
+ASSERT load_cross_room_robot_ghost_output_from_y_tables_source = load_cross_room_robot_ghost_output_from_y_tables
+ASSERT load_cross_room_robot_ghost_output_from_y_tables_source_end = &368B
+COPYBLOCK load_cross_room_robot_ghost_output_from_y_tables_source, load_cross_room_robot_ghost_output_from_y_tables_source_end, &4E7F
 
 ; Runtime $367F-$368A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E7F-$4E8A.
-CLEAR load_indexed_pair_output_from_y_tables_source, load_indexed_pair_output_from_y_tables_source_end
+CLEAR load_cross_room_robot_ghost_output_from_y_tables_source, load_cross_room_robot_ghost_output_from_y_tables_source_end
 
 
 ORG scan_column_below_indexed_entry
@@ -10727,7 +10732,7 @@ ORG advance_indexed_entity_vertical_position
 ; apply reach the display here.
 .advance_indexed_entity_vertical_position_source
     LDA primary_entity_runtime_block,Y
-    STA indexed_pair_output_half_offset
+    STA cross_room_robot_ghost_output_half_offset
     LDA enemy_vertical_delta,Y
     STA vertical_step_delta
     LDA room_enemy_display_pointer_low,Y
@@ -10735,7 +10740,7 @@ ORG advance_indexed_entity_vertical_position
     LDA room_enemy_display_pointer_high,Y
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA indexed_pair_output_half_offset
+    LDA cross_room_robot_ghost_output_half_offset
     STA primary_entity_runtime_block,Y
     LDA vertical_step_pointer_low
     STA room_enemy_display_pointer_low,Y
@@ -11121,7 +11126,8 @@ COPYBLOCK cross_room_robot_ghost_frame_pointer_table_source, player_graphic_fram
 CLEAR cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end
 
 ORG interval_timer_block
-; Runtime 0B9B-0B9F: five-byte MOS interval timer value, replaced by OSWORD $04.
+; Runtime $0B9B-$0B9F: five-byte MOS interval timer value, replaced by
+; OSWORD_WRITE_INTERVAL_TIMER.
 .interval_timer_block_source
     EQUB &90, &E8, &FF, &FF, &FF
 .interval_timer_block_source_end
@@ -11299,7 +11305,8 @@ ORG room_and_item_graphic_records
 ; graphic record &11: companion patterned slope room tile; appearance group 0
     EQUB &08, &84, &8E, &C7, &FE, &F5, &FB, &F5, &00, &00, &00, &08, &08, &0C, &8E, &E5
 .horizontal_bar_tile
-; graphic record &12: horizontal-bar room-cell tile; substituted for blank record when state $79 is nonzero
+; graphic record &12: horizontal-bar room-cell tile; substituted for the blank
+; record while water_environment_flag is nonzero
     EQUB &C0, &00, &C0, &00, &C0, &00, &C0, &00, &C0, &00, &C0, &00, &C0, &00, &C0, &00
 .narrow_vertical_bar_tile
 ; graphic record &13: narrow vertical-bar room-cell tile

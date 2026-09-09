@@ -70,21 +70,21 @@ routines highlighted in detail below include:
 - runtime `$2B57-$2B87`, loaded `$4357-$4387`,
   `check_player_candidate_bounds_overlap`;
 - runtime `$2E44-$2E7B`, loaded `$4644-$467B`,
-  `update_and_draw_two_indexed_pairs`;
+  `update_and_draw_two_cross_room_robot_ghosts`;
 - runtime `$2E7C-$2E91`, loaded `$467C-$4691`,
-  `handle_matching_indexed_pair`;
+  `handle_matching_cross_room_robot_ghost`;
 - runtime `$2E92-$2EA9`, loaded `$4692-$46A9`,
-  `draw_directional_indexed_pair_if_matching`;
+  `draw_directional_ghost_if_reference_matches`;
 - runtime `$30AC-$30CD`, loaded `$48AC-$48CD`,
-  `toggle_first_indexed_pair_mode_when_positions_match`;
+  `toggle_first_ghost_axis_mode_when_positions_match`;
 - runtime `$2EAA-$2EDC`, loaded `$46AA-$46DC`,
-  `draw_indexed_pair_if_reference_matches`;
+  `draw_cross_room_robot_ghost_if_reference_matches`;
 - runtime `$2EDD-$2EED`, loaded `$46DD-$46ED`,
-  `test_indexed_pair_matches_reference`;
+  `test_cross_room_robot_ghost_matches_reference`;
 - runtime `$2EEE-$2F11`, loaded `$46EE-$4711`,
-  `set_indexed_pair_value_delta_at_thresholds`;
+  `set_cross_room_robot_ghost_value_delta_at_thresholds`;
 - runtime `$2F12-$2F8E`, loaded `$4712-$478E`,
-  `advance_indexed_pair_value_and_display_pointer`;
+  `advance_cross_room_robot_ghost_value_and_display_pointer`;
 - runtime `$32A7-$32BE`, loaded `$4AA7-$4ABE`,
   `test_display_pointer_in_xor_draw_window`; and
 - runtime `$32C5-$32D0`, loaded `$4AC5-$4AD0`,
@@ -233,7 +233,7 @@ the real outer `$2E7C` call executes 98 cycles/33 instructions with all 31
 instructions in the three sourced ranges owned and exact. See
 `analysis/reconstruction/check_player_candidate_bounds_overlap_contract.md`.
 
-The two-entry indexed-pair updater loops over X=`$00/$02`, conditionally
+The two-entry cross-room robot/ghost updater loops over X=`$00/$02`, conditionally
 erases and redraws each pair, advances an indexed countdown, applies the
 sourced delta/match/value-pointer helpers, then clears repeated-source mode and
 carry before returning. Five natural calls and four forced-state cases cover
@@ -241,7 +241,7 @@ every branch, including the external `$3009` tail path. Fresh Ghidra ownership
 keeps `$3003-$3008` with that alternate updater rather than this contiguous
 source range. The natural post-source call is exact for 6,673 cycles/2,081
 Quest instructions, 73 changed bytes, and 52 screen bytes. See
-`analysis/reconstruction/update_and_draw_two_indexed_pairs_contract.md`.
+`analysis/reconstruction/update_and_draw_two_cross_room_robot_ghosts_contract.md`.
 
 The shared INKEY wrapper preserves the caller's negative key number in X,
 loads Y=`$FF` and OSBYTE function `$81`, then tail-jumps to MOS `$FFF4`. The
@@ -260,13 +260,13 @@ Model B, so it is retained byte-exactly under a machine-scoped unreachable
 declaration. See
 `analysis/reconstruction/poll_controls_and_apply_gameplay_actions_contract.md`.
 
-The indexed-pair predicate compares `$222B+X` with `$90`, then—only after a
-match—compares `$8A+X` with `$8F`. It returns carry set exactly when both
+The cross-room robot/ghost predicate compares `$222B+X` with `$90`, then--only after a
+match--compares `$8A+X` with `$8F`. It returns carry set exactly when both
 fields match. The no-input trace proves 15 full matches and 15 first-field
 mismatches; paired focused checkpoints prove the exact 26-cycle/eight-
 instruction and 18-cycle/five-instruction paths with no memory, display, or
 hardware effects. A second-field-only mismatch remains static-only. See
-`analysis/reconstruction/test_indexed_pair_matches_reference_contract.md`.
+`analysis/reconstruction/test_cross_room_robot_ghost_matches_reference_contract.md`.
 
 The adjacent matching-pair handler gates its work through that predicate. On
 a match it copies `$222F+X` to `$11`, stores the halved modulo-256 result of
@@ -275,16 +275,16 @@ mismatch it returns through the shared carry-clear exit at `$2E7A`. The
 no-input trace covers five calls on each path; focused calls and an 11-frame
 post-source run match the authority exactly. The wider identities of the
 fields and the guard's downstream action remain unclaimed. See
-`analysis/reconstruction/handle_matching_indexed_pair_contract.md`.
+`analysis/reconstruction/handle_matching_cross_room_robot_ghost_contract.md`.
 
-The indexed-pair draw helper derives graphic selector `$10/$12` from bit 1 of
+The cross-room robot/ghost draw helper derives graphic selector `$10/$12` from bit 1 of
 `$222F+X`, sets two renderer rows, and draws through the sourced XOR renderer
 only when the pair predicate matches. Twenty no-input calls cover both selector
 choices on both predicate outcomes. Focused match/mismatch calls take 3,029/74
 cycles and 948/23 instructions, with exact 61/3-byte memory and 48/0-byte
 screen effects. `$74` is zero on all ten natural draw paths, so its optional
 `$80+X` clear remains static-only. See
-`analysis/reconstruction/draw_indexed_pair_if_reference_matches_contract.md`.
+`analysis/reconstruction/draw_cross_room_robot_ghost_if_reference_matches_contract.md`.
 
 The following threshold helper compares the indexed primary field with two
 selectors, then checks the indexed value against the corresponding threshold.
@@ -292,9 +292,9 @@ Static flow proves conditional `$01/$FF` stores to the adjacent delta field;
 the no-input trace covers five calls through each no-write comparison exit.
 Focused 25-cycle and 33-cycle calls plus an 11-frame post-source run are exact.
 The unmatched-selector and both store paths remain static-only. See
-`analysis/reconstruction/set_indexed_pair_value_delta_at_thresholds_contract.md`.
+`analysis/reconstruction/set_cross_room_robot_ghost_value_delta_at_thresholds_contract.md`.
 
-The adjacent indexed-pair step adds `$222C+X` to `$222F+X`, moves the paired
+The adjacent cross-room robot/ghost step adds `$222C+X` to `$222F+X`, moves the paired
 little-endian display pointer at `$99/$9A+X` by `+8` or `-8`, wraps across
 indexed primary fields, and reverses at endpoints 0/7. Ten no-input calls prove
 five ordinary paths in each direction and exact value/pointer sequences; the
@@ -303,7 +303,7 @@ ordinary calls take 59/58 cycles and 18/17 instructions, while focused
 Z-replay call 8 proves the wrap in 79 cycles/22 instructions with four exact
 state changes. Upper wrap, endpoint reversals, and the static tail entry remain
 qualified. See
-`analysis/reconstruction/advance_indexed_pair_value_and_display_pointer_contract.md`.
+`analysis/reconstruction/advance_cross_room_robot_ghost_value_and_display_pointer_contract.md`.
 
 The XOR renderer's pointer predicate returns carry clear exactly for
 `$7C/$7D` in `$4180-$7FFF`. The committed no-input trace exercises its short
@@ -397,11 +397,11 @@ source_bbc/validate.ps1
 
 Outputs are written below ignored `build/reconstruction/`:
 
-- `QUEST1` — rebuilt DFS payload;
-- `Quest-rebuilt.ssd` — copy of the authoritative disk with only `$.QUEST1`
+- `QUEST1` -- rebuilt DFS payload;
+- `Quest-rebuilt.ssd` -- copy of the authoritative disk with only `$.QUEST1`
   replaced;
-- `quest1.labels` — BeebAsm symbol map; and
-- `disc-build.json` — exact hashes and changed-byte accounting.
+- `quest1.labels` -- BeebAsm symbol map; and
+- `disc-build.json` -- exact hashes and changed-byte accounting.
 
 `validate.ps1` also performs the paired original/rebuilt workbench capture,
 then requires the rebuilt run's complete 64 KiB emulator state at cycle
