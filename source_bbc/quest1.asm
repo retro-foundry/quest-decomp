@@ -3991,7 +3991,7 @@ ORG run_startup_room_sequence_until_space
 ; level_room_map_offset_low/high before the
 ; the room-draw vector and cross-room robot/ghost initialiser run. Each room is then
 ; ticked STARTUP_ROOM_TICK_COUNT times. At STARTUP_PROMPT_TICK the inline VDU stream positions the cursor
-; and prints " PRESS SPACE "; OSBYTE $81 polls Space after every tick.
+; and prints " PRESS SPACE "; OSBYTE_INKEY polls Space after every tick.
 ; A pressed key branches to discard_two_stack_bytes_and_return, which removes the saved X
 ; and Y values before returning to initialise_new_game. Expiring X advances to
 ; the next packed room; expiring Y restarts the entire sequence.
@@ -7598,7 +7598,7 @@ ORG flash_background_colour_with_sound
 ; background colour and X physical colour are written before
 ; the sound is submitted with the same X as its pitch; the remaining three zeros
 ; follow it. So the palette change and the sound are issued together, and the
-; closing OSBYTE $13 waits for vertical sync so the new colour is visible for at
+; closing OSBYTE_WAIT_VSYNC waits so the new colour is visible for at
 ; least one frame.
 ; X is therefore both the physical colour and the pitch, which is why a louder
 ; flash and a higher note arrive together.
@@ -10393,13 +10393,13 @@ CLEAR initialise_room_moving_objects_source, initialise_room_moving_objects_sour
 COPYBLOCK dispatch_room_cell_source, dispatch_room_cell_source_end, dispatch_room_cell+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR dispatch_room_cell_source, dispatch_room_cell_source_end
 
-; The extended alternating-tile block copies after overlapping $2Bxx runtime
+; The extended alternating-tile block copies after its aliased runtime
 ; routines have released their assembly ranges.
 COPYBLOCK draw_alternating_tile_run_source, draw_alternating_tile_run_source_end, draw_eight_alternating_tiles+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_alternating_tile_run_source, draw_alternating_tile_run_source_end
 
 ORG status_icon_graphics
-; Runtime 0880-08FF: alternate 8-by-8 Mode 1 graphics selected by setting the
+; alternate 8-by-8 Mode 1 graphics selected by setting the
 ; blitter bank offset to two. Records 0-3 have proved status-display callers;
 ; records 4-7 decode as figure fragments but have no located runtime selector.
 .status_icon_graphics_source
@@ -10440,7 +10440,7 @@ COPYBLOCK status_icon_graphics_source, unused_status_figure_graphics_source_end,
 CLEAR status_icon_graphics_source, unused_status_figure_graphics_source_end
 
 ORG relocated_game_entry
-; Runtime 0B00-0B02: relocated entry point reached after the loader transfer.
+; relocated entry point reached after the loader transfer.
 .relocated_game_entry_source
     JMP initialise_new_game
 .relocated_game_entry_source_end
@@ -10450,7 +10450,7 @@ COPYBLOCK relocated_game_entry_source, relocated_game_entry_source_end, relocate
 CLEAR relocated_game_entry_source, relocated_game_entry_source_end
 
 ORG item_slot_label_table
-; Runtime 0B03-0B50: blank inventory slot plus twelve six-character labels.
+; blank inventory slot plus twelve six-character labels.
 .item_slot_label_table_source
 .blank_item_slot_label
     EQUS "      "
@@ -10498,7 +10498,7 @@ COPYBLOCK item_slot_label_table_source, item_slot_label_table_source_end, item_s
 CLEAR item_slot_label_table_source, item_slot_label_table_source_end
 
 ORG ITEM_LABEL_TABLE_PADDING_ADDRESS
-; Runtime 0B51-0B52: zero padding between the label and tune tables.
+; zero padding between the label and tune tables.
 .item_label_table_padding_source
     EQUB &00, &00
 .item_label_table_padding_source_end
@@ -10508,7 +10508,7 @@ COPYBLOCK item_label_table_padding_source, item_label_table_padding_source_end, 
 CLEAR item_label_table_padding_source, item_label_table_padding_source_end
 
 ORG music_tune_sequence
-; Runtime 0B53-0B5E: twelve-note sequence required by the music puzzle.
+; twelve-note sequence required by the music puzzle.
 .music_tune_sequence_source
     EQUB &44, &3C, &34, &44, &3C, &34, &50, &48, &44, &50, &48, &44
 .music_tune_sequence_source_end
@@ -10519,7 +10519,7 @@ COPYBLOCK music_tune_sequence_source, music_tune_sequence_source_end, music_tune
 CLEAR music_tune_sequence_source, music_tune_sequence_source_end
 
 ORG active_room_moving_object_pointer_table
-; Runtime 0B5F-0B66: four pointers populated during room initialisation.
+; four pointers populated during room initialisation.
 .active_room_moving_object_pointer_table_source
     EQUW NULL_POINTER, NULL_POINTER, NULL_POINTER, NULL_POINTER
 .active_room_moving_object_pointer_table_source_end
@@ -10529,7 +10529,7 @@ COPYBLOCK active_room_moving_object_pointer_table_source, active_room_moving_obj
 CLEAR active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end
 
 ORG enemy_graphic_descriptor
-; Runtime 0B67-0B6A: current enemy's two sprite-frame pointers.
+; current enemy's two sprite-frame pointers.
 .enemy_graphic_descriptor_source
     EQUB &00, &00, &00, &00
 .enemy_graphic_descriptor_source_end
@@ -10539,7 +10539,7 @@ COPYBLOCK enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end, 
 CLEAR enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end
 
 ORG lift_and_hazard_graphic_descriptor
-; Runtime 0B6B-0B6E: selected lift/hazard sprite-frame pointer pair.
+; selected lift/hazard sprite-frame pointer pair.
 .lift_and_hazard_graphic_descriptor_source
     EQUB &00, &00, &00, &00
 .lift_and_hazard_graphic_descriptor_source_end
@@ -10600,7 +10600,7 @@ COPYBLOCK interval_timer_block_source, interval_timer_block_source_end, interval
 CLEAR interval_timer_block_source, interval_timer_block_source_end
 
 ORG music_note_pitch_table
-; Runtime 0BC0-0BC7: eight pitches selected by the player's keyboard position.
+; eight pitches selected by the player's keyboard position.
 .music_note_pitch_table_source
     EQUB &34, &3C, &44, &48, &50, &58, &60, &64
 .music_note_pitch_table_source_end
@@ -10610,7 +10610,7 @@ COPYBLOCK music_note_pitch_table_source, music_note_pitch_table_source_end, musi
 CLEAR music_note_pitch_table_source, music_note_pitch_table_source_end
 
 ORG startup_room_sequence_table
-; Runtime 0CED-0CFC: sixteen packed secondary/primary startup-room references.
+; sixteen packed secondary/primary startup-room references.
 .startup_room_sequence_table_source
     EQUB &86, &31, &14, &05, &96, &42, &35, &73
     EQUB &17, &54, &90, &53, &61, &45, &60, &01
@@ -10634,7 +10634,7 @@ COPYBLOCK unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_
 CLEAR unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_source_end
 
 ORG password_letters
-; Runtime 1796-17AF: eight overlapping five-letter passwords at stride three.
+; eight overlapping five-letter passwords at stride three.
 .password_letters_source
     EQUS "SALLYNDAVIDIOTTERASEVENTER"
 .password_letters_source_end
@@ -10644,7 +10644,7 @@ COPYBLOCK password_letters_source, password_letters_source_end, password_letters
 CLEAR password_letters_source, password_letters_source_end
 
 ORG room_sign_text_table
-; Runtime 17B0-18A9: fifteen 8-by-2 signs, then the terminal password prompt.
+; fifteen 8-by-2 signs, then the terminal password prompt.
 .room_sign_text_table_source
 .music_room_sign
     EQUS " Music   Room   "
@@ -10697,7 +10697,7 @@ COPYBLOCK across_to_password_number_source, across_to_password_number_source_end
 CLEAR across_to_password_number_source, across_to_password_number_source_end
 
 ORG room_and_item_graphic_bank
-; Runtime 0E00-0E0F: blank graphic record zero. OSWORD $02 also reads its
+; blank graphic record zero. OSWORD_WRITE_SYSTEM_CLOCK also reads its
 ; first five zero bytes as the system-clock parameter block.
 .system_clock_and_blank_graphic_record_source
     EQUB &00, &00, &00, &00, &00, &00, &00, &00
@@ -10709,7 +10709,7 @@ COPYBLOCK system_clock_and_blank_graphic_record_source, system_clock_and_blank_g
 CLEAR system_clock_and_blank_graphic_record_source, system_clock_and_blank_graphic_record_source_end
 
 ORG room_and_item_graphic_records
-; Runtime 0E10-11FF: room-tile, status and item graphic records $01-$3F.
+; room-tile, status and item graphic records one through sixty-three.
 ; Each EQUB row is one 8-by-8, four-colour Mode 1 tile: bytes 0-7 are the
 ; left four pixels' scanlines and bytes 8-15 are the right four. Descriptive
 ; shape names below come from decoding those pixels; gameplay names are used
@@ -10852,7 +10852,7 @@ ORG room_and_item_graphic_records
 ; graphic record &2D
     EQUB &00, &00, &00, &0F, &0F, &00, &00, &00, &00, &00, &00, &0F, &0F, &0E, &0A, &0A
 .golden_dragon_graphic_pair
-; graphic records &2E-&2F: the Golden Dragon. Numeric item code $2E also maps
+; graphic pair selected by ITEM_CODE_GOLDEN_DRAGON_OR_SALT: the Golden Dragon. That code also maps
 ; the inventory label "salt" to this pair, so the same bytes have both roles.
 ; graphic record &2E
     EQUB &00, &00, &FF, &BB, &0C, &03, &33, &FF, &11, &FF, &FC, &FF, &0F, &7F, &FF, &88
@@ -10954,7 +10954,7 @@ COPYBLOCK room_and_item_graphic_records_source, room_and_item_graphic_records_so
 CLEAR room_and_item_graphic_records_source, room_and_item_graphic_records_source_end
 
 ORG room_tile_pair_sets
-; Runtime 1D90-1DC3: thirteen four-byte tile-pair sets selected by appearance.
+; thirteen four-byte tile-pair sets selected by appearance.
 .room_tile_pair_sets_source
     EQUB &D0, &D1, &91, &90
     EQUB &02, &01, &01, &02
@@ -10976,7 +10976,7 @@ COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, room_tile_
 CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
 ORG room_moving_object_pointer_sets
-; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
+; four sets of four little-endian graphic pointers. They are
 ; the caterpillar's two right/left animation phases; the fish's right- and left-facing graphics;
 ; the mouse's right- and left-facing graphics; and the vertical lift graphic.
 ; These room-local creature/puzzle graphics are separate from the room-enemy pairs
@@ -11050,7 +11050,7 @@ COPYBLOCK item_and_goal_record_table_source, item_and_goal_record_table_source_e
 CLEAR item_and_goal_record_table_source, item_and_goal_record_table_source_end
 
 ORG room_moving_object_record_table
-; Runtime 0930-097F: sixteen room-local creature/lift records. The second byte's
+; sixteen room-local creature/lift records. The second byte's
 ; high nibble selects ROOM_MOVING_OBJECT_*; the comments decode the packed room.
 .room_moving_object_record_table_source
 .room_B0_caterpillar_record
@@ -11138,17 +11138,27 @@ COPYBLOCK initial_item_and_goal_record_table_source, initial_item_and_goal_recor
 CLEAR initial_item_and_goal_record_table_source, initial_item_and_goal_record_table_source_end
 
 ORG room_appearance_table
-; Runtime 09B0-09FF: ten rows of eight room appearance bytes.
+; ten rows of eight room appearance bytes.
 .room_appearance_table_source
+.level_0_room_appearance_row
     EQUB &03, &13, &06, &06, &32, &92, &16, &16
+.level_1_room_appearance_row
     EQUB &67, &12, &83, &26, &13, &13, &16, &65
+.level_2_room_appearance_row
     EQUB &66, &33, &A2, &26, &C3, &36, &62, &17
+.level_3_room_appearance_row
     EQUB &A6, &26, &53, &63, &96, &15, &36, &82
+.level_4_room_appearance_row
     EQUB &63, &13, &52, &09, &35, &42, &62, &B6
+.level_5_room_appearance_row
     EQUB &62, &06, &92, &42, &42, &43, &42, &73
+.level_6_room_appearance_row
     EQUB &07, &23, &0B, &12, &45, &56, &15, &26
+.level_7_room_appearance_row
     EQUB &0B, &23, &42, &16, &53, &36, &05, &60
+.level_8_room_appearance_row
     EQUB &6A, &16, &16, &16, &16, &16, &12, &13
+.level_9_room_appearance_row
     EQUB &15, &16, &16, &16, &72, &12, &C3, &B2
 .room_appearance_table_source_end
 ASSERT room_appearance_table_source = room_appearance_table
@@ -11157,7 +11167,7 @@ COPYBLOCK room_appearance_table_source, room_appearance_table_source_end, room_a
 CLEAR room_appearance_table_source, room_appearance_table_source_end
 
 ORG room_enemy_record_table
-; Runtime 0A00-0A77: twenty six-byte room-enemy records. The matched packed
+; twenty six-byte room-enemy records. The matched packed
 ; room reference leaves the low nibble as the last even slot and the high
 ; nibble as ENEMY_SPECIES_*; the remaining four bytes initialise movement
 ; positions and limits.
