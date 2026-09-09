@@ -10545,8 +10545,19 @@ CLEAR music_tune_sequence_source, music_tune_sequence_source_end
 ORG active_room_moving_object_pointer_table
 ; four pointers populated during room initialisation.
 .active_room_moving_object_pointer_table_source
-    EQUW NULL_POINTER, NULL_POINTER, NULL_POINTER, NULL_POINTER
+.active_room_moving_object_frame_0_pointer
+    EQUW NULL_POINTER
+.active_room_moving_object_frame_1_pointer
+    EQUW NULL_POINTER
+.active_room_moving_object_frame_2_pointer
+    EQUW NULL_POINTER
+.active_room_moving_object_frame_3_pointer
+    EQUW NULL_POINTER
 .active_room_moving_object_pointer_table_source_end
+ASSERT active_room_moving_object_frame_0_pointer = active_room_moving_object_pointer_table + ROOM_MOVING_OBJECT_FRAME_0_POINTER_OFFSET
+ASSERT active_room_moving_object_frame_1_pointer = active_room_moving_object_pointer_table + ROOM_MOVING_OBJECT_FRAME_1_POINTER_OFFSET
+ASSERT active_room_moving_object_frame_2_pointer = active_room_moving_object_pointer_table + ROOM_MOVING_OBJECT_FRAME_2_POINTER_OFFSET
+ASSERT active_room_moving_object_frame_3_pointer = active_room_moving_object_pointer_table + ROOM_MOVING_OBJECT_FRAME_3_POINTER_OFFSET
 ASSERT active_room_moving_object_pointer_table_source = active_room_moving_object_pointer_table
 ASSERT active_room_moving_object_pointer_table_source_end = enemy_graphic_descriptor
 COPYBLOCK active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end, active_room_moving_object_pointer_table+LOW_RUNTIME_TO_LOADED_DELTA
@@ -10555,8 +10566,13 @@ CLEAR active_room_moving_object_pointer_table_source, active_room_moving_object_
 ORG enemy_graphic_descriptor
 ; current enemy's two sprite-frame pointers.
 .enemy_graphic_descriptor_source
-    EQUB &00, &00, &00, &00
+.active_enemy_frame_0_pointer
+    EQUW NULL_POINTER
+.active_enemy_frame_1_pointer
+    EQUW NULL_POINTER
 .enemy_graphic_descriptor_source_end
+ASSERT active_enemy_frame_0_pointer = active_room_moving_object_pointer_table + ROOM_ENEMY_FRAME_0_POINTER_OFFSET
+ASSERT active_enemy_frame_1_pointer = active_room_moving_object_pointer_table + ROOM_ENEMY_FRAME_1_POINTER_OFFSET
 ASSERT enemy_graphic_descriptor_source = enemy_graphic_descriptor
 ASSERT enemy_graphic_descriptor_source_end = lift_and_hazard_graphic_descriptor
 COPYBLOCK enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end, enemy_graphic_descriptor+LOW_RUNTIME_TO_LOADED_DELTA
@@ -10565,8 +10581,13 @@ CLEAR enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end
 ORG lift_and_hazard_graphic_descriptor
 ; selected lift/hazard sprite-frame pointer pair.
 .lift_and_hazard_graphic_descriptor_source
-    EQUB &00, &00, &00, &00
+.active_lift_or_hazard_frame_0_pointer
+    EQUW NULL_POINTER
+.active_lift_or_hazard_frame_1_pointer
+    EQUW NULL_POINTER
 .lift_and_hazard_graphic_descriptor_source_end
+ASSERT active_lift_or_hazard_frame_0_pointer = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_0_POINTER_OFFSET
+ASSERT active_lift_or_hazard_frame_1_pointer = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_1_POINTER_OFFSET
 ASSERT lift_and_hazard_graphic_descriptor = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_0_POINTER_OFFSET
 ASSERT lift_and_hazard_graphic_descriptor+2 = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_1_POINTER_OFFSET
 ASSERT lift_and_hazard_graphic_descriptor_source = lift_and_hazard_graphic_descriptor
