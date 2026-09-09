@@ -11162,25 +11162,45 @@ ORG room_enemy_record_table
 ; nibble as ENEMY_SPECIES_*; the remaining four bytes initialise movement
 ; positions and limits.
 .room_enemy_record_table_source
+.room_B5_bat_enemy_record
     EQUB &05, &01, &06, &11, &18, &1C ; B5 bat
+.room_C3_small_robot_enemy_record
     EQUB &03, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&02, &05, &04, &1A, &1E ; C3 small bouncing robot
+.room_F1_small_robot_enemy_record
     EQUB &41, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&05, &02, &00, &0C, &4A ; F1 small bouncing robot
+.room_D0_bat_enemy_record
     EQUB &40, &03, &06, &11, &11, &3C ; D0 bat
+.room_A1_bat_enemy_record
     EQUB &41, &00, &03, &21, &18, &2C ; A1 bat
+.room_C1_small_robot_enemy_record
     EQUB &01, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&02, &03, &18, &0B, &49 ; C1 small bouncing robot
+.room_B3_small_robot_enemy_record
     EQUB &43, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&01, &07, &14, &17, &43 ; B3 small bouncing robot
+.room_B6_small_robot_enemy_record
     EQUB &06, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&01, &04, &06, &0B, &3E ; B6 small bouncing robot
+.room_C5_moth_enemy_record
     EQUB &45, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&02, &04, &00, &11, &2B ; C5 moth
+.room_E5_bat_enemy_record
     EQUB &02, &06, &06, &1D, &08, &28 ; E5 bat
+.room_F4_moth_enemy_record
     EQUB &45, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&04, &04, &00, &14, &40 ; F4 moth
+.room_E4_small_robot_enemy_record
     EQUB &42, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&04, &06, &34, &18, &4B ; E4 small bouncing robot
+.room_G2_small_robot_enemy_record
     EQUB &02, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE, &17, &15, &18, &4B ; G2 small bouncing robot
+.room_E3_bat_enemy_record
     EQUB &03, &04, &04, &00, &13, &3E ; E3 bat
+.room_H7_moth_enemy_record
     EQUB &44, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&05, &04, &15, &14, &32 ; H7 moth
+.room_D6_moth_enemy_record
     EQUB &04, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&04, &04, &08, &19, &2E ; D6 moth
+.room_D7_moth_enemy_record
     EQUB &47, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&07, &06, &0A, &18, &42 ; D7 moth
+.room_C7_bat_enemy_record
     EQUB &06, &03, &0C, &10, &12, &3B ; C7 bat
+.room_A2_small_robot_enemy_record
     EQUB &47, ENEMY_SPECIES_SMALL_ROBOT*PACKED_RECORD_TYPE_SCALE+&02, &05, &07, &12, &49 ; A2 small bouncing robot
+.room_E2_moth_enemy_record
     EQUB &47, ENEMY_SPECIES_MOTH*PACKED_RECORD_TYPE_SCALE+&03, &04, &00, &19, &41 ; E2 moth
 .room_enemy_record_table_source_end
 ASSERT room_enemy_record_table_source = room_enemy_record_table
