@@ -8045,10 +8045,10 @@ ORG toggle_first_ghost_axis_mode_when_positions_match
 ; meeting and alternates the first entry's mode.
 .toggle_first_ghost_axis_mode_when_positions_match_source
     LDA cross_room_robot_ghost_value_field
-    CMP cross_room_robot_ghost_value_field+2
+    CMP cross_room_robot_ghost_second_value_field
     BNE cross_room_robot_ghost_positions_differ_return
     LDA cross_room_robot_ghost_offset_field
-    CMP cross_room_robot_ghost_offset_field+2
+    CMP cross_room_robot_ghost_second_offset_field
     BNE cross_room_robot_ghost_positions_differ_return
     LDA cross_room_robot_ghost_mode_field
     CMP #CROSS_ROOM_GHOST_MODE_VERTICAL
@@ -8448,11 +8448,11 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 ; parity.
 .draw_fixed_pair_gap_and_bordered_rows_source
     LDX #FIXED_PAIR_GAP_EDGE_TILE_COUNT
-    JSR draw_fixed_pair_tile_run+2
+    JSR set_fixed_tile_pair
     LDX #FIXED_PAIR_GAP_BLANK_TILE_COUNT
     JSR draw_blank_tile_run
     LDX #FIXED_PAIR_GAP_EDGE_TILE_COUNT
-    JMP draw_fixed_pair_tile_run+2
+    JMP set_fixed_tile_pair
 
 .draw_bordered_checker_diagonal_row_source
     LDX #GRAPHIC_CHECKER_DIAGONAL
@@ -8638,10 +8638,10 @@ ORG write_indexed_terminal_activation_value
     TAX
     LDA terminal_activation_records,X
     STA indirect_write_pointer_low
-    LDA terminal_activation_records+1,X
+    LDA terminal_activation_records+TERMINAL_ACTIVATION_POINTER_HIGH_OFFSET,X
     STA indirect_write_pointer_high
     LDY #INDIRECT_RECORD_VALUE_OFFSET
-    LDA terminal_activation_records+2,X
+    LDA terminal_activation_records+TERMINAL_ACTIVATION_VALUE_OFFSET,X
     STA (indirect_write_pointer_low),Y
     RTS
 .write_indexed_terminal_activation_value_source_end
@@ -11264,45 +11264,45 @@ ORG room_and_item_graphic_records
 ; graphic record &3F
     EQUB &F0, &F0, &F0, &F0, &F0, &F0, &00, &F0, &E0, &F0, &F0, &F0, &F0, &D0, &30, &E0
 .room_and_item_graphic_records_source_end
-ASSERT rounded_pattern_tile_a = room_and_item_graphic_records + (GRAPHIC_ROUNDED_PATTERN_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT rounded_pattern_tile_b = room_and_item_graphic_records + (GRAPHIC_ROUNDED_PATTERN_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT solid_diagonal_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_DIAGONAL_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT hollow_arch_tile = room_and_item_graphic_records + (GRAPHIC_HOLLOW_ARCH-1)*GRAPHIC_RECORD_BYTES
-ASSERT diagonal_beam_tile = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BEAM-1)*GRAPHIC_RECORD_BYTES
-ASSERT small_marker_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_MARKER-1)*GRAPHIC_RECORD_BYTES
-ASSERT crossed_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CROSSED_DIAGONAL-1)*GRAPHIC_RECORD_BYTES
-ASSERT curved_bowl_tile = room_and_item_graphic_records + (GRAPHIC_CURVED_BOWL-1)*GRAPHIC_RECORD_BYTES
-ASSERT checker_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CHECKER_DIAGONAL-1)*GRAPHIC_RECORD_BYTES
-ASSERT solid_corner_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT solid_corner_tile_b = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT stepped_fixture_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FIXTURE-1)*GRAPHIC_RECORD_BYTES
-ASSERT coloured_fixture_tile = room_and_item_graphic_records + (GRAPHIC_COLOURED_FIXTURE-1)*GRAPHIC_RECORD_BYTES
-ASSERT chain_link_tile_a = room_and_item_graphic_records + (GRAPHIC_CHAIN_LINK_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT chain_link_tile_b = room_and_item_graphic_records + (GRAPHIC_CHAIN_LINK_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT patterned_slope_tile_a = room_and_item_graphic_records + (GRAPHIC_PATTERNED_SLOPE_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT patterned_slope_tile_b = room_and_item_graphic_records + (GRAPHIC_PATTERNED_SLOPE_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT horizontal_bar_tile = room_and_item_graphic_records + (GRAPHIC_HORIZONTAL_BAR-1)*GRAPHIC_RECORD_BYTES
-ASSERT narrow_vertical_bar_tile = room_and_item_graphic_records + (GRAPHIC_NARROW_VERTICAL_BAR-1)*GRAPHIC_RECORD_BYTES
-ASSERT wide_vertical_bar_tile = room_and_item_graphic_records + (GRAPHIC_WIDE_VERTICAL_BAR-1)*GRAPHIC_RECORD_BYTES
-ASSERT column_junction_tile = room_and_item_graphic_records + (GRAPHIC_COLUMN_JUNCTION-1)*GRAPHIC_RECORD_BYTES
-ASSERT solid_fill_tile = room_and_item_graphic_records + (GRAPHIC_SOLID_FILL-1)*GRAPHIC_RECORD_BYTES
-ASSERT stepped_fill_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FILL-1)*GRAPHIC_RECORD_BYTES
-ASSERT sloping_ledge_tile_a = room_and_item_graphic_records + (GRAPHIC_SLOPING_LEDGE_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT sloping_ledge_tile_b = room_and_item_graphic_records + (GRAPHIC_SLOPING_LEDGE_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT diagonal_slope_tile_a = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_SLOPE_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT diagonal_slope_tile_b = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_SLOPE_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT small_panel_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_PANEL-1)*GRAPHIC_RECORD_BYTES
-ASSERT striped_fill_tile = room_and_item_graphic_records + (GRAPHIC_STRIPED_FILL-1)*GRAPHIC_RECORD_BYTES
-ASSERT flat_fill_tile = room_and_item_graphic_records + (GRAPHIC_FLAT_FILL-1)*GRAPHIC_RECORD_BYTES
-ASSERT corner_fill_tile = room_and_item_graphic_records + (GRAPHIC_CORNER_FILL-1)*GRAPHIC_RECORD_BYTES
-ASSERT horizontal_platform_tile = room_and_item_graphic_records + (GRAPHIC_HORIZONTAL_PLATFORM-1)*GRAPHIC_RECORD_BYTES
-ASSERT decorative_diamond_tile = room_and_item_graphic_records + (GRAPHIC_DECORATIVE_DIAMOND-1)*GRAPHIC_RECORD_BYTES
-ASSERT diagonal_block_tile_a = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BLOCK_A-1)*GRAPHIC_RECORD_BYTES
-ASSERT diagonal_block_tile_b = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BLOCK_B-1)*GRAPHIC_RECORD_BYTES
-ASSERT striped_vertical_tile = room_and_item_graphic_records + (GRAPHIC_STRIPED_VERTICAL-1)*GRAPHIC_RECORD_BYTES
-ASSERT uniform_pattern_tile = room_and_item_graphic_records + (GRAPHIC_UNIFORM_PATTERN-1)*GRAPHIC_RECORD_BYTES
-ASSERT double_bar_tile = room_and_item_graphic_records + (GRAPHIC_DOUBLE_BAR-1)*GRAPHIC_RECORD_BYTES
-ASSERT pillar_base_tile = room_and_item_graphic_records + (GRAPHIC_PILLAR_BASE-1)*GRAPHIC_RECORD_BYTES
+ASSERT rounded_pattern_tile_a = room_and_item_graphic_records + (GRAPHIC_ROUNDED_PATTERN_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT rounded_pattern_tile_b = room_and_item_graphic_records + (GRAPHIC_ROUNDED_PATTERN_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT solid_diagonal_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_DIAGONAL_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT hollow_arch_tile = room_and_item_graphic_records + (GRAPHIC_HOLLOW_ARCH-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT diagonal_beam_tile = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BEAM-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT small_marker_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_MARKER-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT crossed_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CROSSED_DIAGONAL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT curved_bowl_tile = room_and_item_graphic_records + (GRAPHIC_CURVED_BOWL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT checker_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CHECKER_DIAGONAL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT solid_corner_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT solid_corner_tile_b = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT stepped_fixture_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FIXTURE-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT coloured_fixture_tile = room_and_item_graphic_records + (GRAPHIC_COLOURED_FIXTURE-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT chain_link_tile_a = room_and_item_graphic_records + (GRAPHIC_CHAIN_LINK_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT chain_link_tile_b = room_and_item_graphic_records + (GRAPHIC_CHAIN_LINK_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT patterned_slope_tile_a = room_and_item_graphic_records + (GRAPHIC_PATTERNED_SLOPE_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT patterned_slope_tile_b = room_and_item_graphic_records + (GRAPHIC_PATTERNED_SLOPE_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT horizontal_bar_tile = room_and_item_graphic_records + (GRAPHIC_HORIZONTAL_BAR-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT narrow_vertical_bar_tile = room_and_item_graphic_records + (GRAPHIC_NARROW_VERTICAL_BAR-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT wide_vertical_bar_tile = room_and_item_graphic_records + (GRAPHIC_WIDE_VERTICAL_BAR-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT column_junction_tile = room_and_item_graphic_records + (GRAPHIC_COLUMN_JUNCTION-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT solid_fill_tile = room_and_item_graphic_records + (GRAPHIC_SOLID_FILL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT stepped_fill_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FILL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT sloping_ledge_tile_a = room_and_item_graphic_records + (GRAPHIC_SLOPING_LEDGE_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT sloping_ledge_tile_b = room_and_item_graphic_records + (GRAPHIC_SLOPING_LEDGE_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT diagonal_slope_tile_a = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_SLOPE_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT diagonal_slope_tile_b = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_SLOPE_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT small_panel_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_PANEL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT striped_fill_tile = room_and_item_graphic_records + (GRAPHIC_STRIPED_FILL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT flat_fill_tile = room_and_item_graphic_records + (GRAPHIC_FLAT_FILL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT corner_fill_tile = room_and_item_graphic_records + (GRAPHIC_CORNER_FILL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT horizontal_platform_tile = room_and_item_graphic_records + (GRAPHIC_HORIZONTAL_PLATFORM-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT decorative_diamond_tile = room_and_item_graphic_records + (GRAPHIC_DECORATIVE_DIAMOND-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT diagonal_block_tile_a = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BLOCK_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT diagonal_block_tile_b = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BLOCK_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT striped_vertical_tile = room_and_item_graphic_records + (GRAPHIC_STRIPED_VERTICAL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT uniform_pattern_tile = room_and_item_graphic_records + (GRAPHIC_UNIFORM_PATTERN-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT double_bar_tile = room_and_item_graphic_records + (GRAPHIC_DOUBLE_BAR-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT pillar_base_tile = room_and_item_graphic_records + (GRAPHIC_PILLAR_BASE-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT room_and_item_graphic_records_source = room_and_item_graphic_records
 ASSERT room_and_item_graphic_records_source_end = display_action_jump_table
 COPYBLOCK room_and_item_graphic_records_source, room_and_item_graphic_records_source_end, &2610
