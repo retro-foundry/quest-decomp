@@ -57,6 +57,18 @@ foreach ($asciiPath in $asciiInputs) {
     }
 }
 
+# Executable operands must use named constants or labels. Raw values remain
+# appropriate in data declarations and exact layout assertions, but not in the
+# reconstructed 6502 instruction stream.
+$assemblySource = Join-Path $PSScriptRoot 'source_bbc\quest1.asm'
+$assemblyText = Get-Content -LiteralPath $assemblySource -Raw
+$numericInstructionPattern = '(?im)^\s*(?:ADC|AND|ASL|BIT|CMP|CPX|CPY|DEC|EOR|INC|JMP|JSR|LDA|LDX|LDY|LSR|ORA|ROL|ROR|SBC|STA|STX|STY)\s+#?(?:&[0-9A-F]+|\$[0-9A-F]+|%[01]+|[0-9]+)(?:\s*,\s*[XY])?\s*(?:;.*)?$'
+$numericInstructions = [regex]::Matches($assemblyText, $numericInstructionPattern)
+if ($numericInstructions.Count -ne 0) {
+    $firstNumericInstruction = $numericInstructions[0].Value.Trim()
+    throw "Raw numeric operand in quest1.asm; use a named constant or label: $firstNumericInstruction"
+}
+
 $variantDefinitions = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools\reconstruction\variants') -Filter '*.json' -File
 if ($variantDefinitions.Count -eq 0) {
     throw 'Standalone source has no reconstruction variant definitions.'
