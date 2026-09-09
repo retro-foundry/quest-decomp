@@ -8825,7 +8825,8 @@ CLEAR draw_fixed_pair_gap_and_bordered_rows_source, draw_fixed_pair_gap_and_bord
 
 ORG write_indexed_terminal_activation_value
 
-; Select a three-byte record with X = $90 * 3. The first
+; Select a three-byte terminal-activation record from the current primary
+; room reference. The first
 ; two bytes are a little-endian destination pointer and the third is stored
 ; through it. The accepted-password path calls this with its current reference.
 .write_indexed_terminal_activation_value_source
@@ -8838,7 +8839,7 @@ ORG write_indexed_terminal_activation_value
     STA indirect_write_pointer_low
     LDA terminal_activation_records+1,X
     STA indirect_write_pointer_high
-    LDY #&00
+    LDY #INDIRECT_RECORD_VALUE_OFFSET
     LDA terminal_activation_records+2,X
     STA (indirect_write_pointer_low),Y
     RTS
@@ -8855,20 +8856,18 @@ CLEAR write_indexed_terminal_activation_value_source, write_indexed_terminal_act
 
 ORG restore_item_and_goal_records
 
-; Restore all twelve four-byte item/goal records from the
-; initial image at $0980, then supply $59 to stamp_map_bytes_and_store by tail
-; call. The natural startup call copies exactly 48 bytes and returns directly
-; from the tail target to the caller at $0BCE. The padding NOP at $3255 is not
-; part of this bounded routine and remains in an untouched binary slice.
+; Restore all item/goal records from their immutable initial image, then tail-call
+; stamp_map_bytes_and_store with the room-B0 cell value. The reverse copy covers
+; the complete packed table; the following padding byte is not part of this routine.
 .restore_item_and_goal_records_source
-    LDX #&2F
+    LDX #ITEM_GOAL_TABLE_LAST_BYTE_INDEX
 
 .copy_next_initial_item_goal_byte
     LDA initial_item_and_goal_record_table,X
     STA item_and_goal_record_table,X
     DEX
     BPL copy_next_initial_item_goal_byte
-    LDA #&59
+    LDA #RESTORED_ROOM_B0_CELL_VALUE
     JMP stamp_map_bytes_and_store
 .restore_item_and_goal_records_source_end
 
@@ -8897,7 +8896,7 @@ ORG print_inline_vdu_stream
     PHA
 
 .print_next_inline_vdu_byte
-    LDY #&00
+    LDY #INLINE_VDU_STREAM_PROBE_OFFSET
     LDA (inline_vdu_stream_pointer_low),Y
     BEQ finish_inline_vdu_stream
     INY
@@ -8939,11 +8938,11 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
 ; to VDU units, then emits the complete stream through OSWRCH.
 .configure_and_emit_dynamic_room_object_vdu_stream_source
     PLA
-    CMP #&07
+    CMP #DYNAMIC_OBJECT_REQUIRED_COLUMN
     BNE dynamic_room_object_wrong_column_return
-    LDA #&01
+    LDA #DYNAMIC_OBJECT_VERTICAL_STEP_HIGH_INITIAL
     STA dynamic_object_vdu_vertical_step_high
-    LDA #&4B
+    LDA #DYNAMIC_OBJECT_GCOL_ACTION
     STA active_tile_pair_first
     CLC
     LDA active_tile_pair_first
@@ -8955,12 +8954,12 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
     STA dynamic_object_vdu_first_plot_x_high
     LDA room_graphics_y_low
     STA dynamic_object_vdu_first_plot_y_low
-    LDA #&00
+    LDA #DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR
     STA dynamic_object_vdu_first_plot_y_high
     LDA room_cell_mirror_state
     BPL convert_dynamic_object_coordinate_to_vdu_units
     SEC
-    LDA #&00
+    LDA #DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR
     SBC dynamic_object_vdu_vertical_step_high
     STA dynamic_object_vdu_vertical_step_high
     CLC
@@ -8970,11 +8969,11 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
     ASL A
     ADC dynamic_object_vdu_first_plot_y_low
     SEC
-    SBC #&02
+    SBC #DYNAMIC_OBJECT_MIRROR_Y_ADJUSTMENT
     STA dynamic_object_vdu_first_plot_y_low
 
 .convert_dynamic_object_coordinate_to_vdu_units
-    LDX #&04
+    LDX #DYNAMIC_OBJECT_COORDINATE_SHIFT_LAST_INDEX
 
 .shift_dynamic_object_coordinate
     ASL dynamic_object_vdu_first_plot_y_low
@@ -8982,19 +8981,19 @@ ORG configure_and_emit_dynamic_room_object_vdu_stream
     DEX
     BPL shift_dynamic_object_coordinate
     SEC
-    LDA #&E0
+    LDA #LO(DYNAMIC_OBJECT_VDU_ORIGIN)
     SBC dynamic_object_vdu_first_plot_y_low
     STA dynamic_object_vdu_first_plot_y_low
-    LDA #&03
+    LDA #HI(DYNAMIC_OBJECT_VDU_ORIGIN)
     SBC dynamic_object_vdu_first_plot_y_high
     STA dynamic_object_vdu_first_plot_y_high
-    LDX #&00
+    LDX #DYNAMIC_OBJECT_VDU_FIRST_BYTE_INDEX
 
 .emit_next_dynamic_object_vdu_byte
     LDA dynamic_room_object_vdu_stream,X
     JSR OSWRCH
     INX
-    CPX #&15
+    CPX #DYNAMIC_OBJECT_VDU_STREAM_BYTES
     BNE emit_next_dynamic_object_vdu_byte
     RTS
 .configure_and_emit_dynamic_room_object_vdu_stream_source_end
@@ -9018,18 +9017,18 @@ ORG dynamic_room_object_vdu_stream
 .dynamic_room_object_vdu_stream_source
     EQUB VDU_GRAPHICS_COLOUR
 .dynamic_object_vdu_gcol_action_source
-    EQUB &00, &03
-    EQUB VDU_PLOT, &04, &00
+    EQUB DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR, DYNAMIC_OBJECT_GCOL_LOGICAL_COLOUR
+    EQUB VDU_PLOT, DYNAMIC_OBJECT_FIRST_PLOT_ACTION, LO(DYNAMIC_OBJECT_VDU_ZERO_COORDINATE)
 .dynamic_object_vdu_first_plot_x_high_source
-    EQUB &00
+    EQUB DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR
 .dynamic_object_vdu_first_plot_y_low_source
-    EQUB &00
+    EQUB DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR
 .dynamic_object_vdu_first_plot_y_high_source
-    EQUB &00
-    EQUB VDU_PLOT, &01, &00, &01, &00, &00
-    EQUB VDU_PLOT, &51, &80, &FF, &00
+    EQUB DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR
+    EQUB VDU_PLOT, DYNAMIC_OBJECT_SECOND_PLOT_ACTION, LO(DYNAMIC_OBJECT_SECOND_PLOT_X), HI(DYNAMIC_OBJECT_SECOND_PLOT_X), LO(DYNAMIC_OBJECT_VDU_ZERO_COORDINATE), HI(DYNAMIC_OBJECT_VDU_ZERO_COORDINATE)
+    EQUB VDU_PLOT, DYNAMIC_OBJECT_THIRD_PLOT_ACTION, LO(DYNAMIC_OBJECT_THIRD_PLOT_X), HI(DYNAMIC_OBJECT_THIRD_PLOT_X), LO(DYNAMIC_OBJECT_VDU_ZERO_COORDINATE)
 .dynamic_object_vdu_vertical_step_high_source
-    EQUB &00
+    EQUB DYNAMIC_OBJECT_COORDINATE_HIGH_CLEAR
 .dynamic_room_object_vdu_stream_source_end
 
 ASSERT dynamic_room_object_vdu_stream_source = dynamic_room_object_vdu_stream
@@ -9048,15 +9047,12 @@ CLEAR dynamic_room_object_vdu_stream_source, dynamic_room_object_vdu_stream_sour
 
 ORG stamp_map_bytes_and_store
 
-; Store the accumulator at $37FE, then write $69 into three
-; fixed addresses at $09D3, $09E2 and $09E8.
-; The three destinations are not contiguous and are outside the record tables
-; that begin at $0900, so this stamps three specific map or state bytes rather
-; than filling a range. What $69 means at those addresses is not established by
-; this routine alone.
+; Store the caller-supplied room-B0 cell value, then restore the common
+; appearance value for rooms D4, C6 and A7. These are named, independent state
+; locations rather than a contiguous fill.
 .stamp_map_bytes_and_store_source
     STA room_B0_row_1_cell_1
-    LDA #&69
+    LDA #RESTORED_SPECIAL_ROOM_APPEARANCE
     STA room_D4_appearance
     STA room_C6_appearance
     STA room_A7_appearance
@@ -9074,19 +9070,18 @@ CLEAR stamp_map_bytes_and_store_source, stamp_map_bytes_and_store_source_end
 
 ORG dispatch_completed_crystal_message
 
-; Completed-game main-loop exit helper. It chooses decoder
-; offset zero normally or $36 when the sequence counter is zero. If crystals
+; Completed-game main-loop exit helper. It chooses the normal decoder entry or
+; the initial-sequence entry while the sequence counter is zero. If crystals
 ; remain, the exact original PLA/RTS exit is retained; if none remain it
-; tail-jumps to the transient stack-page XOR/OSWRCH decoder at $0100.
+; tail-jumps to the transient stack-page XOR/OSWRCH decoder.
 ; Focused traces prove both zero-crystal message offsets. A contradictory
-; nonzero-crystal checkpoint proves the PLA/RTS path does not return normally:
-; it discards part of the JSR return and transfers to $3F26. Legitimate play
-; reaches this helper only after the count is zero.
+; nonzero-crystal checkpoint proves the PLA/RTS path does not return normally.
+; Legitimate play reaches this helper only after the count is zero.
 .dispatch_completed_crystal_message_source
-    LDX #&00
+    LDX #COMPLETED_MESSAGE_DEFAULT_OFFSET
     LDA main_loop_sequence_counter
     BNE completed_crystal_message_offset_selected
-    LDX #&36
+    LDX #COMPLETED_MESSAGE_INITIAL_OFFSET
 
 .completed_crystal_message_offset_selected
     LDA power_crystals_remaining
