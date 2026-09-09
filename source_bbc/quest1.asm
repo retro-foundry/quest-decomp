@@ -162,8 +162,14 @@ COPYBLOCK room_cell_map_alignment_source, room_cell_map_alignment_source_end, &4
 CLEAR room_cell_map_alignment_source, room_cell_map_alignment_source_end
 
 ORG room_cell_map
-; Runtime $37D0-$3C7F: complete room-cell map. Each level occupies $78
-; bytes: three row planes, each holding eight rooms of five cells.
+; Complete room-cell map. Each level occupies ROOM_LEVEL_MAP_BYTES: three row
+; planes, each holding eight rooms of ROOM_CELLS_PER_DRAW_ROW cells. For bytes
+; with ROOM_CELL_CHARACTER_ROW_FLAG clear, the low six bits select a named
+; ROOM_CELL_* handler and ROOM_CELL_MIRROR_FLAG reverses its drawing column.
+; With the character-row flag set, the low six bits are the MOS character index
+; and ROOM_CHARACTER_HIGH_SET_FLAG selects the upper character set. Every row
+; below has a room-and-row label so mutable gameplay cells can be referenced
+; without addresses.
 .room_cell_map_source
 ; Level 0
 .room_A0_row_0_cells
@@ -3965,10 +3971,11 @@ ORG initialise_new_game
     DEY
     BNE clear_next_icon_slot
 
-    ; Draw graphic record 2 three times at the collected-icon row, then seed
-    ; both live and previous-frame player pointers to $7460. The initial player
-    ; grid position is horizontal $1C, vertical $B0. Enter the main loop through
-    ; its fixed jump-table vector; if it returns, restart initialization.
+    ; Draw STATUS_GRAPHIC_INITIAL_MARKER three times at the collected-icon row,
+    ; then seed both live and previous-frame player pointers at
+    ; player_initial_display_pointer. The initial grid position uses
+    ; NEW_GAME_PLAYER_HORIZONTAL_POSITION and NEW_GAME_PLAYER_VERTICAL_POSITION.
+    ; Enter the main loop through its fixed vector; if it returns, restart.
     LDA #LO(collected_icon_next_slot_base)
     STA display_pointer_low
     LDA #HI(collected_icon_next_slot_base)
@@ -6501,12 +6508,12 @@ CLEAR draw_table_selected_four_tile_half_row_source, draw_table_selected_four_ti
 
 ORG right_half_four_tile_graphic_sequences
 ; Four four-selector records indexed directly by room columns zero through
-; three for cell type $11.
+; three for ROOM_CELL_FOUR_TILE_HALF_ROW.
 .right_half_four_tile_graphic_sequences_source
-    EQUB &1F, &16, &21, &22 ; column zero
-    EQUB &16, &16, &61, &23 ; column one
-    EQUB &25, &1D, &25, &24 ; column two
-    EQUB &25, &00, &25, &00 ; column three
+    EQUB GRAPHIC_CORNER_FILL, GRAPHIC_SOLID_FILL, GRAPHIC_DECORATIVE_DIAMOND, GRAPHIC_DIAGONAL_BLOCK_A ; column zero
+    EQUB GRAPHIC_SOLID_FILL, GRAPHIC_SOLID_FILL, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DECORATIVE_DIAMOND, GRAPHIC_DIAGONAL_BLOCK_B ; column one
+    EQUB GRAPHIC_UNIFORM_PATTERN, GRAPHIC_STRIPED_FILL, GRAPHIC_UNIFORM_PATTERN, GRAPHIC_STRIPED_VERTICAL ; column two
+    EQUB GRAPHIC_UNIFORM_PATTERN, GRAPHIC_BLANK, GRAPHIC_UNIFORM_PATTERN, GRAPHIC_BLANK ; column three
 .right_half_four_tile_graphic_sequences_source_end
 ASSERT right_half_four_tile_graphic_sequences_source = right_half_four_tile_graphic_sequences
 ASSERT right_half_four_tile_graphic_sequences_source_end = draw_graphic_selector_sequence
