@@ -1253,15 +1253,15 @@ ORG room_moving_object_graphic_state
 ; consumers run. Keeping each byte explicit documents the intentional overlap
 ; and prevents these variables being mistaken for 6502 instructions.
 .room_render_state_source
-    EQUB &00                         ; room_moving_object_graphic_state, slot 0
-    EQUB &00                         ; room_moving_object_graphic_selector_lower_limit, slot 1
-    EQUB &00                         ; room_moving_object_graphic_selector_upper_limit, slot 2
-    EQUB &00                         ; room_moving_objects_active, slot 3
-    EQUB &00                         ; active_enemy_species
-    EQUB &00                         ; active_enemy_last_slot_index
-    EQUB &00                         ; room_moving_object_slot_limit
-    EQUB &00                         ; graphic_source_base_pointer_offset
-    EQUB &00                         ; complete_current_room_cell
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; room_moving_object_graphic_state, slot 0
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; room_moving_object_graphic_selector_lower_limit, slot 1
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; room_moving_object_graphic_selector_upper_limit, slot 2
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; room_moving_objects_active, slot 3
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; active_enemy_species
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; active_enemy_last_slot_index
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; room_moving_object_slot_limit
+    EQUB GRAPHIC_BANK_PRIMARY_OFFSET ; graphic_source_base_pointer_offset
+    EQUB ROOM_INITIAL_STATE_CLEAR    ; complete_current_room_cell
 .room_render_state_source_end
 
 ASSERT room_render_state_source = room_moving_object_graphic_state
@@ -1277,7 +1277,7 @@ ORG DISPLAY_ACTION_STATE_ALIGNMENT_ADDRESS
 ; committed static reference or trace treats this span as executable.
 .display_action_state_alignment_source
     SKIP 6
-    EQUB &EA
+    NOP
 .display_action_state_alignment_source_end
 
 ASSERT display_action_state_alignment_source = &1216
@@ -2794,7 +2794,7 @@ CLEAR lift_and_hazard_graphic_descriptor_table_source, lift_and_hazard_graphic_d
 ORG terminal_interaction_result
 ; Mutable result byte initialised to zero in the loaded image.
 .terminal_interaction_result_source
-    EQUB &00
+    EQUB TERMINAL_RESULT_NONE
 .terminal_interaction_result_source_end
 ASSERT terminal_interaction_result_source = terminal_interaction_result
 ASSERT terminal_interaction_result_source_end = run_terminal_interaction
@@ -2893,7 +2893,7 @@ CLEAR terminal_activation_records_source, terminal_activation_records_source_end
 ORG status_panel_alignment_padding
 ; Zero alignment byte between the status-panel divider and warp routine.
 .status_panel_alignment_padding_source
-    EQUB &00
+    SKIP 1
 .status_panel_alignment_padding_source_end
 ASSERT status_panel_alignment_padding_source = status_panel_alignment_padding
 ASSERT status_panel_alignment_padding_source_end = warp_to_room_3_4
@@ -2948,7 +2948,7 @@ CLEAR initial_sound_parameter_block_source, initial_sound_parameter_block_source
 ORG music_tune_progress
 ; Mutable new-game tune progress, initially zero.
 .music_tune_progress_source
-    EQUB &00
+    EQUB MUSIC_TUNE_PROGRESS_RESET
 .music_tune_progress_source_end
 ASSERT music_tune_progress_source = music_tune_progress
 ASSERT music_tune_progress_source_end = &32C0
@@ -7414,7 +7414,7 @@ ORG draw_room_sign_or_collect_password
     JSR print_inline_vdu_stream
 .password_equals_inline_text
     EQUS "="
-    EQUB &00
+    EQUB STRING_TERMINATOR
 .password_equals_inline_text_end
     LDY #PASSWORD_CHARACTER_COUNT
 
@@ -10953,7 +10953,7 @@ ORG room_sign_text_table
     EQUS " Music   Room   "
 .level_sector_sign
     EQUS "Level | Sector|"
-    EQUB &00
+    EQUB STRING_TERMINATOR
 .elephant_house_sign
     EQUS "ELEPHANT  HOUSE "
 .joke_shop_sign
@@ -10982,7 +10982,7 @@ ORG room_sign_text_table
     EQUS "         Chapel "
 .terminal_password_prompt
     EQUS "PASSWORD>"
-    EQUB &00
+    EQUB STRING_TERMINATOR
 .room_sign_text_table_source_end
 ASSERT room_sign_text_table_source = room_sign_text_table
 ASSERT room_sign_text_table_source_end = across_to_password_number
@@ -11499,7 +11499,7 @@ CLEAR unused_runtime_low_tail_bytes_source, unused_runtime_low_tail_bytes_source
 ; separate generated authority slices.
 ORG graphic_copy_alignment_padding
 .graphic_copy_alignment_padding_source
-    EQUB &00
+    SKIP 1
 .graphic_copy_alignment_padding_source_end
 ASSERT graphic_copy_alignment_padding_source = graphic_copy_alignment_padding
 ASSERT graphic_copy_alignment_padding_source_end = apply_mirror_flag_then_copy_graphic
@@ -11757,7 +11757,7 @@ CLEAR transient_stack_page_padding_source, transient_stack_page_padding_source_e
 ORG chained_irq1v_vector
 .irq_workspace_prefix_source
     EQUW NULL_POINTER               ; replaced with the previous IRQ1V by loader
-    EQUB &00                        ; lower-screen palette base initial value
+    EQUB LOWER_SCREEN_PALETTE_INITIAL_VALUE
 .irq_workspace_prefix_source_end
 ASSERT irq_workspace_prefix_source_end = irq1v_handler
 COPYBLOCK irq_workspace_prefix_source, irq_workspace_prefix_source_end, &5BB0
@@ -11769,7 +11769,7 @@ CLEAR irq_workspace_prefix_source, irq_workspace_prefix_source_end
 ; entry which starts at the catalogue execution address $5C11.
 ORG IRQ_RELOCATION_TRAILING_ZERO_ADDRESS
 .irq_relocation_trailing_zero_source
-    EQUB &00
+    EQUB IRQ_RELOCATION_TRAILING_VALUE
 .irq_relocation_trailing_zero_source_end
 ASSERT irq_relocation_trailing_zero_source_end = &03E1
 COPYBLOCK irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end, &5C10
