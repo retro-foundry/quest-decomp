@@ -1532,20 +1532,20 @@ CLEAR display_action_state_alignment_source, display_action_state_alignment_sour
 
 ORG display_pattern_test
 
-; Runtime $2A4E-$2A88. Test whether the display under the current pointer matches
+; Test whether the display under the current pointer matches
 ; a graphic record, returning carry set only if every sampled byte agrees.
-; The record index in A is shifted left four times and biased by $0E05, the same
-; sixteen-byte record addressing the blitter uses. Four bytes are then compared,
-; at offsets 0, 8, 2 and 10: the inner loop steps by 8 twice and the outer
-; correction subtracts $0E, which turns the second pass into offsets 2 and 10.
+; The record index in A uses the common sixteen-byte graphic-record scale and
+; graphic_pattern_sample_base. Four bytes are compared at offsets 0, 8, 2 and
+; 10: each pair is one Mode 1 cell column apart, and the row correction turns
+; the post-pair offset sixteen into the second-row offset two.
 ; The first mismatch returns carry clear immediately, so a full match costs four
 ; comparisons and a failure usually costs one, which is why the entry runs 2,659
 ; times but the match path only 8.
 .display_pattern_test_source
     STA graphic_pattern_record_offset_low
-    LDA #&00
+    LDA #GRAPHIC_RECORD_FIRST_BYTE_INDEX
     STA graphic_pattern_record_offset_high
-    LDX #&04
+    LDX #GRAPHIC_RECORD_INDEX_SHIFT
 
 .shift_pattern_index_to_record_offset
     ASL graphic_pattern_record_offset_low
@@ -1559,12 +1559,12 @@ ORG display_pattern_test
     LDA #HI(graphic_pattern_sample_base)
     ADC graphic_pattern_record_offset_high
     STA graphic_source_pointer_high
-    LDY #&00
+    LDY #DISPLAY_PATTERN_FIRST_SAMPLE_OFFSET
 
 .compare_next_sample_pair
-    LDX #&02
+    LDX #DISPLAY_PATTERN_SAMPLE_PAIR_COUNT
 
-.display_pattern_test_branch_3
+.compare_current_pattern_sample
     LDA (display_pointer_low),Y
     CMP (graphic_source_pointer_low),Y
     BEQ step_to_next_sample
@@ -1574,15 +1574,15 @@ ORG display_pattern_test
 .step_to_next_sample
     TYA
     CLC
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     TAY
     DEX
-    BNE display_pattern_test_branch_3
+    BNE compare_current_pattern_sample
     TYA
     SEC
-    SBC #&0E
+    SBC #DISPLAY_PATTERN_NEXT_ROW_CORRECTION
     TAY
-    CPY #&02
+    CPY #DISPLAY_PATTERN_SECOND_ROW_OFFSET
     BEQ compare_next_sample_pair
     SEC
     RTS
@@ -1599,21 +1599,20 @@ CLEAR display_pattern_test_source, display_pattern_test_source_end
 
 ORG store_byte_and_advance_source_pointer
 
-; Runtime $124E-$125C. Write A through the pointer at $7A/$7B indexed by Y, then
-; advance that pointer by 8, one Mode 1 character cell, carrying into the high
+; Write A through graphic_source_pointer indexed by Y, then advance that pointer
+; by one Mode 1 character cell, carrying into the high
 ; byte only on wrap. X is decremented so a caller can use it as a count.
-; $7A/$7B is named as the graphic source pointer because that is what the
-; renderers use it for; here it is the destination.
+; The pointer is named for its renderer role; here it is the destination.
 .store_byte_and_advance_source_pointer_source
     STA (graphic_source_pointer_low),Y
     CLC
     LDA graphic_source_pointer_low
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     STA graphic_source_pointer_low
-    BCC store_byte_and_advance_source_pointer_branch_1
+    BCC source_pointer_advanced_after_store
     INC graphic_source_pointer_high
 
-.store_byte_and_advance_source_pointer_branch_1
+.source_pointer_advanced_after_store
     DEX
     RTS
 .store_byte_and_advance_source_pointer_source_end
