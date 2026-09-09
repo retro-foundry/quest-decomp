@@ -1253,7 +1253,7 @@ ORG main_gameplay_loop
     JSR print_inline_vdu_stream
 
 .reincarnate_prompt_vdu_stream
-    EQUB &1F, &0A, &0F
+    EQUB VDU_TEXT_AT, &0A, &0F
     EQUS "REINCARNATE? (Y or N)"
     EQUB &00
 
@@ -1268,7 +1268,7 @@ ORG main_gameplay_loop
 .show_game_over
     JSR print_inline_vdu_stream
 .game_over_vdu_stream
-    EQUB &1F, &10, &11
+    EQUB VDU_TEXT_AT, &10, &11
     EQUS "GAME OVER"
     EQUB &00
     JSR write_system_clock_via_osword_02
@@ -2566,7 +2566,7 @@ ORG advance_bcd_counter_and_print
     JSR print_inline_vdu_stream
 
 .bcd_counter_cursor_vdu_stream
-    EQUB &1F, &01, &04, &00
+    EQUB VDU_TEXT_AT, &01, &04, INLINE_VDU_STREAM_END
 .bcd_counter_cursor_vdu_stream_end
 
     LDA bcd_counter_high
@@ -4400,7 +4400,7 @@ ORG run_startup_room_sequence_until_space
     JSR print_inline_vdu_stream
 
 .startup_press_space_vdu_stream
-    EQUB &1F, &0E, &07
+    EQUB VDU_TEXT_AT, &0E, &07
     EQUS " PRESS SPACE "
     EQUB &00
 
@@ -5383,7 +5383,7 @@ ORG process_terminal_password_markers
     BEQ terminal_password_flag_absent_step
     JSR print_inline_vdu_stream
 .terminal_password_list_cursor_source
-    EQUB &1F, &1B, &00
+    EQUB VDU_TEXT_AT, &1B, &00
     LDA shared_workspace_33
     JSR OSWRCH
     INC shared_workspace_33
@@ -5416,23 +5416,23 @@ ORG terminal_interaction_text_stream
 ; current password; $FE selects the granted continuation; $FF skips to the next
 ; message alternative.
 .terminal_interaction_text_stream_source
-    EQUB &1F, &07, &13
+    EQUB VDU_TEXT_AT, &07, &13
     EQUS "TERMINAL "
     EQUB &00
-    EQUB &1F, &1A, &11
+    EQUB VDU_TEXT_AT, &1A, &11
     EQUS "PASSWORDS"
     EQUB &FC
-    EQUB &1F, &05, &17
+    EQUB VDU_TEXT_AT, &05, &17
     EQUS "ACCESS "
     EQUB &FE
     EQUS "GRANTED"
     EQUB &FD
-    EQUB &1F, &07, &1A
+    EQUB VDU_TEXT_AT, &07, &1A
     EQUS "ACTIVATED"
     EQUB &FF
     EQUS " DENIED"
     EQUB &FF
-    EQUB &1F, &04, &1A
+    EQUB VDU_TEXT_AT, &04, &1A
     EQUS "INVALID PASSWORD"
     EQUB &FF, &00
 .terminal_interaction_text_stream_source_end
@@ -7589,7 +7589,7 @@ ORG draw_room_sign_or_collect_password
     STA display_pointer_high
     JSR print_inline_vdu_stream
 .room_sign_cursor_prefix
-    EQUB &11, &02, &11, &83, &1F, &00
+    EQUB VDU_TEXT_COLOUR, &02, VDU_TEXT_COLOUR, &83, VDU_TEXT_AT, &00
 .room_sign_cursor_prefix_end
 
     LDA shared_workspace_03
@@ -7644,7 +7644,7 @@ ORG draw_room_sign_or_collect_password
 .finish_room_sign_line
     JSR print_inline_vdu_stream
 .room_sign_second_line_cursor
-    EQUB &11, &01, &11, &80, &00
+    EQUB VDU_TEXT_COLOUR, &01, VDU_TEXT_COLOUR, &80, INLINE_VDU_STREAM_END
 .room_sign_second_line_cursor_end
     RTS
 
@@ -9014,18 +9014,18 @@ ORG dynamic_room_object_vdu_stream
 ; high byte of the final relative vertical displacement before sending all 21
 ; bytes through OSWRCH. The untouched operands are explicit source constants.
 .dynamic_room_object_vdu_stream_source
-    EQUB &12
+    EQUB VDU_GRAPHICS_COLOUR
 .dynamic_object_vdu_gcol_action_source
     EQUB &00, &03
-    EQUB &19, &04, &00
+    EQUB VDU_PLOT, &04, &00
 .dynamic_object_vdu_first_plot_x_high_source
     EQUB &00
 .dynamic_object_vdu_first_plot_y_low_source
     EQUB &00
 .dynamic_object_vdu_first_plot_y_high_source
     EQUB &00
-    EQUB &19, &01, &00, &01, &00, &00
-    EQUB &19, &51, &80, &FF, &00
+    EQUB VDU_PLOT, &01, &00, &01, &00, &00
+    EQUB VDU_PLOT, &51, &80, &FF, &00
 .dynamic_object_vdu_vertical_step_high_source
     EQUB &00
 .dynamic_room_object_vdu_stream_source_end
@@ -10781,15 +10781,15 @@ ORG show_golden_dragon_ending
     JSR print_inline_vdu_stream
 
 .golden_dragon_inline_message
-    EQUB &1F, &0A, &07
+    EQUB VDU_TEXT_AT, &0A, &07
     EQUS "THE"
-    EQUB &1F, &09, &09
+    EQUB VDU_TEXT_AT, &09, &09
     EQUS "GOLDEN"
-    EQUB &1F, &09, &0D
+    EQUB VDU_TEXT_AT, &09, &0D
     EQUS "DRAGON"
-    EQUB &1F, &13, &12, &81, &20, &81
-    EQUB &1F, &1B, &12, &81, &20, &81
-    EQUB &00
+    EQUB VDU_TEXT_AT, &13, &12, &81, &20, &81
+    EQUB VDU_TEXT_AT, &1B, &12, &81, &20, &81
+    EQUB INLINE_VDU_STREAM_END
 .golden_dragon_inline_message_end
 
     LDA #&FF
