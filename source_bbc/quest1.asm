@@ -1648,41 +1648,40 @@ CLEAR enter_copy_16_byte_graphic_to_display_source, enter_copy_16_byte_graphic_t
 
 ORG write_twelve_video_ula_palette_entries
 
-; Runtime $125D-$1268. The IRQ handler calls this entry once in every observed
+; The IRQ handler calls this entry once in every observed
 ; IRQ sample. It supplies three fixed accumulator values to the four-entry
 ; palette helper: two ordinary JSRs followed by a final fall-through. The
 ; complete call therefore writes twelve Video ULA palette commands, preserves
-; X and Y, and returns A = $D3 through the helper's RTS.
+; X and Y, and returns the final encoded palette command through the helper.
 .write_twelve_video_ula_palette_entries_source
-    LDA #&A3
+    LDA #VIDEO_ULA_PALETTE_BATCH_0_SEED
     JSR write_four_video_ula_palette_entries
-    LDA #&21
+    LDA #VIDEO_ULA_PALETTE_BATCH_1_SEED
     JSR write_four_video_ula_palette_entries
-    LDA #&84
+    LDA #VIDEO_ULA_PALETTE_BATCH_2_SEED
 .write_twelve_video_ula_palette_entries_source_end
 
 ASSERT write_twelve_video_ula_palette_entries_source = write_twelve_video_ula_palette_entries
 ASSERT write_twelve_video_ula_palette_entries_source_end = &1269
 COPYBLOCK write_twelve_video_ula_palette_entries_source, write_twelve_video_ula_palette_entries_source_end, &2A5D
 
-; Runtime $1269-$1283.
 ; Evidence-backed behavior: write four related palette commands to the BBC
-; Video ULA palette register at $FE21. The accumulator and stack behavior are
+; Video ULA palette register. The accumulator and stack behavior are
 ; deliberately preserved instruction for instruction.
 .write_four_video_ula_palette_entries
-    EOR #&07
+    EOR #VIDEO_ULA_PHYSICAL_COLOUR_XOR_MASK
     PHA
     STA VIDEO_ULA_PALETTE
     PLA
     PHA
-    ORA #&40
+    ORA #VIDEO_ULA_LOGICAL_COLOUR_1_BITS
     STA VIDEO_ULA_PALETTE
     PLA
     PHA
-    ORA #&10
+    ORA #VIDEO_ULA_LOGICAL_COLOUR_2_BITS
     STA VIDEO_ULA_PALETTE
     PLA
-    ORA #&50
+    ORA #VIDEO_ULA_LOGICAL_COLOUR_3_BITS
     STA VIDEO_ULA_PALETTE
     RTS
 .write_four_video_ula_palette_entries_end
@@ -1692,38 +1691,38 @@ COPYBLOCK write_four_video_ula_palette_entries, write_four_video_ula_palette_ent
 
 ORG draw_room_enemy_with_xor_graphic
 
-; Runtime $3532-$3557. Draw the graphic for the Y-indexed room enemy. It sets
-; the character-row count to 1. Moths, or rooms whose last slot index is below
-; two, first configure a two-row graphic with doubled source scanlines. Bit 1
-; of the entry field at $68 then selects a row count of 8 or $0A in X, after
-; which the display pointer is loaded and the XOR renderer is tail-called.
+; Draw the graphic for the Y-indexed room enemy. Ordinary enemy frames occupy
+; one character row. Moths, or records whose last slot is below the named
+; threshold, configure a two-row graphic with doubled source scanlines. Bit 1
+; of the horizontal position selects frame 0 or frame 1, after which the display
+; pointer is loaded and the XOR renderer is tail-called.
 ;
 ; This is the enemy renderer. Suppressing it was tested in play and the enemy
 ; robots disappeared while the lifts kept working, which is the strongest thing
-; known about any of the four sprite renderers. The species, last slot, $68 and
-; pointer at $47/$48 are exactly the fields initialise_room_enemy_from_table
-; unpacks from the $0A00 record table, so the
+; known about any of the four sprite renderers. The species, last slot,
+; horizontal position, and display pointer are exactly the fields
+; initialise_room_enemy_from_table unpacks from room_enemy_record_table, so the
 ; table and the renderer are the same subsystem.
 .draw_room_enemy_with_xor_graphic_source
-    LDA #&01
+    LDA #ROOM_ENEMY_DEFAULT_CHARACTER_ROWS
     STA xor_graphic_character_rows_remaining
     LDA active_enemy_species
     CMP #ENEMY_SPECIES_MOTH
     BEQ configure_two_row_repeat_for_entity
     LDA active_enemy_last_slot_index
-    CMP #&02
+    CMP #ROOM_ENEMY_TWO_ROW_SLOT_THRESHOLD
     BPL select_entity_row_count
 
 .configure_two_row_repeat_for_entity
     JSR configure_two_row_repeated_xor_graphic
 
 .select_entity_row_count
-    LDX #&08
+    LDX #ROOM_ENEMY_FRAME_0_POINTER_OFFSET
     LDA moving_entity_horizontal_position,Y
     ROR A
     ROR A
     BCS load_pointer_then_draw_entity
-    LDX #&0A
+    LDX #ROOM_ENEMY_FRAME_1_POINTER_OFFSET
 
 .load_pointer_then_draw_entity
     JSR load_room_enemy_display_pointer
