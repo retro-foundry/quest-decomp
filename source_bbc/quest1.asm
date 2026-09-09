@@ -5861,7 +5861,7 @@ ORG dispatch_room_cell
     EQUW draw_fixed_pair_gap_row-1 ; ROOM_CELL_FIXED_PAIR_GAP
     EQUW draw_bordered_checker_diagonal_row-1 ; ROOM_CELL_BORDERED_CHECKER
     EQUW draw_and_configure_dynamic_room_object-1 ; ROOM_CELL_DYNAMIC_OBJECT
-    EQUW enter_room_object_configuration_with_0e_10-1 ; ROOM_CELL_OBJECT_0E_10
+    EQUW draw_or_configure_secondary_dynamic_object-1 ; ROOM_CELL_SECONDARY_DYNAMIC_OBJECT
     EQUW draw_centered_alternating_run_by_column-1 ; ROOM_CELL_CENTERED_ALTERNATING
     EQUW draw_alternating_only_in_columns_three_or_seven-1 ; ROOM_CELL_ALTERNATING_COLUMNS_3_7
     EQUW draw_alternating_only_in_column_three-1 ; ROOM_CELL_ALTERNATING_COLUMN_3
@@ -8613,23 +8613,23 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 ; traced through the room-cell dispatcher. The remaining cluster contains
 ; entries $1904, $1916, $1974, $1981 and $19A0. The bordered painter selects
 ; end/interior graphic records from column zero, seven or the middle columns.
-; The $1904/$1916 entries gate a record-$26 dynamic-room-object setup on tile-
-; pair selector $07, populate the dynamic-object slot bound, lower position and
+; The two dynamic-object entries gate a GRAPHIC_DOUBLE_BAR room-object setup on
+; DYNAMIC_OBJECT_REQUIRED_TILE_PAIR, populate the slot bound, lower position and
 ; class, and call the existing object helpers while preserving the display pointer.
 ; Cell $2E enables water_environment_flag and blanks the
 ; selector-matching column and otherwise enters the right-half alternating
 ; handler. Cell $35 draws blanks around an odd alternating run derived from the
 ; column. Cell $2F selects ROOM_INTERACTION_LONG_ICON_EFFECT, draws its special
-; row and saves the cell/
-; display pointers. Natural traces cover the first 95 instructions; three
+; row and saves the cell/display pointers. Natural traces cover the first 95
+; instructions; three
 ; focused real-dispatch fixtures cover every remaining cell-$2E/$35 instruction
 ; with exact authority/rebuild parity.
 .draw_fixed_pair_gap_and_bordered_rows_source
-    LDX #&02
+    LDX #FIXED_PAIR_GAP_EDGE_TILE_COUNT
     JSR draw_fixed_pair_tile_run+2
-    LDX #&04
+    LDX #FIXED_PAIR_GAP_BLANK_TILE_COUNT
     JSR draw_blank_tile_run
-    LDX #&02
+    LDX #FIXED_PAIR_GAP_EDGE_TILE_COUNT
     JMP draw_fixed_pair_tile_run+2
 
 .draw_bordered_checker_diagonal_row_source
@@ -8637,11 +8637,11 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     STX bordered_row_interior_graphic
 
 .draw_bordered_row_with_selected_interior_source
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BNE draw_bordered_row_last_or_middle_column
     LDA #GRAPHIC_DIAGONAL_SLOPE_A
     JSR copy_16_byte_graphic_to_display
-    LDX #&06
+    LDX #BORDERED_ROW_INTERIOR_TILE_COUNT
     JSR draw_blank_tile_run
     LDA #GRAPHIC_DIAGONAL_SLOPE_B
     JMP copy_16_byte_graphic_to_display
@@ -8650,7 +8650,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     LDA #GRAPHIC_FLAT_FILL
     JSR copy_16_byte_graphic_to_display
     LDA bordered_row_interior_graphic
-    LDX #&06
+    LDX #BORDERED_ROW_INTERIOR_TILE_COUNT
 
 .draw_next_bordered_row_interior_tile
     JSR copy_16_byte_graphic_to_display
@@ -8660,11 +8660,11 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     JMP copy_16_byte_graphic_to_display
 
 .draw_bordered_row_last_or_middle_column
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BNE draw_bordered_row_middle_column
     LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_B
     JSR copy_16_byte_graphic_to_display
-    LDX #&06
+    LDX #BORDERED_ROW_INTERIOR_TILE_COUNT
     LDA #GRAPHIC_HORIZONTAL_PLATFORM
 
 .draw_next_last_column_interior_tile
@@ -8674,15 +8674,15 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A
     JMP copy_16_byte_graphic_to_display
 
-.enter_room_object_configuration_with_0e_10_source
+.draw_or_configure_secondary_dynamic_object_source
     LDA tile_pair_source_selector
-    BEQ mark_record_counter_and_draw_blank_row
-    LDY #&0E
-    LDX #&10
-    JMP require_dynamic_object_selector_seven
+    BEQ enable_secondary_lift_hazard_updates_and_draw_blank_row
+    LDY #DYNAMIC_OBJECT_SECONDARY_SLOT_START
+    LDX #DYNAMIC_OBJECT_SECONDARY_SLOT_END
+    JMP require_dynamic_object_tile_pair
 
-.mark_record_counter_and_draw_blank_row
-    LDA #&01
+.enable_secondary_lift_hazard_updates_and_draw_blank_row
+    LDA #LIFT_HAZARD_UPDATES_ACTIVE
     STA lift_hazard_secondary_updates_active
 
 .draw_blank_dynamic_object_row
@@ -8691,41 +8691,41 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 .draw_and_configure_dynamic_room_object_source
     LDA tile_pair_source_selector
     BEQ mark_dynamic_room_object_present
-    LDX #&08
-    LDY #&00
-    JMP require_dynamic_object_selector_seven
+    LDX #DYNAMIC_OBJECT_PRIMARY_SLOT_END
+    LDY #DYNAMIC_OBJECT_PRIMARY_SLOT_START
+    JMP require_dynamic_object_tile_pair
 
 .mark_dynamic_room_object_present
-    LDA #&01
+    LDA #LIFT_HAZARD_UPDATES_ACTIVE
     STA lift_hazard_primary_updates_active
 
-.require_dynamic_object_selector_seven
-    CMP #&07
+.require_dynamic_object_tile_pair
+    CMP #DYNAMIC_OBJECT_REQUIRED_TILE_PAIR
     BNE draw_blank_dynamic_object_row
     CMP room_graphics_column
-    BNE configure_dynamic_object_outside_column_seven
-    LDA #&D0
+    BNE configure_dynamic_object_outside_last_column
+    LDA #DYNAMIC_OBJECT_COLUMN_LAST_LOWER_POSITION
     STA lift_or_hazard_lower_position
-    LDA #&00
+    LDA #LIFT_OR_HAZARD_LIFT
     JMP store_dynamic_room_object_class
 
-.configure_dynamic_object_outside_column_seven
-    LDA #&CC
+.configure_dynamic_object_outside_last_column
+    LDA #DYNAMIC_OBJECT_OTHER_COLUMN_LOWER_POSITION
     STA lift_or_hazard_lower_position
-    LDA #&01
+    LDA #LIFT_OR_HAZARD_HAZARD
 
 .store_dynamic_room_object_class
     STA active_lift_or_hazard_class
     STX dynamic_room_object_slot_end
     JSR initialise_four_dynamic_room_object_slots
-    LDX #&08
+    LDX #DYNAMIC_OBJECT_TILE_COUNT
 
 .draw_next_dynamic_room_object_tile
     LDA #GRAPHIC_DOUBLE_BAR
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_dynamic_room_object_tile
-    LDA #&00
+    LDA #DYNAMIC_OBJECT_SLOT_LIMIT_NONE
     STA lift_and_hazard_slot_limit
     JSR copy_lift_or_hazard_descriptor_for_active_class
     LDA display_pointer_low
@@ -8734,7 +8734,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     PHA
     LDA dynamic_room_object_slot_end
     SEC
-    SBC #&08
+    SBC #DYNAMIC_OBJECT_PRIMARY_SLOT_END
     TAY
 
 .submit_next_dynamic_room_object_slot
@@ -8760,10 +8760,10 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     JMP draw_eight_blank_tiles
 
 .draw_centered_alternating_run_by_column_source
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BEQ draw_blank_selected_pattern_column
     SEC
-    LDA #&07
+    LDA #ROOM_COLUMN_LAST
     SBC room_graphics_column
     LSR A
     STA room_pattern_selector_state
@@ -8789,7 +8789,7 @@ ASSERT draw_fixed_pair_gap_and_bordered_rows_source = draw_fixed_pair_gap_and_bo
 ASSERT draw_fixed_pair_gap_and_bordered_rows_source = draw_fixed_pair_gap_row
 ASSERT draw_bordered_checker_diagonal_row_source = draw_bordered_checker_diagonal_row
 ASSERT draw_bordered_row_with_selected_interior_source = draw_bordered_row_with_selected_interior
-ASSERT enter_room_object_configuration_with_0e_10_source = enter_room_object_configuration_with_0e_10
+ASSERT draw_or_configure_secondary_dynamic_object_source = draw_or_configure_secondary_dynamic_object
 ASSERT draw_and_configure_dynamic_room_object_source = draw_and_configure_dynamic_room_object
 ASSERT select_blank_or_right_half_pattern_by_column_source = select_blank_or_right_half_pattern_by_column
 ASSERT draw_centered_alternating_run_by_column_source = draw_centered_alternating_run_by_column
