@@ -109,7 +109,7 @@ if ($rawAddressAssertions.Count -ne 0) {
     throw "Raw absolute-address assertion in quest1.asm; use a named boundary or size: $($rawAddressAssertions[0].Value.Trim())"
 }
 
-$rawAddressCommentPattern = '(?im)^\s*;.*\$[0-9A-F]{3,4}\b.*$'
+$rawAddressCommentPattern = '(?im)^\s*;(?=.*(?:\$[0-9A-F]+|\b(?:Runtime|Loaded)\s+[0-9A-F]{4})).*$'
 $rawAddressComments = [regex]::Matches($assemblyText, $rawAddressCommentPattern)
 if ($rawAddressComments.Count -ne 0) {
     throw "Raw address in quest1.asm comment; describe the named source behavior or boundary instead: $($rawAddressComments[0].Value.Trim())"
