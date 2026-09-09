@@ -3322,14 +3322,14 @@ CLEAR osbyte_81_inkey_source, osbyte_81_inkey_source_end
 ORG advance_record_counter_then_dispatch
 
 ; Runtime $23F6-$2400. Increment lift_hazard_secondary_record_counter, copy it
-; into the shared record selector, preset the final indexed slot, and dispatch
+; into lift_hazard_update_schedule_mask, preset the final indexed slot, and dispatch
 ; through update_lift_or_hazard_from_preselected_slot. Successive calls therefore
 ; step through consecutive records.
 .advance_record_counter_then_dispatch_source
     LDY #&08
     INC lift_hazard_secondary_record_counter
     LDA lift_hazard_secondary_record_counter
-    STA shared_workspace_34
+    STA lift_hazard_update_schedule_mask
     JMP update_lift_or_hazard_from_preselected_slot
 .advance_record_counter_then_dispatch_source_end
 
@@ -3409,7 +3409,7 @@ ORG update_lift_and_hazard_slots
 ; Runtime $22D6-$22FD. Update the lift/hazard slots on a schedule driven
 ; by a rolling counter.
 ; lift_hazard_primary_record_counter is incremented once per call and copied
-; into the shared selector, which is then used as a bit mask: after the first three slots are updated
+; into lift_hazard_update_schedule_mask: after the first three slots are updated
 ; unconditionally, each further slot is updated only when the next bit rotated
 ; out of that selector is set. So slots beyond the third take turns across frames rather
 ; than all moving every frame, which spreads the work.
@@ -3419,7 +3419,7 @@ ORG update_lift_and_hazard_slots
 .update_lift_and_hazard_slots_source
     INC lift_hazard_primary_record_counter
     LDA lift_hazard_primary_record_counter
-    STA shared_workspace_34
+    STA lift_hazard_update_schedule_mask
     LDY #&00
 .update_lift_or_hazard_from_preselected_slot
     JSR draw_lift_or_hazard_without_slot_check
@@ -3431,14 +3431,14 @@ ORG update_lift_and_hazard_slots
     JSR update_one_lift_or_hazard
     INY
     INY
-    ROR shared_workspace_34
+    ROR lift_hazard_update_schedule_mask
     BCC test_next_scheduled_slot
     JMP update_one_lift_or_hazard
 
 .test_next_scheduled_slot
     INY
     INY
-    ROR shared_workspace_34
+    ROR lift_hazard_update_schedule_mask
     BCC entity_update_loop_exit
 .update_lift_and_hazard_slots_source_end
 
@@ -6434,7 +6434,7 @@ ORG drop_carried_item
     RTS
 
 .prepare_carried_item_drop
-    STA shared_workspace_34
+    STA carried_item_code_being_dropped
     TXA
     PHA
     LDA #ITEM_DROP_UPWARD_VELOCITY
@@ -6448,7 +6448,7 @@ ORG drop_carried_item
     BNE drop_carried_item_unavailable_exit
     LDA #&00
     STA item_slot_first,X
-    LDA shared_workspace_34
+    LDA carried_item_code_being_dropped
     PHA
     CMP #ITEM_CODE_CROSS
     BEQ apply_dropped_item_3a_state
@@ -6591,7 +6591,7 @@ ORG draw_bordered_horizontal_bar_row
 ; and five and delegates other columns to the adjacent pattern handler.
 .draw_bordered_horizontal_bar_row_source
     LDX #GRAPHIC_HORIZONTAL_BAR
-    STX shared_workspace_34
+    STX bordered_row_interior_graphic
     JMP draw_bordered_row_with_selected_interior
 
 .draw_ff_state_column_motif_source
@@ -6838,15 +6838,15 @@ CLEAR draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_sour
 
 ORG replace_saved_cell_with_14_then_play_sound
 
-; Runtime $2D98-$2DA2. Select record $25 for the redraw and state byte $A4,
-; then enter the shared replacement tail with cell value $14. Unlike the $2DA3
-; entry this prefix preserves Y=$25 in $A4 and skips the $0C setup before the
-; common cell write, redraw and sound sequence.
+; Runtime $2D98-$2DA2. Select GRAPHIC_UNIFORM_PATTERN for the redraw and save
+; it as the interaction item code, then enter the shared replacement tail with
+; ROOM_CELL_FF_STATE_MOTIF. Unlike the ordinary entry, this prefix skips the
+; ROOM_CELL_BLANK_STATE_MOTIF setup before the common write/redraw/sound tail.
 .replace_saved_cell_with_14_then_play_sound_source
-    LDY #&25
-    STY shared_workspace_34
+    LDY #GRAPHIC_UNIFORM_PATTERN
+    STY record_row_graphic_index
     STY saved_interaction_item_code
-    LDA #&14
+    LDA #ROOM_CELL_FF_STATE_MOTIF
     JMP write_saved_cell_and_redraw
 .replace_saved_cell_with_14_then_play_sound_source_end
 
@@ -6861,35 +6861,33 @@ CLEAR replace_saved_cell_with_14_then_play_sound_source, replace_saved_cell_with
 
 ORG replace_saved_cell_then_play_sound
 
-; Runtime $2DA3-$2DD3. Replace the cell the saved pointer refers to with the value
-; $0C, redraw the area, and play a sound.
-; The record for the redraw is set to zero, the flag at $1242 is cleared, and
-; the display pointer is taken from $1243/$1244 offset by $30, which is the
-; position stashed by the room-render layer. Four record rows are then drawn
-; there. Finally the sound pitch is set to $64 and the duration to $0A before
-; the amplitude-1 sound is played by tail jump.
+; Runtime $2DA3-$2DD3. Replace the saved room cell with
+; ROOM_CELL_BLANK_STATE_MOTIF, redraw the area, and play its completion sound.
+; The redraw uses the blank record, clears timed_effect_selector, and starts at
+; SAVED_CELL_REDRAW_POINTER_OFFSET from the saved display position. It draws
+; SAVED_CELL_REDRAW_CHARACTER_ROWS before submitting the named sound values.
 .replace_saved_cell_then_play_sound_source
-    LDY #&00
-    STY shared_workspace_34
-    LDA #&0C
+    LDY #GRAPHIC_RECORD_BLANK
+    STY record_row_graphic_index
+    LDA #ROOM_CELL_BLANK_STATE_MOTIF
 .write_saved_cell_and_redraw
     JSR store_byte_through_saved_pointer
-    LDA #&00
+    LDA #&00 ; disable timed-effect dispatch after the cell change
     STA timed_effect_selector
     CLC
     LDA saved_effect_display_pointer_low
-    ADC #&30
+    ADC #SAVED_CELL_REDRAW_POINTER_OFFSET
     STA display_pointer_low
     LDA saved_effect_display_pointer_high
     ADC #&00
     STA display_pointer_high
-    LDX #&04
+    LDX #SAVED_CELL_REDRAW_CHARACTER_ROWS
     JSR draw_next_record_row
-    LDA #&0A
+    LDA #SAVED_CELL_CHANGE_SOUND_DURATION
     STA sound_block_duration
-    LDA #&64
+    LDA #SAVED_CELL_CHANGE_SOUND_PITCH
     STA sound_block_pitch
-    LDA #&01
+    LDA #SAVED_CELL_CHANGE_SOUND_AMPLITUDE
     JMP play_sound_with_amplitude
 .replace_saved_cell_then_play_sound_source_end
 
@@ -8636,7 +8634,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 
 .draw_bordered_checker_diagonal_row_source
     LDX #GRAPHIC_CHECKER_DIAGONAL
-    STX shared_workspace_34
+    STX bordered_row_interior_graphic
 
 .draw_bordered_row_with_selected_interior_source
     CMP #&00
@@ -8651,7 +8649,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 .draw_bordered_row_middle_column
     LDA #GRAPHIC_FLAT_FILL
     JSR copy_16_byte_graphic_to_display
-    LDA shared_workspace_34
+    LDA bordered_row_interior_graphic
     LDX #&06
 
 .draw_next_bordered_row_interior_tile
@@ -8718,7 +8716,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 
 .store_dynamic_room_object_class
     STA active_lift_or_hazard_class
-    STX shared_workspace_34
+    STX dynamic_room_object_slot_end
     JSR initialise_four_dynamic_room_object_slots
     LDX #&08
 
@@ -8734,7 +8732,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     PHA
     LDA display_pointer_high
     PHA
-    LDA shared_workspace_34
+    LDA dynamic_room_object_slot_end
     SEC
     SBC #&08
     TAY
@@ -8743,7 +8741,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     JSR enter_draw_enemy_without_slot_check
     INY
     INY
-    CPY shared_workspace_34
+    CPY dynamic_room_object_slot_end
     BNE submit_next_dynamic_room_object_slot
     PLA
     STA display_pointer_high
@@ -10311,8 +10309,8 @@ ORG set_display_pointer_from_grid_position
 ; stored rows before converting: initialise_room_enemy_from_table adds $0A to
 ; one row and subtracts 6 and 3 from the other.
 ;
-; X is preserved across the whole computation; A and the scratch bytes $33/$34
-; are not.
+; X is preserved across the whole computation; A and the named column-offset
+; scratch word are not.
 .set_display_pointer_from_grid_position_source
     TXA
     PHA
@@ -10331,20 +10329,20 @@ ORG set_display_pointer_from_grid_position
     DEX
     BNE multiply_row_by_character_row
     LDA display_grid_column
-    STA shared_workspace_33
+    STA display_grid_column_offset_low
     LDA #&00
-    STA shared_workspace_34
+    STA display_grid_column_offset_high
     LDX #&03
 
 .multiply_column_by_cell
-    ASL shared_workspace_33
-    ROL shared_workspace_34
+    ASL display_grid_column_offset_low
+    ROL display_grid_column_offset_high
     DEX
     BNE multiply_column_by_cell
-    LDA shared_workspace_33
+    LDA display_grid_column_offset_low
     ADC display_pointer_low
     STA display_pointer_low
-    LDA shared_workspace_34
+    LDA display_grid_column_offset_high
     ADC display_pointer_high
     ADC #HI(display_grid_origin)
     STA display_pointer_high
