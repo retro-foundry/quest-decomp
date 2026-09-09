@@ -108,6 +108,31 @@ foreach ($variantDefinition in $variantDefinitions) {
 
 & (Join-Path $PSScriptRoot 'build.ps1') -BeebAsm $BeebAsm
 
+$generatedVariantName = 'validation_generated_start_room'
+$generatedVariantDefinition = Join-Path $PSScriptRoot "tools\reconstruction\variants\$generatedVariantName.json"
+$generatedVariantPayload = Join-Path $PSScriptRoot 'build\reconstruction\QUEST1-validation-generated-variant'
+try {
+    & $pythonCommand.Source (Join-Path $PSScriptRoot 'tools\reconstruction\make_start_room_variant.py') `
+        --room 1,0 --name $generatedVariantName | Out-Null
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $generatedVariantDefinition -PathType Leaf)) {
+        throw 'Bundled start-room variant generator smoke test failed.'
+    }
+    & $pythonCommand.Source (Join-Path $PSScriptRoot 'tools\reconstruction\apply_variant.py') `
+        --variant $generatedVariantName --output-payload $generatedVariantPayload | Out-Null
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $generatedVariantPayload -PathType Leaf)) {
+        throw 'Generated start-room variant could not be applied to the rebuilt payload.'
+    }
+}
+finally {
+    Remove-Item -LiteralPath $generatedVariantDefinition -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $generatedVariantPayload -ErrorAction SilentlyContinue
+}
+
+& $pythonCommand.Source (Join-Path $PSScriptRoot 'tools\runtime_trace\find_start_point.py') --help | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw 'Bundled start-point helper CLI smoke test failed.'
+}
+
 $variantSmokeOutput = Join-Path $PSScriptRoot 'build\reconstruction\QUEST1-validation-variant'
 & $pythonCommand.Source (Join-Path $PSScriptRoot 'tools\reconstruction\apply_variant.py') `
     --variant sector_e_level_1 --output-payload $variantSmokeOutput | Out-Null
