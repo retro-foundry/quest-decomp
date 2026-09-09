@@ -10960,7 +10960,7 @@ ORG music_note_pitch_table
 .music_note_pitch_table_source_end
 ASSERT music_note_pitch_table_source = music_note_pitch_table
 ASSERT music_note_pitch_table_source_end = initialise_new_game
-COPYBLOCK music_note_pitch_table_source, music_note_pitch_table_source_end, &24C0
+COPYBLOCK music_note_pitch_table_source, music_note_pitch_table_source_end, music_note_pitch_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR music_note_pitch_table_source, music_note_pitch_table_source_end
 
 ORG startup_room_sequence_table
@@ -10971,7 +10971,7 @@ ORG startup_room_sequence_table
 .startup_room_sequence_table_source_end
 ASSERT startup_room_sequence_table_source = startup_room_sequence_table
 ASSERT startup_room_sequence_table_source_end = &0CFD
-COPYBLOCK startup_room_sequence_table_source, startup_room_sequence_table_source_end, &25ED
+COPYBLOCK startup_room_sequence_table_source, startup_room_sequence_table_source_end, startup_room_sequence_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR startup_room_sequence_table_source, startup_room_sequence_table_source_end
 
 ORG unreachable_runtime_low_tail_jsr
@@ -10985,7 +10985,7 @@ ORG unreachable_runtime_low_tail_jsr
 .unreachable_runtime_low_tail_jsr_source_end
 ASSERT unreachable_runtime_low_tail_jsr_source = unreachable_runtime_low_tail_jsr
 ASSERT unreachable_runtime_low_tail_jsr_source_end = &0D00
-COPYBLOCK unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_source_end, &25FD
+COPYBLOCK unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_source_end, unreachable_runtime_low_tail_jsr+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_source_end
 
 ORG password_letters
@@ -10995,7 +10995,7 @@ ORG password_letters
 .password_letters_source_end
 ASSERT password_letters_source = password_letters
 ASSERT password_letters_source_end = room_sign_text_table
-COPYBLOCK password_letters_source, password_letters_source_end, &2F96
+COPYBLOCK password_letters_source, password_letters_source_end, password_letters+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR password_letters_source, password_letters_source_end
 
 ORG room_sign_text_table
@@ -11038,7 +11038,7 @@ ORG room_sign_text_table
 .room_sign_text_table_source_end
 ASSERT room_sign_text_table_source = room_sign_text_table
 ASSERT room_sign_text_table_source_end = across_to_password_number
-COPYBLOCK room_sign_text_table_source, room_sign_text_table_source_end, &2FB0
+COPYBLOCK room_sign_text_table_source, room_sign_text_table_source_end, room_sign_text_table+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR room_sign_text_table_source, room_sign_text_table_source_end
 
 ORG across_to_password_number
@@ -11048,7 +11048,7 @@ ORG across_to_password_number
 .across_to_password_number_source_end
 ASSERT across_to_password_number_source = across_to_password_number
 ASSERT across_to_password_number_source_end = &18B2
-COPYBLOCK across_to_password_number_source, across_to_password_number_source_end, &30AA
+COPYBLOCK across_to_password_number_source, across_to_password_number_source_end, across_to_password_number+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR across_to_password_number_source, across_to_password_number_source_end
 
 ORG room_and_item_graphic_bank
@@ -11060,7 +11060,7 @@ ORG room_and_item_graphic_bank
 .system_clock_and_blank_graphic_record_source_end
 ASSERT system_clock_and_blank_graphic_record_source = room_and_item_graphic_bank
 ASSERT system_clock_and_blank_graphic_record_source_end = room_and_item_graphic_records
-COPYBLOCK system_clock_and_blank_graphic_record_source, system_clock_and_blank_graphic_record_source_end, &2600
+COPYBLOCK system_clock_and_blank_graphic_record_source, system_clock_and_blank_graphic_record_source_end, room_and_item_graphic_bank+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR system_clock_and_blank_graphic_record_source, system_clock_and_blank_graphic_record_source_end
 
 ORG room_and_item_graphic_records
@@ -11305,7 +11305,7 @@ ASSERT double_bar_tile = room_and_item_graphic_records + (GRAPHIC_DOUBLE_BAR-GRA
 ASSERT pillar_base_tile = room_and_item_graphic_records + (GRAPHIC_PILLAR_BASE-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT room_and_item_graphic_records_source = room_and_item_graphic_records
 ASSERT room_and_item_graphic_records_source_end = display_action_jump_table
-COPYBLOCK room_and_item_graphic_records_source, room_and_item_graphic_records_source_end, &2610
+COPYBLOCK room_and_item_graphic_records_source, room_and_item_graphic_records_source_end, room_and_item_graphic_bank+GRAPHIC_RECORD_BYTES+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR room_and_item_graphic_records_source, room_and_item_graphic_records_source_end
 
 ORG room_tile_pair_sets
@@ -11327,7 +11327,7 @@ ORG room_tile_pair_sets
 .room_tile_pair_sets_source_end
 ASSERT room_tile_pair_sets_source = room_tile_pair_sets
 ASSERT room_tile_pair_sets_source_end = draw_matching_records_from_table
-COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, &3590
+COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, room_tile_pair_sets+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
 ORG room_moving_object_pointer_sets
@@ -11355,7 +11355,7 @@ ASSERT mouse_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING
 ASSERT vertical_lift_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_LIFT*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
 ASSERT room_moving_object_pointer_sets_source = room_moving_object_pointer_sets
 ASSERT room_moving_object_pointer_sets_source_end = initialise_room_enemy_from_table
-COPYBLOCK room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end, &370F
+COPYBLOCK room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end, room_moving_object_pointer_sets+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end
 
 ORG item_and_goal_record_table
@@ -11377,7 +11377,7 @@ ORG item_and_goal_record_table
 ASSERT item_and_goal_record_table_source_end-item_and_goal_record_table_source = ITEM_GOAL_RECORD_COUNT*ITEM_GOAL_RECORD_BYTES
 ASSERT item_and_goal_record_table_source = item_and_goal_record_table
 ASSERT item_and_goal_record_table_source_end = &0930
-COPYBLOCK item_and_goal_record_table_source, item_and_goal_record_table_source_end, &2200
+COPYBLOCK item_and_goal_record_table_source, item_and_goal_record_table_source_end, item_and_goal_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR item_and_goal_record_table_source, item_and_goal_record_table_source_end
 
 ORG room_moving_object_record_table
@@ -11403,7 +11403,7 @@ ORG room_moving_object_record_table
 .room_moving_object_record_table_source_end
 ASSERT room_moving_object_record_table_source = room_moving_object_record_table
 ASSERT room_moving_object_record_table_source_end = &0980
-COPYBLOCK room_moving_object_record_table_source, room_moving_object_record_table_source_end, &2230
+COPYBLOCK room_moving_object_record_table_source, room_moving_object_record_table_source_end, room_moving_object_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR room_moving_object_record_table_source, room_moving_object_record_table_source_end
 
 ORG initial_item_and_goal_record_table
@@ -11425,7 +11425,7 @@ ORG initial_item_and_goal_record_table
 ASSERT initial_item_and_goal_record_table_source_end-initial_item_and_goal_record_table_source = ITEM_GOAL_RECORD_COUNT*ITEM_GOAL_RECORD_BYTES
 ASSERT initial_item_and_goal_record_table_source = initial_item_and_goal_record_table
 ASSERT initial_item_and_goal_record_table_source_end = &09B0
-COPYBLOCK initial_item_and_goal_record_table_source, initial_item_and_goal_record_table_source_end, &2280
+COPYBLOCK initial_item_and_goal_record_table_source, initial_item_and_goal_record_table_source_end, initial_item_and_goal_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR initial_item_and_goal_record_table_source, initial_item_and_goal_record_table_source_end
 
 ORG room_appearance_table
@@ -11444,7 +11444,7 @@ ORG room_appearance_table
 .room_appearance_table_source_end
 ASSERT room_appearance_table_source = room_appearance_table
 ASSERT room_appearance_table_source_end = &0A00
-COPYBLOCK room_appearance_table_source, room_appearance_table_source_end, &22B0
+COPYBLOCK room_appearance_table_source, room_appearance_table_source_end, room_appearance_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR room_appearance_table_source, room_appearance_table_source_end
 
 ORG room_enemy_record_table
@@ -11477,7 +11477,7 @@ ORG room_enemy_record_table
 ASSERT room_enemy_record_table_source = room_enemy_record_table
 ASSERT room_enemy_record_table_source_end-room_enemy_record_table_source = ROOM_ENEMY_RECORD_COUNT*ROOM_ENEMY_RECORD_BYTES
 ASSERT room_enemy_record_table_source_end = &0A78
-COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, &2300
+COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, room_enemy_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
 
 ORG cross_room_robot_ghost_record_table
@@ -11501,7 +11501,7 @@ ORG cross_room_robot_ghost_record_table
 ASSERT cross_room_robot_ghost_record_table_source = cross_room_robot_ghost_record_table
 ASSERT cross_room_robot_ghost_record_table_source_end-cross_room_robot_ghost_record_table_source = CROSS_ROOM_ROBOT_GHOST_RECORD_COUNT*CROSS_ROOM_ROBOT_GHOST_RECORD_BYTES
 ASSERT cross_room_robot_ghost_record_table_source_end = &0A96
-COPYBLOCK cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_record_table_source_end, &2378
+COPYBLOCK cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_record_table_source_end, cross_room_robot_ghost_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_record_table_source_end
 
 ORG lift_and_hazard_room_record_table
@@ -11532,7 +11532,7 @@ ORG lift_and_hazard_room_record_table
 ASSERT lift_and_hazard_room_record_table_source = lift_and_hazard_room_record_table
 ASSERT lift_and_hazard_room_record_table_source_end-lift_and_hazard_room_record_table_source = LIFT_HAZARD_RECORD_COUNT*LIFT_HAZARD_RECORD_BYTES
 ASSERT lift_and_hazard_room_record_table_source_end = &0AFA
-COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end, &2396
+COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end, lift_and_hazard_room_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end
 
 ORG unused_runtime_low_tail_bytes
@@ -11545,7 +11545,7 @@ ORG unused_runtime_low_tail_bytes
     EQUB &7C, &0E, &4C, &44, &59, &63
 .unused_runtime_low_tail_bytes_source_end
 ASSERT unused_runtime_low_tail_bytes_source_end = relocated_game_entry
-COPYBLOCK unused_runtime_low_tail_bytes_source, unused_runtime_low_tail_bytes_source_end, &23FA
+COPYBLOCK unused_runtime_low_tail_bytes_source, unused_runtime_low_tail_bytes_source_end, unused_runtime_low_tail_bytes+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR unused_runtime_low_tail_bytes_source, unused_runtime_low_tail_bytes_source_end
 
 ; Short, explicitly identified source islands that previously occupied
@@ -11556,7 +11556,7 @@ ORG graphic_copy_alignment_padding
 .graphic_copy_alignment_padding_source_end
 ASSERT graphic_copy_alignment_padding_source = graphic_copy_alignment_padding
 ASSERT graphic_copy_alignment_padding_source_end = apply_mirror_flag_then_copy_graphic
-COPYBLOCK graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_source_end, &34D7
+COPYBLOCK graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_source_end, graphic_copy_alignment_padding+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_source_end
 
 ORG enemy_graphic_descriptor_table
@@ -11578,7 +11578,7 @@ ASSERT moth_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_
 ASSERT jellyfish_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_JELLYFISH*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
 ASSERT enemy_graphic_descriptor_table_source = enemy_graphic_descriptor_table
 ASSERT enemy_graphic_descriptor_table_source_end = initialise_lifts_and_hazards_from_table
-COPYBLOCK enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_source_end, &37DF
+COPYBLOCK enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_source_end, enemy_graphic_descriptor_table+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR enemy_graphic_descriptor_table_source, enemy_graphic_descriptor_table_source_end
 
 
@@ -11758,7 +11758,7 @@ ORG EMBEDDED_MESSAGE_SOURCE_STAGING_ADDRESS
     EQUB &00, &00, &00, &00, &00, &00
 .embedded_mountaineering_message_source_end
 ASSERT embedded_mountaineering_message_source_end-embedded_mountaineering_message_source = &62
-COPYBLOCK embedded_mountaineering_message_source, embedded_mountaineering_message_source_end, &5A9E
+COPYBLOCK embedded_mountaineering_message_source, embedded_mountaineering_message_source_end, LOADED_EMBEDDED_MOUNTAINEERING_MESSAGE
 CLEAR embedded_mountaineering_message_source, embedded_mountaineering_message_source_end
 
 
@@ -11779,7 +11779,7 @@ ORG transient_xor_message_decoder
     RTS
 .transient_xor_message_decoder_source_end
 ASSERT transient_xor_message_decoder_source_end = &010F
-COPYBLOCK transient_xor_message_decoder_source, transient_xor_message_decoder_source_end, &5B00
+COPYBLOCK transient_xor_message_decoder_source, transient_xor_message_decoder_source_end, transient_xor_message_decoder+STACK_RUNTIME_TO_LOADED_DELTA
 CLEAR transient_xor_message_decoder_source, transient_xor_message_decoder_source_end
 
 ORG TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS
@@ -11795,7 +11795,7 @@ ORG TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS
     EQUB &5D, &67, &24, &4E, &4D, &50, &45, &54, &A7, &B8, &AE, &E1, &D0, &8E, &23
 .transient_xor_message_payload_end
 ASSERT transient_xor_message_payload_end = &019E
-COPYBLOCK transient_xor_message_payload, transient_xor_message_payload_end, &5B0F
+COPYBLOCK transient_xor_message_payload, transient_xor_message_payload_end, TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS+STACK_RUNTIME_TO_LOADED_DELTA
 CLEAR transient_xor_message_payload, transient_xor_message_payload_end
 
 ORG TRANSIENT_STACK_PAGE_PADDING_ADDRESS
@@ -11804,7 +11804,7 @@ ORG TRANSIENT_STACK_PAGE_PADDING_ADDRESS
     EQUB &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF
 .transient_stack_page_padding_source_end
 ASSERT transient_stack_page_padding_source_end = &01B0
-COPYBLOCK transient_stack_page_padding_source, transient_stack_page_padding_source_end, &5B9E
+COPYBLOCK transient_stack_page_padding_source, transient_stack_page_padding_source_end, TRANSIENT_STACK_PAGE_PADDING_ADDRESS+STACK_RUNTIME_TO_LOADED_DELTA
 CLEAR transient_stack_page_padding_source, transient_stack_page_padding_source_end
 
 ORG chained_irq1v_vector
@@ -11813,7 +11813,7 @@ ORG chained_irq1v_vector
     EQUB LOWER_SCREEN_PALETTE_INITIAL_VALUE
 .irq_workspace_prefix_source_end
 ASSERT irq_workspace_prefix_source_end = irq1v_handler
-COPYBLOCK irq_workspace_prefix_source, irq_workspace_prefix_source_end, &5BB0
+COPYBLOCK irq_workspace_prefix_source, irq_workspace_prefix_source_end, chained_irq1v_vector+IRQ_RUNTIME_TO_LOADED_DELTA
 CLEAR irq_workspace_prefix_source, irq_workspace_prefix_source_end
 
 
@@ -11825,7 +11825,7 @@ ORG IRQ_RELOCATION_TRAILING_ZERO_ADDRESS
     EQUB IRQ_RELOCATION_TRAILING_VALUE
 .irq_relocation_trailing_zero_source_end
 ASSERT irq_relocation_trailing_zero_source_end = &03E1
-COPYBLOCK irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end, &5C10
+COPYBLOCK irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end, IRQ_RELOCATION_TRAILING_ZERO_ADDRESS+IRQ_RUNTIME_TO_LOADED_DELTA
 CLEAR irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end
 
 

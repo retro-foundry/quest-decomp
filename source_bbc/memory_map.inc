@@ -1263,6 +1263,7 @@ LOW_RUNTIME_TO_LOADED_DELTA     = &1900 ; structural: maps runtime &0400-&0CFF b
 HIGH_RUNTIME_TO_LOADED_DELTA    = &1800 ; structural: maps runtime &0E00-&42FF back to loaded &2600-&5AFF
 STACK_RUNTIME_TO_LOADED_DELTA   = &5A00 ; structural: maps runtime &0100-&01AF back to loaded &5B00-&5BAF
 IRQ_RUNTIME_TO_LOADED_DELTA     = &5830 ; structural: maps runtime &0380-&03E0 back to loaded &5BB0-&5C10
+LOADED_EMBEDDED_MOUNTAINEERING_MESSAGE = &5A9E ; structural: loaded-only dormant message immediately following the relocation loader
 SPRITE_SOURCE_STAGING_ADDRESS   = &9000 ; assembly-only: scratch origin for the primary XOR sprite bank
 INERT_SPRITE_SOURCE_STAGING_ADDRESS = &9400 ; assembly-only: scratch origin for the proved-inert aligned graphic records
 RELOCATION_LOADER_SOURCE_STAGING_ADDRESS = &8100 ; assembly-only: scratch origin preserving loaded-view branches
