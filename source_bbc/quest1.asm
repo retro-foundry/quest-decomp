@@ -1,278 +1,29 @@
 ; Quest $.QUEST1 byte-exact 6502 reconstruction.
 ;
-; Two reference blocks follow the relocation notes below:
-;   Deliberate modifications - how to enable the jet boots everywhere and how
-;     to start the game in a chosen room, with the reasoning for each patch site.
-;   Discovered data - the item, password, sign, terminal and per-room tables,
-;     read out of the payload and cross-checked against play. Proved tables move
-;     into named source blocks below as they are reconstructed;
-;     analysis/room_map.md decodes the per-room tables into the map itself.
+; Source contract:
+;   - Builds the complete original QUEST1 payload without binary includes.
+;   - Preserves the original load, execution and relocation layout exactly.
+;   - Keeps gameplay variants outside this authority source; apply them to the
+;     built payload with tools/reconstruction/apply_variant.py.
 ;
-; Authority:
-;   original/game/$.QUEST1
-;   load  &1D00
-;   exec  &5C11
-;   size  &3F20
+; Architecture:
+;   The loaded image contains a relocation loader, transport copies of runtime
+;   code and data, and a DFS execution stub. COPYBLOCK and CLEAR express those
+;   aliases explicitly. memory_map.inc names the runtime state, hardware, APIs,
+;   tables, constants and reconstructed entry points.
 ;
-; The loader relocates loaded $2600-$5AFF to runtime $0E00-$42FF. Therefore
-; loaded $2A5D-$2A83 below executes at runtime $125D-$1283, and loaded
-; $34E4-$3568 executes at runtime $1CE4-$1D68. Loaded $4AC5-$4AD0
-; executes at runtime $32C5-$32D0. Loaded $3F90-$3F96 executes at runtime
-; $2790-$2796, loaded $3A37-$3A3A executes at runtime $2237-$223A, loaded
-; $4099-$40A6 executes at runtime $2899-$28A6, and loaded $4AA7-$4ABE
-; executes at runtime $32A7-$32BE. Loaded $3DC4-$3DDB executes at runtime
-; $25C4-$25DB.
-; The earlier loader segment maps loaded $24A0-$24A8 to runtime $0BA0-$0BA8.
-
-; Deliberate modifications
+; Game data:
+;   The source below owns the complete room map, appearance data, item and goal
+;   records, passwords, signs, terminal streams, graphics and entity databases.
+;   Room-local enemies are bats, small bouncing robots and moths. A separate
+;   per-level subsystem moves small bouncing robots across rooms on levels 0-7
+;   and ghosts across rooms on levels 8-9. Fish, mice, caterpillars and lifts
+;   use the room-moving-object subsystem.
 ;
-; This file must assemble to the original bytes exactly, so it is never the
-; place to change how the game plays. A change is a patch applied to the built
-; payload by tools/reconstruction/apply_variant.py, from a definition in
-; tools/reconstruction/variants/ that states the bytes it expects and is refused
-; if they no longer match. What follows is where the two most-asked-for changes
-; live and why they are where they are. Runtime addresses throughout.
-;
-; Jet boots in every room
-;
-;   The boots are enabled per room by $A6, jet_boots_enabled_this_room. The
-;   control poller reads it at $2685 and, when it is zero, branches past BOTH
-;   thrust polls, so neither INKEY -73 nor INKEY -105 is read and $0E never
-;   gains upward velocity. The boots are inert in such a room, not weak.
-;
-;   draw_and_initialise_room clears $A6 at $1BAA as part of its per-room reset,
-;   so every room starts with them off, and $167A writes 1 into it while one
-;   particular cell is drawn. On screen that cell is a triangle symbol: rooms
-;   showing one allow flight and rooms without one do not.
-;
-;   The change patches the reader, two bytes at $2685, LDA $A6 to LDA #$01.
-;   Not the store at $1BAA: that store shares its LDA #$00 with ten others in
-;   the same run, so retargeting it in place would set ten unrelated flags. A
-;   is not read after the branch - $2689 loads X immediately - and LDA #$01
-;   leaves Z clear, so the branch is never taken and nothing else shifts.
-;
-;   Variant: fly_in_every_room on its own, or --fly-everywhere on
-;   make_start_room_variant.py to combine it with a starting room.
-;
-; Starting in a chosen room
-;
-;   Four separate pieces of state have to move together. Moving some of them
-;   produces a game that misbehaves in ways easily mistaken for a corrupt room,
-;   which is how each of these was found.
-;
-;   1. The room and its data pointer. initialise_new_game writes the room at
-;      $0BD1, but set_room_data_pointer reaches the cells through the level base
-;      at $72/$73, a copy of $70/$71, which the transitions maintain as the down
-;      index times $78. Writing $8F alone leaves that stale and the room draws as
-;      nonsense. $3200 is an unreachable developer warp that writes $8F, $90 and
-;      $70/$71 together from four immediates before JMP $1206; the change
-;      retargets its immediates, turns that jump into RTS and calls it.
-;
-;   2. Every store the call displaces. $0BD1 through $0BDE writes $90, $8F, $A0,
-;      $70 and $71 from a single LDA #$00 at $0BD5. A patch that stops at $0BD8
-;      leaves the last three running on whatever the call returned in A. Down 0
-;      has a zero base high byte, so that fault is invisible in the opening row
-;      and corrupts every other one.
-;
-;   3. A place the player can stand. The player is three character rows tall:
-;      the movers write $18 to $41 and $290B reads one byte per scanline, so
-;      twenty-four, and $2899 reaches the ground by adding $0780. Two clear rows
-;      buries the player's bottom third in the floor, and the collision scan then
-;      refuses to let them walk out of it. Nothing in the game stores a per-room
-;      start point to copy: the edge transitions write only a horizontal and
-;      inherit the height. tools/runtime_trace/find_start_point.py reads the
-;      floor out of the room's drawn screen instead.
-;
-;   4. $2C, player_vertical_position. It is kept independently of the display
-;      pointer, and $28B0 reads $2C - not the pointer - to decide the player has
-;      reached the ceiling. A start point that moves the pointer and not $2C
-;      leaves the game believing the player is elsewhere, and the room-above
-;      transition can never fire however far they fly. The start point at $0C29
-;      writes the pointer, $35 and $2C together, so all four fit one patch.
-;
-;   Rooms are named across then down: across is $90 and runs 0 to 7, down is
-;   $8F and runs 0 to 9, and the game opens at $8F = 0, $90 = 1, which is room
-;   1,0. tools/reconstruction/make_start_room_variant.py --room ACROSS,DOWN
-;   generates the whole thing, with --item, --no-damage, --fly-everywhere and a
-;   start point from find_start_point.py. --item takes an item code: see
-;   Discovered data below for the twelve of them, of which
-;   $32 is the access card.
-;
-; $0C29, $0C39, $167A, $2685 and $3200 are not reconstructed here yet, so those
-; addresses are cited rather than shown. CONTINUE.md carries the same account
-; with the trace counts behind it.
-
-; Discovered data
-;
-; These tables were read out of the authority payload and, where noted,
-; confirmed by play. Some now have named ORG blocks below; the remaining
-; address notes are the starting points for further reconstruction. Runtime
-; addresses throughout.
-;
-; The room grid is eight across and ten down
-;
-;   Across is $90 and down is $8F, and rooms are named across first, so the
-;   game opens at 1,0 and the Music Room is 4,1. Eight across is not a guess:
-;   $18AA is a table indexed by $90 and it is exactly eight bytes long, because
-;   $18B2 is the next instruction's opcode. Ten down follows from the level
-;   base moving by $78 per $8F. Moving right increments $90 and moving down
-;   increments $8F, both measured from a session of known moves.
-;   A room sign shows the level as down plus one, and the sector as a letter
-;   from $90: a sign reading Sector F was at $90 = 5, so $90 = 4 is Sector E.
-;
-; Thirteen slot labels at $0B03: blank plus twelve item names
-;
-;   Slot label zero is blank. Item n is six characters at $0B09 + 6n,
-;   hand-padded to sit in a six-wide display field, and there are twelve items
-;   - the same twelve that collected_icon_count counts up to.
-;
-;     n   name      code     n   name      code
-;     0   'key'      $28     6   'herrin'   $34
-;     1   'key'      $2A     7   'mouse'    $36
-;     2   'key'      $2C     8   'cheese'   $38
-;     3   'salt'     $2E     9   'cross'    $3A
-;     4   'worm'     $30    10   'eye'      $3C
-;     5   'card'     $32    11   'bottle'   $3E
-;
-;   The code formula is fixed by two measured points, not inferred: a frame
-;   captured with $2C in the first slot is labelled Key, which is entry 2, and
-;   one with $32 is labelled card, which is entry 5. Three entries apart, six
-;   codes apart, so the stride is two. Item slots are $0C and $0D, and
-;   draw_two_item_slots uses a slot's value directly as a graphic index, so the
-;   slot holds the code itself. Consumables such as power crystals never enter
-;   a slot.
-;
-;   An obstruction cell names the item that answers it:
-;
-;     cell $28 wants item $2C, a key      ($29D3 then $29D7)
-;     cell $21 wants item $34, a herring  ($2A00 then $2A04)
-;     cell $24 wants item $3E, a bottle   ($2A1D then $2A28)
-;
-;   Those three pass the code as an immediate to
-;   consume_matching_item_from_slots. The card, $32, is not among them, so
-;   whatever it opens reaches that routine through one of the three sites that
-;   computes the code instead: $2212, $29CC or $2C3C.
-;
-; Eight passwords, five letters each, in the 26 bytes at $1796
-;
-;   The bytes are SALLYNDAVIDIOTTERASEVENTER. $1789 prints five characters from
-;   $1796,X, and $177A computes X as the password number times three, so the
-;   passwords overlap and every multiple of three lands on a word. Twenty-six
-;   bytes hold forty letters.
-;
-;     number  shown  offset  password  carried by
-;       0       1       0     SALLY     across 3
-;       1       2       3     LYNDA     across 5
-;       2       3       6     DAVID     across 1
-;       3       4       9     IDIOT     across 7
-;       4       5      12     OTTER     across 6
-;       5       6      15     ERASE     across 4
-;       6       7      18     SEVEN     across 2
-;       7       8      21     ENTER     across 0
-;
-;   $176A reads the column's password number from $18AA,X with X taken from
-;   $90, adds $31 to print it, and records the collection with STA $91,X at
-;   $1778. So the number shown is one higher than the number stored, and
-;   $91 through $98 are the collected-password flags.
-;
-;   Confirmed by play: playing from across 4, the player collected "password
-;   6". $18AA+4 holds 5, and 5 printed with $31 added is 6, which is ERASE.
-;
-;   The terminal's own text is at $2199: TERMINAL, PASSWORDS, ACCESS GRANTED,
-;   ACTIVATED, DENIED and INVALID PASSWORD.
-;
-; Room-sign text at $17B0
-;
-;   Fifteen signs are sixteen bytes each, drawn eight characters by two rows.
-;   Reading them names much of the map: the Music Room, a Level/Sector
-;   template, Elephant House, Joke Shop, Teleport, The Armoury, Hydroponics,
-;   two chemical signs, Time Warp, The Oracle, Optician, Chemical Supplies,
-;   Ghost Maze and Chapel. A ten-byte PASSWORD prompt follows them.
-;
-; The per-room tables, and what each one turns out to hold
-;
-;   Several tables in the region from $0900 to $0AFA are indexed by the room.
-;   A record's room is the packed pair
-;   match_packed_record_against_references tests: byte 0's low
-;   six bits are $8F, byte 1's low nibble is $90. analysis/room_map.md carries
-;   the decoded contents room by room, alongside the player's account of the map and
-;   marked for where the two disagree.
-;
-;   $09B0  room_appearance_table, eighty bytes at $8F * 8 + $90. Eighty rooms
-;          for eight across by ten down. Grouping every room by the palette
-;          nibble puts exactly two rooms in palette $B, and they are exactly the
-;          two rooms reported to be real reactors; palette $A holds exactly one,
-;          the room reported to look like a reactor without being one. So the
-;          appearance byte alone separates the decoy from the genuine ones.
-;
-;   $0900  item_and_goal_record_table, twelve four-byte records. Eleven indices
-;          line up with item_name_table and select graphic pair $28 + 2n.
-;          Index 3 is special: in H8 it prints THE GOLDEN DRAGON, sets the
-;          gameplay-loop exit flag, then draws pair $2E/$2F. That is the reported
-;          goal rather than a placed salt item. Seven item rooms match the
-;          reported pickup locations exactly, including all three keys. Two
-;          records name down 10, outside the grid, matching items the account
-;          says are produced by puzzles rather than found: the herring and mouse.
-;
-;   $0930  room_moving_object_record_table, sixteen five-byte records. A matching
-;          record configures four positions for a caterpillar, fish, mouse or
-;          lift. Its last three bytes are the display row and lower and upper
-;          position limits. Fish and mouse records keep an existing nonzero
-;          puzzle state at $63 rather than reinitialising it.
-;
-;   $0980  initial_item_and_goal_record_table, the 48-byte new-game image of
-;          the mutable $0900 table. restore_item_and_goal_records copies the
-;          whole range before room setup begins.
-;
-;   $0A00  room_enemy_record_table, twenty six-byte records for room-local
-;          enemies. Every record resolves to one specific room; this updater
-;          has no room-column transition path. The set contains
-;          every room the account calls out for an enemy. So this is the table
-;          the creatures come from.
-;
-;   $0A78  cross_room_robot_ghost_record_table, ten three-byte records
-;          indexed by $8F alone. This one is per level, not per room, and
-;          advance_cross_room_robot_ghost_value_and_display_pointer carries its objects
-;          across room boundaries: at horizontal $4D the column increments and
-;          the position resets to zero, at a negative position the column
-;          decrements and the position becomes $4C, and the deltas reverse at
-;          columns 0 and 7. The ordinary update path selects pointer offsets
-;          $10/$12, which are the two small-bouncing-robot frames at $0B6F;
-;          levels 8 and 9 use the alternate path and offsets $14/$16, the ghost
-;          frames at $0B73. Thus only robots and ghosts use this cross-room
-;          subsystem.
-;
-;   $0A96  lift_and_hazard_room_record_table, twenty five-byte records selecting
-;          either the vertical-lift graphic or the damaging moth-shaped frames.
-;          The lift update carries or pushes the player.
-;          A room can appear twice, so it can hold two.
-;
-;   Twelve power crystals are reported and twelve is also the limit
-;   collected_icon_count counts to, but no table of twelve crystal rooms has
-;   been found. $0900 is twelve records and turned out to be the items, so
-;   whatever places the crystals is still unlocated.
-;
-; The passwords the account and the payload disagree about
-;
-;   Five of the seven reported password locations match $18AA exactly. The two
-;   that do not are settled by the image: neither GREEN nor EDITOR appears
-;   anywhere in it, while IDIOT is at $179F and SEVEN at $17A8. Column 7 carries
-;   IDIOT and column 2 carries SEVEN, and password 7 being the word SEVEN is
-;   plainly deliberate.
-;
-;   Reading the reported room names as a column letter and a level digit also
-;   makes every reported terminal number the column plus one, which the account
-;   did not claim. A column's terminal number and its password number are
-;   unrelated: column G holds terminal 7 and password 5.
-;
-; A disassembly trap in this area
-;
-;   print_inline_vdu_stream at $3256 prints bytes that follow its own call site,
-;   reading them through its return address and replacing that address to skip
-;   the zero-terminated data. Both callers, $1761 and $1782, are therefore
-;   followed by bytes that are data, and a linear disassembly of $1761-$1795
-;   mis-decodes because of it. The loop at $1791 branching back to $1789 is
-;   what gives the real instruction boundaries away.
+; Standalone tooling:
+;   The quest-decomp repository includes every referenced build, validation and
+;   variant helper. Its validate.ps1 checks both the byte-exact payload digest
+;   and the presence of repository-relative tool references.
 
 INCLUDE "source_bbc/memory_map.inc"
 
