@@ -2804,7 +2804,11 @@ CLEAR terminal_interaction_result_source, terminal_interaction_result_source_end
 ORG horizontal_band_velocity_step_table
 ; Signed vertical step for each sixteen-unit horizontal room band.
 .horizontal_band_velocity_step_table_source
-    EQUB &01, &FF, &02, &FE, &03
+    EQUB HORIZONTAL_BAND_0_VERTICAL_STEP
+    EQUB HORIZONTAL_BAND_1_VERTICAL_STEP
+    EQUB HORIZONTAL_BAND_2_VERTICAL_STEP
+    EQUB HORIZONTAL_BAND_3_VERTICAL_STEP
+    EQUB HORIZONTAL_BAND_4_VERTICAL_STEP
 .horizontal_band_velocity_step_table_source_end
 ASSERT horizontal_band_velocity_step_table_source = horizontal_band_velocity_step_table
 ASSERT horizontal_band_velocity_step_table_source_end = advance_bounded_tick_target
@@ -2824,7 +2828,10 @@ CLEAR unused_ghost_update_return_source, unused_ghost_update_return_source_end
 ORG energy_bar_fill_patterns
 ; Four partial energy-bar fill masks, indexed by (energy AND 7) / 2.
 .energy_bar_fill_patterns_source
-    EQUB &00, &08, &0C, &0E
+    EQUB ENERGY_BAR_FILL_EMPTY
+    EQUB ENERGY_BAR_FILL_QUARTER
+    EQUB ENERGY_BAR_FILL_HALF
+    EQUB ENERGY_BAR_FILL_THREE_QUARTERS
 .energy_bar_fill_patterns_source_end
 ASSERT energy_bar_fill_patterns_source = energy_bar_fill_patterns
 ASSERT energy_bar_fill_patterns_source_end = cross_room_robot_ghost_initial_state
@@ -2832,12 +2839,14 @@ COPYBLOCK energy_bar_fill_patterns_source, energy_bar_fill_patterns_source_end, 
 CLEAR energy_bar_fill_patterns_source, energy_bar_fill_patterns_source_end
 
 ORG cross_room_robot_ghost_initial_state
-; Initial zeroed scratch followed by the two interleaved cross-room robot/ghost records.
-; The final three interleaved bytes initialise delta/mode/delta to $FE/$00/$FE.
+; Initial zeroed scratch followed by the two interleaved cross-room robot/ghost
+; records. The final fields initialise the upward step, horizontal-axis mode,
+; and the second upward step respectively.
 .cross_room_robot_ghost_initial_state_source
-    EQUB &00, &00, &00, &00, &00, &00, &00
-    EQUB &00, &00, &00, &00, &00, &00, &00
-    EQUB &FE, &00, &FE
+    SKIP 14
+    EQUB CROSS_ROOM_GHOST_VERTICAL_STEP_UP
+    EQUB CROSS_ROOM_GHOST_MODE_HORIZONTAL
+    EQUB CROSS_ROOM_GHOST_VERTICAL_STEP_UP
 .cross_room_robot_ghost_initial_state_source_end
 ASSERT cross_room_robot_ghost_initial_state_source = cross_room_robot_ghost_initial_state
 ASSERT cross_room_robot_ghost_initial_state_source_end = run_game_tick_with_player_contact_flag_cleared
@@ -2857,7 +2866,10 @@ CLEAR last_chance_chord_inkey_codes_source, last_chance_chord_inkey_codes_source
 ORG effect_room_appearance_indices
 ; Four room-appearance table offsets selected by primary reference zero-three.
 .effect_room_appearance_indices_source
-    EQUB &38, &01, &32, &23
+    EQUB ROOM_APPEARANCE_INDEX_A7
+    EQUB ROOM_APPEARANCE_INDEX_B0
+    EQUB ROOM_APPEARANCE_INDEX_C6
+    EQUB ROOM_APPEARANCE_INDEX_D4
 .effect_room_appearance_indices_source_end
 ASSERT effect_room_appearance_indices_source = effect_room_appearance_indices
 ASSERT effect_room_appearance_indices_source_end = &3175
