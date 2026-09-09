@@ -44,7 +44,7 @@ the lower-screen palette. Grouping all eighty rooms by it:
 | `6` | C0 D0 G0 H0 D1 G1 A2 D2 F2 A3 B3 E3 G3 H4 B5 F6 H6 D7 F7 B8 C8 D8 E8 F8 B9 C9 D9 | 27 rooms, mixed |
 | `7` | A1 H2 A6 | square-key door, Joke Shop, platform/spikes |
 | `9` | D4 | password SALLY |
-| `A` | **A8** | **"PRAY AT NOON" clue — a decoy reactor** |
+| `A` | **A8** | **"PRAY AT NOON" clue - a decoy reactor** |
 | `B` | **C6, A7** | **the two known real reactors** |
 
 The last two rows are the striking ones and they were not looked for. Palette
@@ -61,8 +61,8 @@ appearance.
 
 `item_and_goal_record_table` holds twelve records and shares the item-name and
 graphic index: graphic pairs begin at `$28 + 2n`. Record 3 is deliberately
-special, however. Before drawing pair `$2E/$2F`, its code prints “THE GOLDEN
-DRAGON” and sets the gameplay-loop exit flag to `$FF`. Its H8 location is the
+special, however. Before drawing pair `$2E/$2F`, its code prints "THE GOLDEN
+DRAGON" and sets the gameplay-loop exit flag to `$FF`. Its H8 location is the
 reported goal, not evidence that the inventory item named `salt` lies there.
 At new-game startup, `$3245` restores this whole mutable table from the 48-byte
 initial image at `$0980`.
@@ -72,15 +72,15 @@ initial image at `$0980`.
 | 0 | `key` | `$28` | G8 | square key at G8 |
 | 1 | `key` | `$2A` | B1 | round key at B1 |
 | 2 | `key` | `$2C` | A4 | key at A4 |
-| 3 | Golden Dragon ending (`salt` index) | `$2E/$2F` | H8 | THE GOLDEN DRAGON at H8 — agrees |
+| 3 | Golden Dragon ending (`salt` index) | `$2E/$2F` | H8 | THE GOLDEN DRAGON at H8 - agrees |
 | 4 | `worm` | `$30` | H5 | worm at H5 |
 | 5 | `card` | `$32` | A2 | access card at A2 |
 | 6 | `herrin` | `$34` | across 0, down 10 | from the E6 fish puzzle |
 | 7 | `mouse` | `$36` | across 0, down 10 | mouse at G9, via cheese |
 | 8 | `cheese` | `$38` | F1 | cheese at F1 |
 | 9 | `cross` | `$3A` | H2 | cross from the Joke Shop chain at H2 |
-| 10 | `eye` | `$3C` | F3 | not reported — F3 is Chemical Supplies |
-| 11 | `bottle` | `$3E` | B1 | bottle at F7 — **disagrees** |
+| 10 | `eye` | `$3C` | F3 | not reported - F3 is Chemical Supplies |
+| 11 | `bottle` | `$3E` | B1 | bottle at F7 - **disagrees** |
 
 Seven rows agree exactly, including all three keys in the order the three
 reported keys are found, and `$2C` being a key and `$32` the card was already
@@ -92,7 +92,7 @@ Both are items the account says are *produced* rather than found: the herring
 from the fish puzzle and the mouse from baiting with cheese.
 
 Two item rows disagree with the account: `eye` at F3 and `bottle` at B1. The
-first is suggestive rather than plainly wrong — F3 is the Chemical Supplies
+first is suggestive rather than plainly wrong - F3 is the Chemical Supplies
 room, while the room-sign table contains an `Optician` sign that nothing else
 explains and would want an eye. The bottle is a plain disagreement. Record 3's
 former apparent salt disagreement is resolved by its explicit ending code.
@@ -105,13 +105,13 @@ are five letters at `password_letters + 3n`.
 
 | Shown | Stored | Word | Column | Reported location |
 | --- | --- | --- | --- | --- |
-| 1 | 0 | SALLY | across 3 | D4 — agrees |
-| 2 | 1 | LYNDA | across 5 | F5 — agrees |
-| 3 | 2 | DAVID | across 1 | B9 — agrees |
-| 4 | 3 | IDIOT | across 7 | H3, reported as EDITOR — **disagrees** |
-| 5 | 4 | OTTER | across 6 | G0 — agrees |
-| 6 | 5 | ERASE | across 4 | E1, the Music Room — agrees |
-| 7 | 6 | SEVEN | across 2 | C7, reported as GREEN — **disagrees** |
+| 1 | 0 | SALLY | across 3 | D4 - agrees |
+| 2 | 1 | LYNDA | across 5 | F5 - agrees |
+| 3 | 2 | DAVID | across 1 | B9 - agrees |
+| 4 | 3 | IDIOT | across 7 | H3, reported as EDITOR - **disagrees** |
+| 5 | 4 | OTTER | across 6 | G0 - agrees |
+| 6 | 5 | ERASE | across 4 | E1, the Music Room - agrees |
+| 7 | 6 | SEVEN | across 2 | C7, reported as GREEN - **disagrees** |
 | 8 | 7 | ENTER | across 0 | not reported |
 
 Both disagreements are settled by the payload: **neither `GREEN` nor `EDITOR`
@@ -137,42 +137,45 @@ column G holds terminal 7 and password 5.
 Every one of the forty entity records resolves to a room inside the grid, which
 is itself a check on the packed format.
 
-`room_enemy_record_table` at `$0A00`, twenty records — B5 C3 F1 D0 A1 C1 B3 B6
+`room_enemy_record_table` at `$0A00`, twenty records - B5 C3 F1 D0 A1 C1 B3 B6
 C5 G2 E5 E2 A2 E3 F4 E4 H7 D6 C7 D7. This contains **every room the account
 calls out for an enemy**: D0, G2, E5, E3 (the homing one) and F4. The rest are
 hazard, water, acid and plant rooms.
 
-`lift_and_hazard_room_record_table` at `$0A96`, twenty records — A4 B2 B6 G2 A1 B3
+`lift_and_hazard_room_record_table` at `$0A96`, twenty records - A4 B2 B6 G2 A1 B3
 C0 G8 F0 E8 E5 G8 G5 H7 H4 E3 C2 E6 B8 D5. This is the class whose renderer
 `$23BF` was shown by play to draw the vertical lifts, and whose update pushes or
 carries the player. It contains C2, reported as an acid-vat platform room, and
 the Ghost Maze rooms B8 and E8. G8 appears twice, so a room can hold two.
 
 `cross_room_robot_ghost_record_table` at `$0A78` is different in kind: one three-byte
-record per level, not per room. `initialise_indexed_pair_from_record` reads it
+record per level, not per room. `initialise_cross_room_robot_ghost_from_record` reads it
 at `$8F * 3` and writes every unpacked field twice, initialising two parallel
-objects, and `advance_indexed_pair_value_and_display_pointer` **carries them
-across room boundaries** — at a horizontal position of `$4D` it increments the
+objects, and `advance_cross_room_robot_ghost_value_and_display_pointer` **carries them
+across room boundaries** - at a horizontal position of `$4D` it increments the
 column and resets the position to zero, and at a negative position it decrements
 the column and sets the position to `$4C`, reversing at columns 0 and 7.
 
-That is a horizontally moving object which roams along a whole level rather than
-sitting in one room, and it explains a failed experiment: suppressing its
-renderer `$2EAA` appeared to do nothing to "the horizontal lifts", because
-whether one is in the room being watched depends on where it has roamed to.
+The shared pointer table identifies the objects. The ordinary updater used for
+levels 0-7 selects offsets `$10/$12`, which reach the small-bouncing-robot
+pointers at `$0B6F/$0B71`. The alternate updater used for levels 8-9 selects
+offsets `$14/$16`, which reach the ghost pointers at `$0B73/$0B75`. These are
+therefore cross-room robots and ghosts, not horizontal lifts or an unidentified
+general roaming class. No other enemy species is dispatched through this
+cross-room subsystem.
 
 | Level | Reverses at column | Reported platform rooms on that level |
 | --- | --- | --- |
 | 0 | 1 and 5 | E0 platform |
 | 1 | 5 and 6 | D1 platform |
 | 2 | 4 and 6 | C2 platform |
-| 3 | 3 and 6 | D3 platform — agrees |
-| 4 | 0 and 2 | — |
-| 5 | 1 and 2 | — |
+| 3 | 3 and 6 | D3 platform - agrees |
+| 4 | 0 and 2 | - |
+| 5 | 1 and 2 | - |
 | 6 | 5 and 6 | A6 platform |
-| 7 | 2 and 4 | — |
-| 8 | 0 and 7 | — |
-| 9 | 0 and 7 | — |
+| 7 | 2 and 4 | - |
+| 8 | 0 and 7 | - |
+| 9 | 0 and 7 | - |
 
 Only level 3 lines up with a reported platform room, so the reversal columns are
 not simply "the room the platform is in". The mechanism is proved from the code;

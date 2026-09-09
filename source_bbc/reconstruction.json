@@ -554,7 +554,7 @@
       ]
     },
     {
-     "name": "cell_3b_graphic_sequence_table",
+     "name": "right_columns_four_tile_graphic_sequences",
      "runtime_start": 6799,
      "runtime_end_exclusive": 6811,
      "loaded_start": 12943,
@@ -567,7 +567,7 @@
       ]
     },
     {
-     "name": "cell_3c_graphic_sequence_table",
+     "name": "middle_columns_transition_graphic_sequences",
      "runtime_start": 6858,
      "runtime_end_exclusive": 6866,
      "loaded_start": 13002,
@@ -576,11 +576,11 @@
       "meaning_level": "behavioral",
       "record_size": 4,
       "evidence": [
-        "draw_cell_3c_transition_row_by_column indexes one of two four-byte selector records by room column minus two"
+        "draw_transition_row_by_column indexes one of two four-byte selector records by room column minus two"
       ]
     },
     {
-     "name": "cell_3d_graphic_sequence_table",
+     "name": "middle_columns_eight_tile_graphic_sequences",
      "runtime_start": 6897,
      "runtime_end_exclusive": 6913,
      "loaded_start": 13041,
@@ -1892,7 +1892,7 @@
       ]
     },
     {
-     "name": "draw_cell_3c_transition_row_by_column",
+     "name": "draw_transition_row_by_column",
      "runtime_start": 6811,
      "runtime_end_exclusive": 6858,
      "loaded_start": 12955,
@@ -1913,7 +1913,7 @@
       ],
       "evidence": [
         "the room-cell dispatch table maps cell type $3C to $1A9B",
-        "static control flow partitions columns zero/one, two/three and four-seven and selects cell_3c_graphic_sequence_table for the middle pair"
+        "static control flow partitions columns zero/one, two/three and four-seven and selects middle_columns_transition_graphic_sequences for the middle pair"
       ]
     },
     {

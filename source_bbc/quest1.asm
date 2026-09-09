@@ -5865,7 +5865,7 @@ ORG dispatch_room_cell
     EQUW draw_alternating_in_right_half-1 ; ROOM_CELL_ALTERNATING_RIGHT_HALF
     EQUW draw_blank_then_configure_column_seven_object-1 ; ROOM_CELL_COLUMN_7_OBJECT
     EQUW draw_table_selected_sequence_in_columns_five_to_seven-1 ; ROOM_CELL_COLUMNS_5_TO_7_SEQUENCE
-    EQUW draw_cell_3c_transition_row_by_column-1 ; ROOM_CELL_TRANSITION_3C
+    EQUW draw_transition_row_by_column-1 ; ROOM_CELL_TRANSITION_3C
     EQUW draw_table_selected_eight_tiles_in_columns_four_five-1 ; ROOM_CELL_COLUMNS_4_5_SEQUENCE
     EQUW draw_left_edge_or_full_last_column-1 ; ROOM_CELL_LEFT_EDGE_OR_FULL
     EQUW draw_right_edge_or_full_last_column-1 ; ROOM_CELL_RIGHT_EDGE_OR_FULL
@@ -9090,33 +9090,33 @@ CLEAR dispatch_completed_crystal_message_source, dispatch_completed_crystal_mess
 
 ORG draw_table_selected_sequence_in_columns_five_to_seven
 
-; Runtime $1A6C-$1A8E, room-cell type $3B. Columns zero through four draw
-; eight blanks. Columns five through seven convert the column to sequence
+; ROOM_CELL_COLUMNS_5_TO_7_SEQUENCE draws blanks in columns zero through four.
+; Columns five through seven convert the column to sequence
 ; index zero through two, draw two blanks, draw four graphic records selected
-; from cell_3b_graphic_sequence_table, then draw the final two blanks.
+; from right_columns_four_tile_graphic_sequences, then draw two final blanks.
 .draw_table_selected_sequence_in_columns_five_to_seven_source
-    CMP #CELL_3B_FIRST_SEQUENCE_COLUMN
-    BPL draw_cell_3b_selected_middle_pair
+    CMP #RIGHT_COLUMNS_SEQUENCE_FIRST_COLUMN
+    BPL draw_right_columns_selected_middle_sequence
     JMP draw_eight_blank_tiles
 
-.draw_cell_3b_selected_middle_pair
+.draw_right_columns_selected_middle_sequence
     SEC
-    SBC #CELL_3B_FIRST_SEQUENCE_COLUMN
-    STA cell_3b_sequence_index
+    SBC #RIGHT_COLUMNS_SEQUENCE_FIRST_COLUMN
+    STA right_columns_sequence_index
     STA room_update_suppression_state
-    LDX #CELL_3B_EDGE_BLANK_TILES
+    LDX #RIGHT_COLUMNS_SEQUENCE_EDGE_BLANK_TILES
     JSR draw_blank_tile_run
-    LDA #LO(cell_3b_graphic_sequence_table)
+    LDA #LO(right_columns_four_tile_graphic_sequences)
     STA graphic_sequence_pointer_low
-    LDA #HI(cell_3b_graphic_sequence_table)
+    LDA #HI(right_columns_four_tile_graphic_sequences)
     STA graphic_sequence_pointer_high
     JSR draw_four_graphic_selectors_from_pointer
-    LDX #CELL_3B_EDGE_BLANK_TILES
+    LDX #RIGHT_COLUMNS_SEQUENCE_EDGE_BLANK_TILES
     JMP draw_blank_tile_run
 .draw_table_selected_sequence_in_columns_five_to_seven_source_end
 
 ASSERT draw_table_selected_sequence_in_columns_five_to_seven_source = draw_table_selected_sequence_in_columns_five_to_seven
-ASSERT draw_table_selected_sequence_in_columns_five_to_seven_source_end = cell_3b_graphic_sequence_table
+ASSERT draw_table_selected_sequence_in_columns_five_to_seven_source_end = right_columns_four_tile_graphic_sequences
 COPYBLOCK draw_table_selected_sequence_in_columns_five_to_seven_source, draw_table_selected_sequence_in_columns_five_to_seven_source_end, &326C
 
 ; Runtime $1A6C-$1A8E overlaps the loaded transport image. Release it after
@@ -9124,71 +9124,71 @@ COPYBLOCK draw_table_selected_sequence_in_columns_five_to_seven_source, draw_tab
 CLEAR draw_table_selected_sequence_in_columns_five_to_seven_source, draw_table_selected_sequence_in_columns_five_to_seven_source_end
 
 
-ORG cell_3b_graphic_sequence_table
+ORG right_columns_four_tile_graphic_sequences
 
-; Runtime $1A8F-$1A9A. Three four-selector graphic sequences, selected by
-; room column minus five by the cell-$3B handler above.
-.cell_3b_graphic_sequence_table_source
+; Three four-selector graphic sequences selected by room column minus
+; RIGHT_COLUMNS_SEQUENCE_FIRST_COLUMN.
+.right_columns_four_tile_graphic_sequences_source
     EQUB &00, &1C, &06, &00 ; column five
     EQUB &00, &5C, &46, &00 ; column six
     EQUB &5D, &24, &24, &5D ; column seven
-.cell_3b_graphic_sequence_table_source_end
+.right_columns_four_tile_graphic_sequences_source_end
 
-ASSERT cell_3b_graphic_sequence_table_source = cell_3b_graphic_sequence_table
-ASSERT cell_3b_graphic_sequence_table_source_end = draw_cell_3c_transition_row_by_column
-COPYBLOCK cell_3b_graphic_sequence_table_source, cell_3b_graphic_sequence_table_source_end, &328F
+ASSERT right_columns_four_tile_graphic_sequences_source = right_columns_four_tile_graphic_sequences
+ASSERT right_columns_four_tile_graphic_sequences_source_end = draw_transition_row_by_column
+COPYBLOCK right_columns_four_tile_graphic_sequences_source, right_columns_four_tile_graphic_sequences_source_end, &328F
 
 ; Runtime $1A8F-$1A9A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $328F-$329A.
-CLEAR cell_3b_graphic_sequence_table_source, cell_3b_graphic_sequence_table_source_end
+CLEAR right_columns_four_tile_graphic_sequences_source, right_columns_four_tile_graphic_sequences_source_end
 
 
-ORG draw_cell_3c_transition_row_by_column
+ORG draw_transition_row_by_column
 
-; Runtime $1A9B-$1AC9, room-cell type $3C. Column zero also saves the cell and
-; display pointers. Columns zero and one draw blanks; columns two and three
+; ROOM_CELL_TRANSITION_3C saves the cell/display reference in column zero.
+; Columns zero and one draw blanks; columns two and three
 ; draw four blanks followed by a four-selector sequence from
-; cell_3c_graphic_sequence_table; columns four through seven draw alternating
-; tiles. The dispatch-table entry proves this runtime-only entry; only its
-; shared alternating tail has appeared in committed natural traces so far.
-.draw_cell_3c_transition_row_by_column_source
-    CMP #&00
-    BNE select_cell_3c_column_layout
+; middle_columns_transition_graphic_sequences; columns four through seven draw
+; alternating tiles. The dispatch-table entry proves this runtime-only entry;
+; only its shared alternating tail has appeared in committed natural traces.
+.draw_transition_row_by_column_source
+    CMP #ROOM_COLUMN_FIRST
+    BNE select_transition_column_layout
     JSR save_display_pointer_and_cell_reference
-    LDA #&00
+    LDA #ROOM_COLUMN_FIRST
 
-.select_cell_3c_column_layout
-    CMP #&04
-    BMI select_cell_3c_blank_or_sequence
-.draw_cell_3c_alternating_row
+.select_transition_column_layout
+    CMP #TRANSITION_ALTERNATING_FIRST_COLUMN
+    BMI select_transition_blank_or_sequence
+.draw_transition_alternating_row
     JMP draw_eight_alternating_tiles
 
-.select_cell_3c_blank_or_sequence
-    CMP #&02
-    BPL draw_cell_3c_table_sequence
+.select_transition_blank_or_sequence
+    CMP #TRANSITION_SEQUENCE_FIRST_COLUMN
+    BPL draw_transition_table_sequence
     JMP draw_eight_blank_tiles
 
-.draw_cell_3c_table_sequence
-    LDX #&04
+.draw_transition_table_sequence
+    LDX #FOUR_TILE_SEQUENCE_SELECTOR_COUNT
     JSR draw_blank_tile_run
-    LDA #LO(cell_3c_graphic_sequence_table)
+    LDA #LO(middle_columns_transition_graphic_sequences)
     STA graphic_sequence_pointer_low
-    LDA #HI(cell_3c_graphic_sequence_table)
+    LDA #HI(middle_columns_transition_graphic_sequences)
     STA graphic_sequence_pointer_high
     DEC room_graphics_column
     DEC room_graphics_column
-    LDX #&04
-    LDY #&02
+    LDX #FOUR_TILE_SEQUENCE_SELECTOR_COUNT
+    LDY #FOUR_TILE_SEQUENCE_INDEX_SHIFTS
     JMP draw_graphic_selector_sequence
-.draw_cell_3c_transition_row_by_column_source_end
+.draw_transition_row_by_column_source_end
 
-ASSERT draw_cell_3c_transition_row_by_column_source = draw_cell_3c_transition_row_by_column
-ASSERT draw_cell_3c_transition_row_by_column_source_end = cell_3c_graphic_sequence_table
-COPYBLOCK draw_cell_3c_transition_row_by_column_source, draw_cell_3c_transition_row_by_column_source_end, &329B
+ASSERT draw_transition_row_by_column_source = draw_transition_row_by_column
+ASSERT draw_transition_row_by_column_source_end = middle_columns_transition_graphic_sequences
+COPYBLOCK draw_transition_row_by_column_source, draw_transition_row_by_column_source_end, &329B
 
 ; Runtime $1A9B-$1AC9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $329B-$32C9.
-CLEAR draw_cell_3c_transition_row_by_column_source, draw_cell_3c_transition_row_by_column_source_end
+CLEAR draw_transition_row_by_column_source, draw_transition_row_by_column_source_end
 
 
 ORG xor_graphic_into_display
@@ -9282,22 +9282,22 @@ COPYBLOCK xor_graphic_into_display_source, xor_graphic_into_display_source_end, 
 CLEAR xor_graphic_into_display_source, xor_graphic_into_display_source_end
 
 
-ORG cell_3c_graphic_sequence_table
+ORG middle_columns_transition_graphic_sequences
 
-; Runtime $1ACA-$1AD1. Two four-selector sequences selected by room column
-; minus two for cell type $3C.
-.cell_3c_graphic_sequence_table_source
+; Two four-selector transition sequences selected by room column minus
+; TRANSITION_SEQUENCE_FIRST_COLUMN.
+.middle_columns_transition_graphic_sequences_source
     EQUB &1B, &1A, &0C, &00 ; column two
     EQUB &5B, &20, &0D, &00 ; column three
-.cell_3c_graphic_sequence_table_source_end
+.middle_columns_transition_graphic_sequences_source_end
 
-ASSERT cell_3c_graphic_sequence_table_source = cell_3c_graphic_sequence_table
-ASSERT cell_3c_graphic_sequence_table_source_end = draw_table_selected_eight_tiles_in_columns_four_five
-COPYBLOCK cell_3c_graphic_sequence_table_source, cell_3c_graphic_sequence_table_source_end, &32CA
+ASSERT middle_columns_transition_graphic_sequences_source = middle_columns_transition_graphic_sequences
+ASSERT middle_columns_transition_graphic_sequences_source_end = draw_table_selected_eight_tiles_in_columns_four_five
+COPYBLOCK middle_columns_transition_graphic_sequences_source, middle_columns_transition_graphic_sequences_source_end, &32CA
 
 ; Runtime $1ACA-$1AD1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $32CA-$32D1.
-CLEAR cell_3c_graphic_sequence_table_source, cell_3c_graphic_sequence_table_source_end
+CLEAR middle_columns_transition_graphic_sequences_source, middle_columns_transition_graphic_sequences_source_end
 
 ORG draw_pillar_framed_or_pattern_row
 
@@ -9337,29 +9337,32 @@ CLEAR draw_pillar_framed_or_pattern_row_source, draw_pillar_framed_or_pattern_ro
 
 ORG draw_table_selected_eight_tiles_in_columns_four_five
 
-; Runtime $1AD2-$1AF0, room-cell type $3D. Columns zero through three draw blanks. Columns four and five select one of two eight-selector records from cell_3d_graphic_sequence_table; columns six and seven share the cell-$3C alternating-row tail.
+; ROOM_CELL_COLUMNS_4_5_SEQUENCE draws blanks in columns zero through three.
+; Columns four and five select one of two eight-selector records from
+; middle_columns_eight_tile_graphic_sequences; columns six and seven share the
+; transition cell's alternating-row tail.
 .draw_table_selected_eight_tiles_in_columns_four_five_source
-    CMP #&04
-    BPL select_cell_3d_middle_or_right_columns
+    CMP #MIDDLE_EIGHT_TILE_FIRST_COLUMN
+    BPL select_eight_tile_middle_or_right_columns
     JMP draw_eight_blank_tiles
 
-.select_cell_3d_middle_or_right_columns
-    CMP #&06
-    BPL draw_cell_3c_alternating_row
+.select_eight_tile_middle_or_right_columns
+    CMP #MIDDLE_EIGHT_TILE_END_COLUMN
+    BPL draw_transition_alternating_row
     SEC
-    SBC #&04
+    SBC #MIDDLE_EIGHT_TILE_FIRST_COLUMN
     STA room_graphics_column
-    LDA #LO(cell_3d_graphic_sequence_table)
+    LDA #LO(middle_columns_eight_tile_graphic_sequences)
     STA graphic_sequence_pointer_low
-    LDA #HI(cell_3d_graphic_sequence_table)
+    LDA #HI(middle_columns_eight_tile_graphic_sequences)
     STA graphic_sequence_pointer_high
-    LDX #&08
-    LDY #&03
+    LDX #ROOM_CELL_TILE_COUNT
+    LDY #EIGHT_TILE_SEQUENCE_INDEX_SHIFTS
     JMP draw_graphic_selector_sequence
 .draw_table_selected_eight_tiles_in_columns_four_five_source_end
 
 ASSERT draw_table_selected_eight_tiles_in_columns_four_five_source = draw_table_selected_eight_tiles_in_columns_four_five
-ASSERT draw_table_selected_eight_tiles_in_columns_four_five_source_end = cell_3d_graphic_sequence_table
+ASSERT draw_table_selected_eight_tiles_in_columns_four_five_source_end = middle_columns_eight_tile_graphic_sequences
 COPYBLOCK draw_table_selected_eight_tiles_in_columns_four_five_source, draw_table_selected_eight_tiles_in_columns_four_five_source_end, &32D2
 
 ; Runtime $1AD2-$1AF0 overlaps the loaded transport image. Release it after
@@ -9367,22 +9370,22 @@ COPYBLOCK draw_table_selected_eight_tiles_in_columns_four_five_source, draw_tabl
 CLEAR draw_table_selected_eight_tiles_in_columns_four_five_source, draw_table_selected_eight_tiles_in_columns_four_five_source_end
 
 
-ORG cell_3d_graphic_sequence_table
+ORG middle_columns_eight_tile_graphic_sequences
 
-; Runtime $1AF1-$1B00. Two eight-selector rows selected by room column minus
-; four for cell type $3D.
-.cell_3d_graphic_sequence_table_source
+; Two eight-selector rows selected by room column minus
+; MIDDLE_EIGHT_TILE_FIRST_COLUMN.
+.middle_columns_eight_tile_graphic_sequences_source
     EQUB &00, &45, &5D, &1D, &16, &1D, &5D, &05 ; column four
     EQUB &00, &00, &24, &00, &16, &00, &24, &00 ; column five
-.cell_3d_graphic_sequence_table_source_end
+.middle_columns_eight_tile_graphic_sequences_source_end
 
-ASSERT cell_3d_graphic_sequence_table_source = cell_3d_graphic_sequence_table
-ASSERT cell_3d_graphic_sequence_table_source_end = draw_pillar_framed_or_pattern_row
-COPYBLOCK cell_3d_graphic_sequence_table_source, cell_3d_graphic_sequence_table_source_end, &32F1
+ASSERT middle_columns_eight_tile_graphic_sequences_source = middle_columns_eight_tile_graphic_sequences
+ASSERT middle_columns_eight_tile_graphic_sequences_source_end = draw_pillar_framed_or_pattern_row
+COPYBLOCK middle_columns_eight_tile_graphic_sequences_source, middle_columns_eight_tile_graphic_sequences_source_end, &32F1
 
 ; Runtime $1AF1-$1B00 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $32F1-$3300.
-CLEAR cell_3d_graphic_sequence_table_source, cell_3d_graphic_sequence_table_source_end
+CLEAR middle_columns_eight_tile_graphic_sequences_source, middle_columns_eight_tile_graphic_sequences_source_end
 
 
 ORG play_sound_with_amplitude
