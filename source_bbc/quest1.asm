@@ -9193,12 +9193,14 @@ CLEAR draw_transition_row_by_column_source, draw_transition_row_by_column_source
 
 ORG xor_graphic_into_display
 
-; Runtime $32D1-$3332. A supplies the destination low byte while $7D supplies
-; its high byte. For each of $41 eight-scanline blocks, XOR four bytes at
-; horizontal offsets 0/8/16/24. The BBC interleaved display pointer advances
-; one byte between scanlines and $0280 bytes across each character-row edge.
-; Nonzero $6C repeats every source scanline twice; zero $6C consumes all eight
-; source scanlines and advances $20 source bytes between multi-block rows.
+; A supplies the destination low byte; display_pointer_high supplies its high
+; byte. For each requested character row, XOR four source bytes spaced one
+; Mode 1 cell column apart on each of eight scanlines. The interleaved display
+; pointer advances one byte between scanlines and one character row at an edge.
+; xor_graphic_repeat_source_scanlines can repeat each source scanline twice.
+; Without repetition, eight INCs consume one source byte per scanline. The
+; final scanline comparison leaves carry set, so the subsequent source-pointer
+; ADC adds $19 to the consumed $08: the next source row begins $21 bytes later.
 .xor_graphic_into_display_source
     STA display_pointer_low
     TYA
@@ -9207,10 +9209,10 @@ ORG xor_graphic_into_display
     PHA
 
 .xor_graphic_next_character_row
-    LDA #&08
+    LDA #MODE1_CHARACTER_SCANLINE_COUNT
     STA xor_graphic_scanlines_remaining
 .xor_graphic_next_display_scanline
-    LDY #&00
+    LDY #XOR_GRAPHIC_SCANLINE_FIRST_OFFSET
     JSR test_display_pointer_in_xor_draw_window
     BCS xor_graphic_skip_clipped_scanline
 
@@ -9219,9 +9221,9 @@ ORG xor_graphic_into_display
     EOR (display_pointer_low),Y
     STA (display_pointer_low),Y
     TYA
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     TAY
-    CMP #&20
+    CMP #XOR_GRAPHIC_SCANLINE_SPAN_BYTES
     BNE xor_graphic_four_byte_scanline_loop
 
 .xor_graphic_skip_clipped_scanline
@@ -9235,8 +9237,8 @@ ORG xor_graphic_into_display
 
 .xor_graphic_source_scanline_ready
     LDA display_pointer_low
-    AND #&07
-    CMP #&07
+    AND #MODE1_SCANLINE_INDEX_MASK
+    CMP #MODE1_CHARACTER_LAST_SCANLINE
     BPL xor_graphic_advance_display_character_row
     INC display_pointer_low
 .xor_graphic_display_scanline_ready
@@ -9249,7 +9251,7 @@ ORG xor_graphic_into_display
     BNE xor_graphic_next_character_row
 
     LDA graphic_source_pointer_low
-    ADC #&18
+    ADC #XOR_GRAPHIC_NEXT_SOURCE_ROW_LOW_ADJUST ; carry is intentionally still set
     STA graphic_source_pointer_low
     BCC xor_graphic_next_character_row
     INC graphic_source_pointer_high
@@ -9265,10 +9267,10 @@ ORG xor_graphic_into_display
 .xor_graphic_advance_display_character_row
     CLC
     LDA display_pointer_low
-    ADC #&79
+    ADC #MODE1_NEXT_CHARACTER_ROW_LOW_ADJUST
     STA display_pointer_low
     LDA display_pointer_high
-    ADC #&02
+    ADC #MODE1_NEXT_CHARACTER_ROW_HIGH_ADJUST
     STA display_pointer_high
     JMP xor_graphic_display_scanline_ready
 .xor_graphic_into_display_source_end
