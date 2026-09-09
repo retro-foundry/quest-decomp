@@ -27,8 +27,8 @@
 
 INCLUDE "source_bbc/memory_map.inc"
 
-; PLAYER, CREATURE, ROBOT AND LIFT SPRITES
-; =========================================
+; PLAYER, CREATURE AND ENEMY SPRITES
+; ==================================
 ; Primary XOR sprite bank: 28 aligned 32-byte Mode 1 frames. The player body
 ; records and six-record ghost set are individually named below.
 ; xor_graphic_into_display proves the storage order: eight source
@@ -39,7 +39,7 @@ INCLUDE "source_bbc/memory_map.inc"
 ; Stage this data outside the loaded/runtime alias range. It is copied to its
 ; transport location only after all relocated routines have been assembled.
 ORG SPRITE_SOURCE_STAGING_ADDRESS
-.player_enemy_and_lift_xor_sprite_frames_source
+.primary_xor_sprite_frames_source
 .caterpillar_facing_right_phase_0_frame
     EQUB &00, &00, &00, &00, &06, &6F, &6F, &06, &00, &00, &00, &06, &6F, &6F, &6F, &06
     EQUB &00, &00, &06, &6F, &7F, &7F, &6F, &06, &77, &88, &0E, &6F, &69, &0F, &08, &0E
@@ -124,12 +124,12 @@ ORG SPRITE_SOURCE_STAGING_ADDRESS
 .ghost_facing_left_lower_frame
     EQUB &10, &10, &10, &00, &00, &00, &00, &00, &F0, &B0, &F0, &B0, &D0, &60, &70, &30
     EQUB &60, &70, &D0, &E0, &F0, &F0, &70, &B0, &60, &10, &80, &C0, &00, &E0, &E0, &30
-.player_enemy_and_lift_xor_sprite_frames_end
+.primary_xor_sprite_frames_end
 ASSERT ghost_facing_right_middle_frame = ghost_facing_right_upper_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
 ASSERT ghost_facing_right_lower_frame = ghost_facing_right_middle_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
 ASSERT ghost_facing_left_middle_frame = ghost_facing_left_upper_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
 ASSERT ghost_facing_left_lower_frame = ghost_facing_left_middle_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
-ASSERT player_enemy_and_lift_xor_sprite_frames_end-player_enemy_and_lift_xor_sprite_frames_source = PRIMARY_XOR_SPRITE_BANK_BYTES
+ASSERT primary_xor_sprite_frames_end-primary_xor_sprite_frames_source = PRIMARY_XOR_SPRITE_BANK_BYTES
 
 ; Four aligned Mode 1-shaped records after the embedded map initializer. No
 ; pointer-table entry or committed runtime read selects them, so their source
@@ -10878,8 +10878,9 @@ ORG room_and_item_graphic_records
 .checker_diagonal_tile
 ; graphic record &09: checker-pattern diagonal room-cell tile
     EQUB &0A, &05, &0A, &05, &0A, &05, &0A, &05, &0A, &05, &0A, &05, &0A, &05, &0A, &05
-.solid_corner_tile_a
-; graphic record &0A: solid corner room-cell tile
+.solid_corner_and_vertical_lift_graphic_record
+; graphic record &0A: solid corner room-cell tile, also used as the repeated
+; two-row vertical-lift graphic through the runtime pointer vertical_lift_graphic
     EQUB &FF, &FF, &23, &11, &00, &00, &00, &00, &FF, &FF, &0F, &0F, &F8, &F8, &00, &00
 .solid_corner_tile_b
 ; graphic record &0B: companion solid corner room-cell tile
@@ -11054,7 +11055,7 @@ ASSERT small_marker_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_MARKER
 ASSERT crossed_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CROSSED_DIAGONAL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT curved_bowl_tile = room_and_item_graphic_records + (GRAPHIC_CURVED_BOWL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT checker_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CHECKER_DIAGONAL-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
-ASSERT solid_corner_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
+ASSERT solid_corner_and_vertical_lift_graphic_record = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_A-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT solid_corner_tile_b = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_B-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT stepped_fixture_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FIXTURE-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
 ASSERT coloured_fixture_tile = room_and_item_graphic_records + (GRAPHIC_COLOURED_FIXTURE-GRAPHIC_FIRST_STORED_RECORD)*GRAPHIC_RECORD_BYTES
@@ -11515,9 +11516,9 @@ ORG RELOCATION_LOADER_SOURCE_STAGING_ADDRESS
     STA graphic_source_pointer_low
     LDA #HI(QUEST1_LOAD_ADDRESS)
     STA graphic_source_pointer_high
-    LDA #LO(player_enemy_and_lift_xor_sprite_frames)
+    LDA #LO(primary_xor_sprite_frames)
     STA display_pointer_low
-    LDA #HI(player_enemy_and_lift_xor_sprite_frames)
+    LDA #HI(primary_xor_sprite_frames)
     STA display_pointer_high
     LDY #LOADER_COPY_FIRST_INDEX
 .copy_loaded_low_byte
@@ -11766,9 +11767,9 @@ CLEAR dfs_execution_entry_stub_source, dfs_execution_entry_stub_source_end
 
 ; Install the two staged XOR graphic-bank parts only after every relocated
 ; routine that assembles in the aliased destination window is finished.
-COPYBLOCK player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end, player_enemy_and_lift_xor_sprite_frames+LOW_RUNTIME_TO_LOADED_DELTA
+COPYBLOCK primary_xor_sprite_frames_source, primary_xor_sprite_frames_end, primary_xor_sprite_frames+LOW_RUNTIME_TO_LOADED_DELTA
 COPYBLOCK inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end, inert_xor_sprite_frame_block+LOW_RUNTIME_TO_LOADED_DELTA
-CLEAR player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end
+CLEAR primary_xor_sprite_frames_source, primary_xor_sprite_frames_end
 CLEAR inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end
 
 

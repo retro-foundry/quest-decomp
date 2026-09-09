@@ -15,7 +15,7 @@
   },
   "data_ranges": [
     {
-      "name": "player_enemy_and_lift_xor_sprite_frames",
+      "name": "primary_xor_sprite_frames",
       "runtime_start": 1024,
       "runtime_end_exclusive": 1920,
       "loaded_start": 7424,
