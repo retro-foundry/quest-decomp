@@ -1320,7 +1320,7 @@ ORG add_collected_icon
 ; routine's saved X and Y loop values before RTS returns to initialise_new_game.
 .add_collected_icon_source
     LDA collected_icon_count
-    CMP #&0C
+    CMP #POWER_CRYSTAL_TOTAL
     BEQ add_collected_icon_branch_1
     INC collected_icon_count
     LDA collected_icon_count
@@ -3676,13 +3676,13 @@ ORG xor_draw_lift_or_hazard
 ; platform look alike to this routine; only what happens on contact differs,
 ; which update_lift_or_hazard_by_class decides.
 .xor_draw_lift_or_hazard_source
-    CPY #&00
+    CPY #LIFT_HAZARD_FIRST_INVALID_SLOT
     BEQ lift_or_hazard_step_rts
-    CPY #&08
+    CPY #LIFT_HAZARD_LAST_INVALID_SLOT
     BEQ lift_or_hazard_step_rts
 
 .draw_lift_or_hazard_without_slot_check
-    LDX #&0C
+    LDX #LIFT_HAZARD_FRAME_0_POINTER_OFFSET
     LDA active_lift_or_hazard_class
     LSR A
     BCC single_row_lift_or_hazard
@@ -3691,7 +3691,7 @@ ORG xor_draw_lift_or_hazard
     LSR A
     LSR A
     BCS test_two_row_lift_or_hazard
-    LDX #&0E
+    LDX #LIFT_HAZARD_FRAME_1_POINTER_OFFSET
 
 .test_two_row_lift_or_hazard
     LDA lift_and_hazard_slot_limit
@@ -4194,7 +4194,7 @@ ORG initialise_new_game
     STA bcd_counter_high
     LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
-    LDY #&0C
+    LDY #POWER_CRYSTAL_TOTAL
     STY power_crystals_remaining
     LDA #LO(status_icon_row_base)
     STA display_pointer_low
@@ -9627,7 +9627,7 @@ ORG play_note_for_position_and_test_tune
     BNE test_note_still_held
     INC music_tune_progress
     LDA music_tune_progress
-    CMP #&0C
+    CMP #MUSIC_TUNE_NOTE_COUNT
     BNE submit_sound_block_rts
     STA timed_effect_selector
     LDA reference_pair_primary_value
@@ -10236,10 +10236,10 @@ ORG draw_matching_records_from_table
 ; analysis/room_map.md has the full correspondence and the two remaining item
 ; rows that disagree.
 .draw_matching_records_from_table_source
-    LDX #&0B
-    LDA #&00
+    LDX #ITEM_GOAL_LAST_RECORD_INDEX
+    LDA #LO(item_and_goal_record_table)
     STA shared_workspace_13
-    LDA #&09
+    LDA #HI(item_and_goal_record_table)
     STA shared_workspace_14
 
 .test_next_record
@@ -11035,6 +11035,7 @@ ORG music_tune_sequence
 .music_tune_sequence_source
     EQUB &44, &3C, &34, &44, &3C, &34, &50, &48, &44, &50, &48, &44
 .music_tune_sequence_source_end
+ASSERT music_tune_sequence_source_end-music_tune_sequence_source = MUSIC_TUNE_NOTE_COUNT
 ASSERT music_tune_sequence_source = music_tune_sequence
 ASSERT music_tune_sequence_source_end = active_room_moving_object_pointer_table
 COPYBLOCK music_tune_sequence_source, music_tune_sequence_source_end, &2453
@@ -11065,6 +11066,8 @@ ORG lift_and_hazard_graphic_descriptor
 .lift_and_hazard_graphic_descriptor_source
     EQUB &00, &00, &00, &00
 .lift_and_hazard_graphic_descriptor_source_end
+ASSERT lift_and_hazard_graphic_descriptor = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_0_POINTER_OFFSET
+ASSERT lift_and_hazard_graphic_descriptor+2 = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_1_POINTER_OFFSET
 ASSERT lift_and_hazard_graphic_descriptor_source = lift_and_hazard_graphic_descriptor
 ASSERT lift_and_hazard_graphic_descriptor_source_end = &0B6F
 COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end, &246B
@@ -11540,6 +11543,7 @@ ORG item_and_goal_record_table
     EQUB &03, &05, &12, &16
     EQUB &01, &01, &0A, &45
 .item_and_goal_record_table_source_end
+ASSERT item_and_goal_record_table_source_end-item_and_goal_record_table_source = ITEM_GOAL_RECORD_COUNT*ITEM_GOAL_RECORD_BYTES
 ASSERT item_and_goal_record_table_source = item_and_goal_record_table
 ASSERT item_and_goal_record_table_source_end = &0930
 COPYBLOCK item_and_goal_record_table_source, item_and_goal_record_table_source_end, &2200
@@ -11587,6 +11591,7 @@ ORG initial_item_and_goal_record_table
     EQUB &03, &05, &12, &16
     EQUB &07, &05, &11, &24
 .initial_item_and_goal_record_table_source_end
+ASSERT initial_item_and_goal_record_table_source_end-initial_item_and_goal_record_table_source = ITEM_GOAL_RECORD_COUNT*ITEM_GOAL_RECORD_BYTES
 ASSERT initial_item_and_goal_record_table_source = initial_item_and_goal_record_table
 ASSERT initial_item_and_goal_record_table_source_end = &09B0
 COPYBLOCK initial_item_and_goal_record_table_source, initial_item_and_goal_record_table_source_end, &2280
