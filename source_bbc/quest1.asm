@@ -5928,14 +5928,14 @@ ORG enter_room_to_the_left
 ; $120C vector before the player is redrawn by a tail jump, so the room index
 ; moves one step and the new room is what the redraw lands on.
 .enter_room_to_the_left_source
-    LDA #&4C
+    LDA #PLAYER_RIGHT_EDGE_POSITION
     STA player_horizontal_position
     CLC
     LDA player_display_pointer_low
-    ADC #&60
+    ADC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA player_display_pointer_low
     LDA player_display_pointer_high
-    ADC #&02
+    ADC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA player_display_pointer_high
     JSR decrement_reference_then_draw_and_initialise_room
     JMP xor_draw_player_two_parts
@@ -5968,12 +5968,12 @@ ORG enter_room_below
     JSR set_player_pointer_from_horizontal_position
     CLC
     LDA player_display_pointer_low
-    ADC #&80
+    ADC #LO(QUEST_DISPLAY_START)
     STA player_display_pointer_low
     LDA player_display_pointer_high
-    ADC #&3C
+    ADC #HI(QUEST_DISPLAY_START)
     STA player_display_pointer_high
-    LDA #&00
+    LDA #PLAYER_TOP_EDGE_VERTICAL_POSITION
     STA player_vertical_position
     JSR enter_advance_secondary_reference_and_pointer
     JSR xor_draw_player_two_parts
@@ -6012,14 +6012,14 @@ ORG enter_room_above
     LSR shared_workspace_75
     BCS return_carry_clear_2b35
     JSR set_player_pointer_from_horizontal_position
-    LDA #&D0
+    LDA #PLAYER_BOTTOM_EDGE_VERTICAL_POSITION
     STA player_vertical_position
     CLC
     LDA player_display_pointer_low
-    ADC #&80
+    ADC #LO(PLAYER_BOTTOM_ROW_POINTER_BASE)
     STA player_display_pointer_low
     LDA player_display_pointer_high
-    ADC #&7D
+    ADC #HI(PLAYER_BOTTOM_ROW_POINTER_BASE)
     STA player_display_pointer_high
     JSR enter_retreat_secondary_reference_and_pointer
     INC player_vertical_velocity
