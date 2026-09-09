@@ -4017,20 +4017,17 @@ ORG set_velocity_step_from_horizontal_band
 
 ; Set the vertical velocity step from which horizontal band
 ; of the room the player is standing in.
-; The shadow horizontal position at $16 is shifted right four times, so the room
-; splits into bands sixteen units wide, and the result indexes the table that
-; follows the RTS at $24F4. A room is $4C units wide, so five bands exist and the
-; table's five entries are $01, $FF, $02, $FE and $03 - alternating sign with
-; rising magnitude.
-; vertical_velocity_step is the unit both the jet boots and gravity work in, added by the thrust code
-; and subtracted at $277B, so a negative entry inverts which way the player is
+; The saved horizontal position is shifted right four times, splitting the room
+; into sixteen-unit bands and selecting the adjacent signed-step table. Its five
+; entries alternate direction while increasing in magnitude.
+; vertical_velocity_step is the unit both the jet boots and gravity work in,
+; added by the thrust code and subtracted by the normal vertical update, so a
+; negative entry inverts which way the player is
 ; carried while standing still. Bands two and four therefore lift rather than drop.
 ; This runs only when horizontal_band_velocity_effect_state is odd.
 ; draw_and_initialise_room clears that state for every room, so it is a
-; per-room effect a room has to request. It fired on 379 of 3,509 tested frames.
-; What the effect is called in play is not established. A signed step that
-; alternates by band is consistent with a current, and the account of the map has
-; many water rooms, but no trace has been tied to a named room.
+; per-room effect a room has to request. Runtime traces establish the alternating
+; band behavior; the source does not assign it an unsupported in-game name.
 .set_velocity_step_from_horizontal_band_source
     LDA player_horizontal_position_snapshot
     LSR A
