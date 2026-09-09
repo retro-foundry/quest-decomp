@@ -10208,7 +10208,7 @@ ORG scan_column_behind_room_enemy
 
 ASSERT scan_column_behind_room_enemy_source = scan_column_behind_room_enemy
 ASSERT scan_column_behind_room_enemy_source_end = &363E
-COPYBLOCK scan_column_behind_room_enemy_source, scan_column_behind_room_enemy_source_end, &4E2E
+COPYBLOCK scan_column_behind_room_enemy_source, scan_column_behind_room_enemy_source_end, scan_column_behind_room_enemy+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $362E-$363D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E2E-$4E3D.
@@ -10235,7 +10235,7 @@ ORG scan_column_ahead_of_room_enemy
 
 ASSERT scan_column_ahead_of_room_enemy_source = scan_column_ahead_of_room_enemy
 ASSERT scan_column_ahead_of_room_enemy_source_end = &364E
-COPYBLOCK scan_column_ahead_of_room_enemy_source, scan_column_ahead_of_room_enemy_source_end, &4E3E
+COPYBLOCK scan_column_ahead_of_room_enemy_source, scan_column_ahead_of_room_enemy_source_end, scan_column_ahead_of_room_enemy+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $363E-$364D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E3E-$4E4D.
@@ -10266,7 +10266,7 @@ ORG draw_item_graphic_pair
 
 ASSERT draw_item_graphic_pair_source = draw_item_graphic_pair
 ASSERT draw_item_graphic_pair_source_end = &1E3F
-COPYBLOCK draw_item_graphic_pair_source, draw_item_graphic_pair_source_end, &3629
+COPYBLOCK draw_item_graphic_pair_source, draw_item_graphic_pair_source_end, draw_item_graphic_pair+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1E29-$1E3E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3629-$363E.
@@ -10291,7 +10291,7 @@ ORG load_room_enemy_display_pointer_then_scan_markers
 
 ASSERT load_room_enemy_display_pointer_then_scan_markers_source = load_room_enemy_display_pointer_then_scan_markers
 ASSERT load_room_enemy_display_pointer_then_scan_markers_source_end = &3659
-COPYBLOCK load_room_enemy_display_pointer_then_scan_markers_source, load_room_enemy_display_pointer_then_scan_markers_source_end, &4E4E
+COPYBLOCK load_room_enemy_display_pointer_then_scan_markers_source, load_room_enemy_display_pointer_then_scan_markers_source_end, load_room_enemy_display_pointer_then_scan_markers+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $364E-$3658 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E4E-$4E58.
@@ -10336,7 +10336,7 @@ ORG scan_markers_below_room_enemy
 
 ASSERT scan_markers_below_room_enemy_source = scan_markers_below_room_enemy
 ASSERT scan_markers_below_room_enemy_source_end = &367F
-COPYBLOCK scan_markers_below_room_enemy_source, scan_markers_below_room_enemy_source_end, &4E59
+COPYBLOCK scan_markers_below_room_enemy_source, scan_markers_below_room_enemy_source_end, scan_markers_below_room_enemy+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $3659-$367E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E59-$4E7E.
@@ -10359,7 +10359,7 @@ ORG load_room_enemy_collision_coordinates
 
 ASSERT load_room_enemy_collision_coordinates_source = load_room_enemy_collision_coordinates
 ASSERT load_room_enemy_collision_coordinates_source_end = &368B
-COPYBLOCK load_room_enemy_collision_coordinates_source, load_room_enemy_collision_coordinates_source_end, &4E7F
+COPYBLOCK load_room_enemy_collision_coordinates_source, load_room_enemy_collision_coordinates_source_end, load_room_enemy_collision_coordinates+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $367F-$368A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E7F-$4E8A.
@@ -10394,7 +10394,7 @@ ORG scan_column_below_room_enemy
 
 ASSERT scan_column_below_room_enemy_source = scan_column_below_room_enemy
 ASSERT scan_column_below_room_enemy_source_end = &36A1
-COPYBLOCK scan_column_below_room_enemy_source, scan_column_below_room_enemy_source_end, &4E8B
+COPYBLOCK scan_column_below_room_enemy_source, scan_column_below_room_enemy_source_end, scan_column_below_room_enemy+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $368B-$36A0 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E8B-$4EA0.
@@ -10435,7 +10435,7 @@ ORG clamp_room_enemy_horizontal_delta_at_limits
 
 ASSERT clamp_room_enemy_horizontal_delta_at_limits_source = clamp_room_enemy_horizontal_delta_at_limits
 ASSERT clamp_room_enemy_horizontal_delta_at_limits_source_end = &36BA
-COPYBLOCK clamp_room_enemy_horizontal_delta_at_limits_source, clamp_room_enemy_horizontal_delta_at_limits_source_end, &4EA1
+COPYBLOCK clamp_room_enemy_horizontal_delta_at_limits_source, clamp_room_enemy_horizontal_delta_at_limits_source_end, clamp_room_enemy_horizontal_delta_at_limits+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $36A1-$36B9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4EA1-$4EB9.
@@ -10484,7 +10484,7 @@ ORG advance_room_enemy_horizontal_position
 
 ASSERT advance_room_enemy_horizontal_position_source = advance_room_enemy_horizontal_position
 ASSERT advance_room_enemy_horizontal_position_source_end = &36ED
-COPYBLOCK advance_room_enemy_horizontal_position_source, advance_room_enemy_horizontal_position_source_end, &4EBA
+COPYBLOCK advance_room_enemy_horizontal_position_source, advance_room_enemy_horizontal_position_source_end, advance_room_enemy_horizontal_position+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $36BA-$36EC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4EBA-$4EEC.
@@ -10526,7 +10526,7 @@ ORG reverse_room_enemy_vertical_delta_at_limits
 
 ASSERT reverse_room_enemy_vertical_delta_at_limits_source = reverse_room_enemy_vertical_delta_at_limits
 ASSERT reverse_room_enemy_vertical_delta_at_limits_source_end = &3708
-COPYBLOCK reverse_room_enemy_vertical_delta_at_limits_source, reverse_room_enemy_vertical_delta_at_limits_source_end, &4EED
+COPYBLOCK reverse_room_enemy_vertical_delta_at_limits_source, reverse_room_enemy_vertical_delta_at_limits_source_end, reverse_room_enemy_vertical_delta_at_limits+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $36ED-$3707 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4EED-$4F07.
@@ -10569,7 +10569,7 @@ ORG advance_room_enemy_vertical_position
 
 ASSERT advance_room_enemy_vertical_position_source = advance_room_enemy_vertical_position
 ASSERT advance_room_enemy_vertical_position_source_end = &372F
-COPYBLOCK advance_room_enemy_vertical_position_source, advance_room_enemy_vertical_position_source_end, &4F08
+COPYBLOCK advance_room_enemy_vertical_position_source, advance_room_enemy_vertical_position_source_end, advance_room_enemy_vertical_position+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $3708-$372E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4F08-$4F2E.
@@ -10609,7 +10609,7 @@ ASSERT show_golden_dragon_ending_source = show_golden_dragon_ending
 ASSERT golden_dragon_inline_message = &1E42
 ASSERT golden_dragon_inline_message_end = &1E67
 ASSERT show_golden_dragon_ending_source_end = &1E6C
-COPYBLOCK show_golden_dragon_ending_source, show_golden_dragon_ending_source_end, &363F
+COPYBLOCK show_golden_dragon_ending_source, show_golden_dragon_ending_source_end, show_golden_dragon_ending+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1E3F-$1E6B overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $363F-$366B.
@@ -10733,7 +10733,7 @@ ORG initialise_room_moving_objects
 
 ASSERT initialise_room_moving_objects_source = initialise_room_moving_objects
 ASSERT initialise_room_moving_objects_source_end = &1F0F
-COPYBLOCK initialise_room_moving_objects_source, initialise_room_moving_objects_source_end, &366C
+COPYBLOCK initialise_room_moving_objects_source, initialise_room_moving_objects_source_end, initialise_room_moving_objects+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1E6C-$1F0E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $366C-$370E.
@@ -10744,12 +10744,12 @@ CLEAR initialise_room_moving_objects_source, initialise_room_moving_objects_sour
 
 ; Delay this copy until every routine assembled in loaded $2AA8-$2B60 has
 ; already copied itself elsewhere and released that overlapping runtime area.
-COPYBLOCK dispatch_room_cell_source, dispatch_room_cell_source_end, &2AA8
+COPYBLOCK dispatch_room_cell_source, dispatch_room_cell_source_end, dispatch_room_cell+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR dispatch_room_cell_source, dispatch_room_cell_source_end
 
 ; The extended alternating-tile block copies after overlapping $2Bxx runtime
 ; routines have released their assembly ranges.
-COPYBLOCK draw_alternating_tile_run_source, draw_alternating_tile_run_source_end, &2B71
+COPYBLOCK draw_alternating_tile_run_source, draw_alternating_tile_run_source_end, draw_eight_alternating_tiles+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_alternating_tile_run_source, draw_alternating_tile_run_source_end
 
 ORG status_icon_graphics
@@ -10790,7 +10790,7 @@ ASSERT blank_status_icon_graphic = status_icon_graphics + STATUS_GRAPHIC_BLANK_I
 ASSERT status_icon_graphics_source = status_icon_graphics
 ASSERT unused_status_figure_graphics_source = unused_status_figure_graphics
 ASSERT unused_status_figure_graphics_source_end = item_and_goal_record_table
-COPYBLOCK status_icon_graphics_source, unused_status_figure_graphics_source_end, &2180
+COPYBLOCK status_icon_graphics_source, unused_status_figure_graphics_source_end, status_icon_graphics+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR status_icon_graphics_source, unused_status_figure_graphics_source_end
 
 ORG relocated_game_entry
@@ -10800,7 +10800,7 @@ ORG relocated_game_entry
 .relocated_game_entry_source_end
 ASSERT relocated_game_entry_source = relocated_game_entry
 ASSERT relocated_game_entry_source_end = item_slot_label_table
-COPYBLOCK relocated_game_entry_source, relocated_game_entry_source_end, &2400
+COPYBLOCK relocated_game_entry_source, relocated_game_entry_source_end, relocated_game_entry+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR relocated_game_entry_source, relocated_game_entry_source_end
 
 ORG item_slot_label_table
@@ -10848,7 +10848,7 @@ ASSERT bottle_item_slot_label = item_slot_label_table + (ITEM_CODE_BOTTLE-ITEM_L
 ASSERT item_slot_label_table_source_end-item_slot_label_table_source = (ITEM_GOAL_RECORD_COUNT+1)*ITEM_LABEL_CHARACTER_COUNT
 ASSERT item_slot_label_table_source = item_slot_label_table
 ASSERT item_slot_label_table_source_end = &0B51
-COPYBLOCK item_slot_label_table_source, item_slot_label_table_source_end, &2403
+COPYBLOCK item_slot_label_table_source, item_slot_label_table_source_end, item_slot_label_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR item_slot_label_table_source, item_slot_label_table_source_end
 
 ORG ITEM_LABEL_TABLE_PADDING_ADDRESS
@@ -10858,7 +10858,7 @@ ORG ITEM_LABEL_TABLE_PADDING_ADDRESS
 .item_label_table_padding_source_end
 ASSERT item_label_table_padding_source = &0B51
 ASSERT item_label_table_padding_source_end = music_tune_sequence
-COPYBLOCK item_label_table_padding_source, item_label_table_padding_source_end, &2451
+COPYBLOCK item_label_table_padding_source, item_label_table_padding_source_end, ITEM_LABEL_TABLE_PADDING_ADDRESS+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR item_label_table_padding_source, item_label_table_padding_source_end
 
 ORG music_tune_sequence
@@ -10869,7 +10869,7 @@ ORG music_tune_sequence
 ASSERT music_tune_sequence_source_end-music_tune_sequence_source = MUSIC_TUNE_NOTE_COUNT
 ASSERT music_tune_sequence_source = music_tune_sequence
 ASSERT music_tune_sequence_source_end = active_room_moving_object_pointer_table
-COPYBLOCK music_tune_sequence_source, music_tune_sequence_source_end, &2453
+COPYBLOCK music_tune_sequence_source, music_tune_sequence_source_end, music_tune_sequence+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR music_tune_sequence_source, music_tune_sequence_source_end
 
 ORG active_room_moving_object_pointer_table
@@ -10879,7 +10879,7 @@ ORG active_room_moving_object_pointer_table
 .active_room_moving_object_pointer_table_source_end
 ASSERT active_room_moving_object_pointer_table_source = active_room_moving_object_pointer_table
 ASSERT active_room_moving_object_pointer_table_source_end = &0B67
-COPYBLOCK active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end, &245F
+COPYBLOCK active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end, active_room_moving_object_pointer_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR active_room_moving_object_pointer_table_source, active_room_moving_object_pointer_table_source_end
 
 ORG enemy_graphic_descriptor
@@ -10889,7 +10889,7 @@ ORG enemy_graphic_descriptor
 .enemy_graphic_descriptor_source_end
 ASSERT enemy_graphic_descriptor_source = enemy_graphic_descriptor
 ASSERT enemy_graphic_descriptor_source_end = lift_and_hazard_graphic_descriptor
-COPYBLOCK enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end, &2467
+COPYBLOCK enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end, enemy_graphic_descriptor+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR enemy_graphic_descriptor_source, enemy_graphic_descriptor_source_end
 
 ORG lift_and_hazard_graphic_descriptor
@@ -10901,7 +10901,7 @@ ASSERT lift_and_hazard_graphic_descriptor = active_room_moving_object_pointer_ta
 ASSERT lift_and_hazard_graphic_descriptor+2 = active_room_moving_object_pointer_table + LIFT_HAZARD_FRAME_1_POINTER_OFFSET
 ASSERT lift_and_hazard_graphic_descriptor_source = lift_and_hazard_graphic_descriptor
 ASSERT lift_and_hazard_graphic_descriptor_source_end = &0B6F
-COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end, &246B
+COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end, lift_and_hazard_graphic_descriptor+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end
 
 ORG cross_room_robot_ghost_frame_pointer_table
@@ -10939,7 +10939,7 @@ ASSERT player_lower_wide_graphic_pointer = active_room_moving_object_pointer_tab
 ASSERT player_lower_step_left_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_LOWER_STEP_LEFT_POINTER_OFFSET
 ASSERT player_graphic_frame_pointer_table_source = player_graphic_frame_pointer_table
 ASSERT player_graphic_frame_pointer_table_source_end = &0B83
-COPYBLOCK cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end, &246F
+COPYBLOCK cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end, cross_room_robot_ghost_frame_pointer_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end
 
 ORG interval_timer_block
@@ -10950,7 +10950,7 @@ ORG interval_timer_block
 .interval_timer_block_source_end
 ASSERT interval_timer_block_source = interval_timer_block
 ASSERT interval_timer_block_source_end = write_system_clock_via_osword_02
-COPYBLOCK interval_timer_block_source, interval_timer_block_source_end, &249B
+COPYBLOCK interval_timer_block_source, interval_timer_block_source_end, interval_timer_block+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR interval_timer_block_source, interval_timer_block_source_end
 
 ORG music_note_pitch_table
