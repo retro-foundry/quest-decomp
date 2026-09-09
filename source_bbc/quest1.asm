@@ -1862,9 +1862,8 @@ CLEAR print_item_slot_label_source, print_item_slot_label_source_end
 
 ORG copy_16_byte_graphic_to_display
 
-; Runtime $1CE4-$1D51, including the two-entry pointer table at $1D34-$1D37.
 ; A bits 0-5 select a 16-byte record. Bit 6 selects reversed order within each
-; eight-byte half; bit 7 makes the byte helper apply EOR #$90. In a water
+; eight-byte half; bit 7 makes the byte helper apply GRAPHIC_BYTE_XOR_MASK. In a water
 ; environment, record zero is replaced by GRAPHIC_HORIZONTAL_BAR. X and Y are
 ; preserved, while A returns the original masked record index.
 .copy_16_byte_graphic_to_display_source
@@ -1884,10 +1883,10 @@ ORG copy_16_byte_graphic_to_display
     LDA #GRAPHIC_HORIZONTAL_BAR
     STA graphic_record_byte_offset_low
 .copy_16_graphic_index_selected
-    LDA #&00 ; clear the record-offset high byte and disable the XOR transform
+    LDA #GRAPHIC_XOR_TRANSFORM_DISABLED
     STA graphic_record_byte_offset_high
     STA graphic_byte_xor_transform_enabled
-    LDX #&04
+    LDX #GRAPHIC_RECORD_INDEX_SHIFT
 .multiply_graphic_index_by_16
     ASL graphic_record_byte_offset_low
     ROL graphic_record_byte_offset_high
@@ -1910,30 +1909,30 @@ ORG copy_16_byte_graphic_to_display
     ASL graphic_record_selector_flags
     BCS copy_16_graphic_halves_reversed
 
-    LDY #&00
+    LDY #GRAPHIC_RECORD_FIRST_BYTE_INDEX
 .copy_16_graphic_forward_loop
     JSR copy_graphic_byte_to_display
     INY
-    CPY #&10
+    CPY #GRAPHIC_RECORD_BYTE_COUNT
     BNE copy_16_graphic_forward_loop
     JMP restore_copy_16_graphic_registers
 
-; Two little-endian base pointers selected by resolved 0/2 writes to $1224.
+; Two little-endian base pointers selected by GRAPHIC_BANK_* offsets.
 .graphic_source_base_pointers
     EQUW room_and_item_graphic_bank, status_icon_graphics
 
 .copy_16_graphic_halves_reversed
-    LDY #&07
+    LDY #GRAPHIC_RECORD_FIRST_HALF_LAST_INDEX
 .copy_16_graphic_first_half_reversed_loop
     JSR copy_graphic_byte_to_display
     DEY
-    CPY #&FF
+    CPY #GRAPHIC_REVERSE_FIRST_HALF_END
     BNE copy_16_graphic_first_half_reversed_loop
-    LDY #&0F
+    LDY #GRAPHIC_RECORD_SECOND_HALF_LAST_INDEX
 .copy_16_graphic_second_half_reversed_loop
     JSR copy_graphic_byte_to_display
     DEY
-    CPY #&07
+    CPY #GRAPHIC_RECORD_FIRST_HALF_LAST_INDEX
     BNE copy_16_graphic_second_half_reversed_loop
 
 .restore_copy_16_graphic_registers
@@ -2207,23 +2206,22 @@ CLEAR update_and_draw_room_enemies_source, update_and_draw_room_enemies_source_e
 
 ORG copy_graphic_byte_to_display
 
-; Runtime $1D52-$1D68.
 ; Inputs: Y selects a byte through graphic_source_pointer;
 ; graphic_byte_xor_transform_enabled selects the optional EOR transform, and
 ; display_pointer names the current destination.
 ; Output: one byte is stored, display_pointer advances by one with its page
 ; carry preserved, and the caller's Y source index is restored before return.
 ; The initial-render trace exercises 11,434 entries and 44 page carries. Its
-; observed calls all take the $75 = 0 path; the EOR path is statically proven
+; observed calls all disable the XOR transform; the EOR path is statically proven
 ; by the original instruction stream but is not exercised by a committed run.
 .copy_graphic_byte_to_display_source
     LDA (graphic_source_pointer_low),Y
     STY graphic_byte_saved_source_index
     LDY graphic_byte_xor_transform_enabled
     BEQ copy_graphic_byte_without_xor
-    EOR #&90
+    EOR #GRAPHIC_BYTE_XOR_MASK
 .copy_graphic_byte_without_xor
-    LDY #&00
+    LDY #GRAPHIC_RECORD_FIRST_BYTE_INDEX
     STA (display_pointer_low),Y
     INC display_pointer_low
     BNE copy_graphic_byte_pointer_advanced
