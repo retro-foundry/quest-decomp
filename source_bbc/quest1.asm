@@ -8352,7 +8352,14 @@ CLEAR start_saved_display_block_shift_effect_source, start_saved_display_block_s
 
 ORG draw_blank_marker_and_column_gated_rows
 
-; This contiguous room-cell handler cluster contains the two mirrored blank-marker layouts and cell types $36-$3A. Cells $36/$37 draw alternating rows only in columns three-or-seven / column three; $38 uses only column seven; $39 uses columns four-seven. Cell $3A optionally saves the cell/display pointers in column four, draws a blank row, then leaves A stacked for the shared $19E8 continuation. Natural room traces cover the marker, $38-$3A and shared alternating tails; focused real-dispatch fixtures cover every $36/$37 comparison and outcome with exact authority/rebuild parity.
+; This contiguous handler cluster begins with the blank-before-suffix and
+; blank-after-prefix layouts. The four named alternating-column handlers gate
+; full alternating rows to columns three/seven, three, seven, or the right half
+; respectively. draw_blank_then_configure_column_seven_object optionally saves
+; the cell/display pointers at ROOM_HALF_COLUMN_COUNT, draws a blank row, and
+; leaves the column stacked for the shared object continuation. Natural room
+; traces and focused dispatch fixtures cover every comparison and outcome with
+; exact authority/rebuild parity.
 .draw_blank_marker_and_column_gated_rows_source
     LDY #GRAPHIC_BLANK
     STY single_tile_room_graphic_selector
@@ -8416,23 +8423,21 @@ CLEAR draw_blank_marker_and_column_gated_rows_source, draw_blank_marker_and_colu
 
 ORG draw_fixed_pair_gap_and_bordered_rows
 
-; The cell-$31 entry draws two fixed-pair tiles, four
-; blanks, then two fixed-pair tiles. Cell $32 loads graphic selector $09 and
-; enters the shared bordered-row painter at $18C5. Both presets are fully
-; traced through the room-cell dispatcher. The remaining cluster contains
-; entries $1904, $1916, $1974, $1981 and $19A0. The bordered painter selects
-; end/interior graphic records from column zero, seven or the middle columns.
+; ROOM_CELL_FIXED_PAIR_GAP draws two fixed-pair tiles, four blanks, then two
+; fixed-pair tiles. ROOM_CELL_BORDERED_CHECKER selects
+; GRAPHIC_CHECKER_DIAGONAL and enters the shared bordered-row painter. Both
+; presets are fully traced through the dispatcher. The bordered painter selects
+; named end/interior graphics for the first, last, and middle columns.
 ; The two dynamic-object entries gate a GRAPHIC_DOUBLE_BAR room-object setup on
 ; DYNAMIC_OBJECT_REQUIRED_TILE_PAIR, populate the slot bound, lower position and
 ; class, and call the existing object helpers while preserving the display pointer.
-; Cell $2E enables water_environment_flag and blanks the
-; selector-matching column and otherwise enters the right-half alternating
-; handler. Cell $35 draws blanks around an odd alternating run derived from the
-; column. Cell $2F selects ROOM_INTERACTION_LONG_ICON_EFFECT, draws its special
-; row and saves the cell/display pointers. Natural traces cover the first 95
-; instructions; three
-; focused real-dispatch fixtures cover every remaining cell-$2E/$35 instruction
-; with exact authority/rebuild parity.
+; ROOM_CELL_RIGHT_HALF_PATTERN enables the water environment, blanks the
+; selector-matching column, and otherwise enters the right-half alternating
+; handler. ROOM_CELL_CENTERED_ALTERNATING surrounds its column-derived odd run
+; with blanks. ROOM_CELL_FF_LAST_COLUMN selects the long icon effect, draws its
+; special row, and saves the cell/display pointers. Natural traces and focused
+; real-dispatch fixtures cover every instruction with exact authority/rebuild
+; parity.
 .draw_fixed_pair_gap_and_bordered_rows_source
     LDX #FIXED_PAIR_GAP_EDGE_TILE_COUNT
     JSR draw_fixed_pair_tile_run+2
