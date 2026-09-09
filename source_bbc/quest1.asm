@@ -7494,10 +7494,10 @@ CLEAR draw_table_selected_left_half_row_source, draw_table_selected_left_half_ro
 ORG left_half_four_tile_graphic_sequences
 ; Four four-selector records selected by room column modulo four for cell $1B.
 .left_half_four_tile_graphic_sequences_source
-    EQUB &17, &00, &00, &18 ; columns zero/four
-    EQUB &16, &17, &18, &DA ; columns one/five
-    EQUB &16, &16, &DA, &DB ; columns two/six
-    EQUB &16, &13, &9A, &9B ; columns three/seven
+    EQUB GRAPHIC_STEPPED_FILL, GRAPHIC_BLANK, GRAPHIC_BLANK, GRAPHIC_SLOPING_LEDGE_A ; columns zero/four
+    EQUB GRAPHIC_SOLID_FILL, GRAPHIC_STEPPED_FILL, GRAPHIC_SLOPING_LEDGE_A, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A ; columns one/five
+    EQUB GRAPHIC_SOLID_FILL, GRAPHIC_SOLID_FILL, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_B ; columns two/six
+    EQUB GRAPHIC_SOLID_FILL, GRAPHIC_NARROW_VERTICAL_BAR, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_DIAGONAL_SLOPE_B ; columns three/seven
 .left_half_four_tile_graphic_sequences_source_end
 ASSERT left_half_four_tile_graphic_sequences_source = left_half_four_tile_graphic_sequences
 ASSERT left_half_four_tile_graphic_sequences_source_end = draw_two_13_two_beam_two_13_two_pattern
@@ -8907,9 +8907,9 @@ ORG right_columns_four_tile_graphic_sequences
 ; Three four-selector graphic sequences selected by room column minus
 ; RIGHT_COLUMNS_SEQUENCE_FIRST_COLUMN.
 .right_columns_four_tile_graphic_sequences_source
-    EQUB &00, &1C, &06, &00 ; column five
-    EQUB &00, &5C, &46, &00 ; column six
-    EQUB &5D, &24, &24, &5D ; column seven
+    EQUB GRAPHIC_BLANK, GRAPHIC_SMALL_PANEL, GRAPHIC_SMALL_MARKER, GRAPHIC_BLANK ; column five
+    EQUB GRAPHIC_BLANK, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_SMALL_PANEL, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_SMALL_MARKER, GRAPHIC_BLANK ; column six
+    EQUB GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_STRIPED_FILL, GRAPHIC_STRIPED_VERTICAL, GRAPHIC_STRIPED_VERTICAL, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_STRIPED_FILL ; column seven
 .right_columns_four_tile_graphic_sequences_source_end
 
 ASSERT right_columns_four_tile_graphic_sequences_source = right_columns_four_tile_graphic_sequences
@@ -9067,8 +9067,8 @@ ORG middle_columns_transition_graphic_sequences
 ; Two four-selector transition sequences selected by room column minus
 ; TRANSITION_SEQUENCE_FIRST_COLUMN.
 .middle_columns_transition_graphic_sequences_source
-    EQUB &1B, &1A, &0C, &00 ; column two
-    EQUB &5B, &20, &0D, &00 ; column three
+    EQUB GRAPHIC_DIAGONAL_SLOPE_B, GRAPHIC_DIAGONAL_SLOPE_A, GRAPHIC_STEPPED_FIXTURE, GRAPHIC_BLANK ; column two
+    EQUB GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_B, GRAPHIC_HORIZONTAL_PLATFORM, GRAPHIC_COLOURED_FIXTURE, GRAPHIC_BLANK ; column three
 .middle_columns_transition_graphic_sequences_source_end
 
 ASSERT middle_columns_transition_graphic_sequences_source = middle_columns_transition_graphic_sequences
@@ -9157,8 +9157,10 @@ ORG middle_columns_eight_tile_graphic_sequences
 ; Two eight-selector rows selected by room column minus
 ; MIDDLE_EIGHT_TILE_FIRST_COLUMN.
 .middle_columns_eight_tile_graphic_sequences_source
-    EQUB &00, &45, &5D, &1D, &16, &1D, &5D, &05 ; column four
-    EQUB &00, &00, &24, &00, &16, &00, &24, &00 ; column five
+    EQUB GRAPHIC_BLANK, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_BEAM, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_STRIPED_FILL, GRAPHIC_STRIPED_FILL
+    EQUB GRAPHIC_SOLID_FILL, GRAPHIC_STRIPED_FILL, GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_STRIPED_FILL, GRAPHIC_DIAGONAL_BEAM ; column four
+    EQUB GRAPHIC_BLANK, GRAPHIC_BLANK, GRAPHIC_STRIPED_VERTICAL, GRAPHIC_BLANK
+    EQUB GRAPHIC_SOLID_FILL, GRAPHIC_BLANK, GRAPHIC_STRIPED_VERTICAL, GRAPHIC_BLANK ; column five
 .middle_columns_eight_tile_graphic_sequences_source_end
 
 ASSERT middle_columns_eight_tile_graphic_sequences_source = middle_columns_eight_tile_graphic_sequences
