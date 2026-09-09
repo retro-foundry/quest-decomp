@@ -17,7 +17,7 @@
 ;   records, passwords, signs, terminal streams, graphics and entity databases.
 ;   Room-local enemies are bats, small bouncing robots and moths. A separate
 ;   per-level subsystem moves small bouncing robots across rooms on levels 0-7
-;   and ghosts across rooms on levels 8-9. Fish, mice, caterpillars and lifts
+;   and ghosts across rooms on levels 8-9. Herring, mice, caterpillars and lifts
 ;   use the room-moving-object subsystem.
 ;
 ; Standalone tooling:
@@ -103,7 +103,7 @@ ORG SPRITE_SOURCE_STAGING_ADDRESS
 .mouse_facing_right_frame
     EQUB &11, &22, &44, &44, &44, &33, &00, &00, &00, &33, &77, &77, &FF, &FF, &EE, &77
     EQUB &00, &CC, &FF, &FF, &FF, &EE, &33, &00, &CC, &CC, &88, &4C, &FF, &00, &00, &88
-.fish_facing_right_frame
+.herring_facing_right_frame
     EQUB &08, &0C, &86, &0F, &4B, &86, &0C, &08, &01, &07, &0F, &0F, &0F, &0F, &07, &01
     EQUB &0E, &0F, &3C, &3C, &0F, &0C, &0F, &0E, &00, &08, &0C, &0E, &0F, &00, &0C, &00
 .ghost_facing_right_upper_frame
@@ -9155,7 +9155,7 @@ CLEAR play_note_for_position_and_test_tune_source, play_note_for_position_and_te
 
 ORG update_and_draw_room_moving_objects
 
-; Update the room's active caterpillar, fish, mouse or
+; Update the room's active caterpillar, herring, mouse or
 ; lift graphics. Each instance occupies an even Y index because its display pointer is a two-byte
 ; zero-page entry. When erase_previous_xor_sprite_flag is nonzero the old image
 ; is XOR-erased first; the
@@ -9166,7 +9166,7 @@ ORG update_and_draw_room_moving_objects
 ; submits the moved graphic to the player-bounds test using its named collision
 ; extent. For the other types, the shared range helper tests the candidate. The
 ; carry-set path was not reached in committed play, but its exact static code
-; records the candidate delta and accepts a worm for a fish or cheese for a
+; records the candidate delta and accepts a worm for a herring or cheese for a
 ; mouse; if neither carried slot has that item it substitutes the named missing-
 ; item delta. Every observed range-helper call returns carry clear.
 .update_and_draw_room_moving_objects_source
@@ -9198,7 +9198,7 @@ ORG update_and_draw_room_moving_objects
     LDA candidate_horizontal_step
     STA room_moving_object_graphic_selector_delta,Y
     LDA current_room_cell
-    CMP #ROOM_MOVING_OBJECT_FISH
+    CMP #ROOM_MOVING_OBJECT_HERRING
     BNE room_moving_object_require_item_38
     LDA #ITEM_CODE_WORM
     JMP room_moving_object_test_required_item
@@ -10270,7 +10270,7 @@ ORG initialise_room_moving_objects
 ; Scan room_moving_object_record_table for the
 ; current room. No match returns without changing the room-moving-object
 ; configuration. A match saves the record type and a selector derived from the
-; packed room bytes; fish and mouse records return early when the existing
+; packed room bytes; herring and mouse records return early when the existing
 ; room_moving_object_puzzle_state is nonzero.
 ;
 ; Otherwise the record's final three bytes become a display row and lower and
@@ -10309,7 +10309,7 @@ ORG initialise_room_moving_objects
     INX
     STX room_moving_object_slot_limit
     LDA current_room_cell
-    CMP #ROOM_MOVING_OBJECT_FISH
+    CMP #ROOM_MOVING_OBJECT_HERRING
     BEQ test_existing_special_xor_state
     CMP #ROOM_MOVING_OBJECT_MOUSE
     BNE initialise_room_moving_object_record
@@ -11006,9 +11006,9 @@ ORG room_and_item_graphic_records
     EQUB &30, &70, &F0, &F0, &E1, &C3, &70, &33, &F0, &E1, &C3, &69, &3C, &1E, &F0, &FF
 ; graphic record &33
     EQUB &F0, &3C, &1E, &0F, &87, &C3, &F0, &FF, &C0, &E0, &F0, &F0, &78, &3C, &E0, &CC
-.fish_facing_left_and_herring_item_graphic_pair
-; graphic records &34-&35: fish facing left; used both as the inventory herring
-; graphic and as the left-facing partner of fish_facing_right_frame
+.herring_facing_left_and_item_graphic_pair
+; graphic records &34-&35: herring facing left; used both as the inventory
+; herring graphic and as the left-facing partner of herring_facing_right_frame
 ; graphic record &34
     EQUB &00, &01, &03, &07, &0F, &00, &03, &00, &07, &0F, &C3, &C3, &0F, &03, &0F, &07
 ; graphic record &35
@@ -11127,7 +11127,7 @@ CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
 ORG room_moving_object_pointer_sets
 ; four sets of four little-endian graphic pointers. They are
-; the caterpillar's two right/left animation phases; the fish's right- and left-facing graphics;
+; the caterpillar's two right/left animation phases; the herring's right- and left-facing graphics;
 ; the mouse's right- and left-facing graphics; and the vertical lift graphic.
 ; These room-local creature/puzzle graphics are separate from the room-enemy pairs
 ; selected by enemy_graphic_descriptor_table.
@@ -11135,9 +11135,9 @@ ORG room_moving_object_pointer_sets
 .caterpillar_graphic_pointer_set
     EQUW runtime_caterpillar_facing_right_phase_0_frame, runtime_caterpillar_facing_left_phase_0_frame
     EQUW runtime_caterpillar_facing_right_phase_1_frame, runtime_caterpillar_facing_left_phase_1_frame
-.fish_graphic_pointer_set
-    EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
-    EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
+.herring_graphic_pointer_set
+    EQUW runtime_herring_facing_right_frame, herring_facing_left_and_item_graphic_pair
+    EQUW runtime_herring_facing_right_frame, herring_facing_left_and_item_graphic_pair
 .mouse_graphic_pointer_set
     EQUW runtime_mouse_facing_right_frame, mouse_facing_left_and_item_graphic_pair
     EQUW runtime_mouse_facing_right_frame, mouse_facing_left_and_item_graphic_pair
@@ -11145,7 +11145,7 @@ ORG room_moving_object_pointer_sets
     EQUW vertical_lift_graphic, vertical_lift_graphic, vertical_lift_graphic, vertical_lift_graphic
 .room_moving_object_pointer_sets_source_end
 ASSERT caterpillar_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_CATERPILLAR*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
-ASSERT fish_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_FISH*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
+ASSERT herring_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_HERRING*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
 ASSERT mouse_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_MOUSE*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
 ASSERT vertical_lift_graphic_pointer_set = room_moving_object_pointer_sets + ROOM_MOVING_OBJECT_LIFT*ROOM_MOVING_OBJECT_POINTER_SET_BYTES
 ASSERT room_moving_object_pointer_sets_source = room_moving_object_pointer_sets
@@ -11231,8 +11231,8 @@ ORG room_moving_object_record_table
     EQUB &05, &06, &12, &20, &3B ; G5 caterpillar
 .room_G9_mouse_record
     EQUB &09, ROOM_MOVING_OBJECT_MOUSE*PACKED_RECORD_TYPE_SCALE+&06, &19, &1A, &33 ; G9 mouse
-.room_E7_fish_record
-    EQUB &07, ROOM_MOVING_OBJECT_FISH*PACKED_RECORD_TYPE_SCALE+&04, &16, &00, &2F ; E7 fish
+.room_E7_herring_record
+    EQUB &07, ROOM_MOVING_OBJECT_HERRING*PACKED_RECORD_TYPE_SCALE+&04, &16, &00, &2F ; E7 herring
 .room_E6_caterpillar_record
     EQUB &06, &04, &10, &24, &45 ; E6 caterpillar
 .room_moving_object_record_table_source_end
@@ -11373,7 +11373,7 @@ ORG cross_room_robot_ghost_record_table
 ; Ten per-level cross-room robot/ghost records, one per level.
 ; These are separate from the room-enemy table. Levels 0-7 select the small
 ; bouncing robot frames; levels 8-9 select the ghost frames. Only those two
-; enemy classes use this cross-room subsystem. Bats, moths, jellyfish, fish,
+; enemy classes use this cross-room subsystem. Bats, moths, jellyfish, herring,
 ; mice and caterpillars never use it.
 .cross_room_robot_ghost_record_table_source
 .level_0_cross_room_small_robot_record
