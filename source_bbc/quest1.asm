@@ -88,16 +88,16 @@ ORG SPRITE_SOURCE_STAGING_ADDRESS
 .player_lower_step_right_frame
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &FA, &F5, &72, &75, &72, &75, &07, &07
     EQUB &88, &80, &00, &00, &00, &00, &4E, &0E, &00, &00, &00, &00, &00, &00, &00, &00
-.jellyfish_frame_1
+.jellyfish_animation_phase_1_frame
     EQUB &00, &03, &07, &0F, &9F, &09, &99, &05, &0F, &0F, &0F, &0F, &22, &02, &22, &04
     EQUB &0F, &0F, &0F, &0F, &99, &09, &44, &04, &00, &0C, &0E, &0F, &2F, &02, &AA, &09
-.jellyfish_frame_0
+.jellyfish_animation_phase_0_frame
     EQUB &03, &07, &0F, &0F, &99, &04, &22, &02, &08, &0F, &0F, &0F, &33, &0A, &AA, &0A
     EQUB &01, &0F, &0F, &0F, &99, &0A, &AA, &0A, &0C, &0E, &0F, &0E, &22, &04, &88, &08
-.small_bouncing_robot_frame_0
+.small_bouncing_robot_animation_phase_0_frame
     EQUB &57, &57, &00, &30, &0F, &0F, &30, &00, &5F, &5F, &30, &F0, &FF, &FF, &F0, &30
     EQUB &5F, &5F, &C0, &F0, &0F, &0F, &F0, &C0, &4E, &4E, &00, &C0, &FF, &FF, &C0, &00
-.small_bouncing_robot_frame_1
+.small_bouncing_robot_animation_phase_1_frame
     EQUB &00, &00, &00, &30, &FF, &FF, &30, &00, &07, &07, &30, &F0, &0F, &0F, &F0, &30
     EQUB &0E, &0E, &C0, &F0, &FF, &FF, &F0, &C0, &00, &00, &00, &C0, &0F, &0F, &C0, &00
 .mouse_facing_right_frame
@@ -7123,9 +7123,9 @@ ORG draw_cross_room_robot_ghost_if_reference_matches
     TXA
     PHA
     PHA
-    LDX #CROSS_ROOM_ROBOT_FRAME_0_OFFSET
+    LDX #CROSS_ROOM_ROBOT_ANIMATION_PHASE_0_OFFSET
     BCC cross_room_robot_ghost_draw_selector_ready
-    LDX #CROSS_ROOM_ROBOT_FRAME_1_OFFSET
+    LDX #CROSS_ROOM_ROBOT_ANIMATION_PHASE_1_OFFSET
 
 .cross_room_robot_ghost_draw_selector_ready
     STX cross_room_robot_ghost_graphic_pointer_offset
@@ -10853,7 +10853,7 @@ ORG cross_room_robot_ghost_frame_pointer_table
 ; updater selects the two named small-bouncing-robot offsets. The alternate
 ; updater used on levels 8 and 9 selects the two named ghost offsets.
 .cross_room_robot_ghost_frame_pointer_table_source
-    EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
+    EQUW runtime_small_bouncing_robot_animation_phase_0_frame, runtime_small_bouncing_robot_animation_phase_1_frame
     EQUW runtime_ghost_facing_right_upper_frame, runtime_ghost_facing_left_upper_frame
 .cross_room_robot_ghost_frame_pointer_table_source_end
 ASSERT cross_room_robot_ghost_frame_pointer_table_source = cross_room_robot_ghost_frame_pointer_table
@@ -11509,11 +11509,11 @@ ORG enemy_graphic_descriptor_table
 .bat_graphic_descriptor
     EQUW runtime_bat_wings_raised_frame, runtime_bat_wings_lowered_frame
 .small_bouncing_robot_graphic_descriptor
-    EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
+    EQUW runtime_small_bouncing_robot_animation_phase_0_frame, runtime_small_bouncing_robot_animation_phase_1_frame
 .moth_graphic_descriptor
     EQUW runtime_moth_wings_raised_frame, runtime_moth_wings_lowered_frame
 .jellyfish_graphic_descriptor
-    EQUW runtime_jellyfish_frame_0, runtime_jellyfish_frame_1 ; unselected here
+    EQUW runtime_jellyfish_animation_phase_0_frame, runtime_jellyfish_animation_phase_1_frame ; unselected here
 .enemy_graphic_descriptor_table_source_end
 ASSERT bat_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_BAT*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
 ASSERT small_bouncing_robot_graphic_descriptor = enemy_graphic_descriptor_table + ENEMY_SPECIES_SMALL_ROBOT*ENEMY_GRAPHIC_DESCRIPTOR_BYTES
