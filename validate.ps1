@@ -16,15 +16,15 @@ $requiredStandaloneFiles = [System.Collections.Generic.HashSet[string]]::new([Sy
     'tools/reconstruction/variants/sector_e_level_1.json'
 ) | ForEach-Object { [void]$requiredStandaloneFiles.Add($_) }
 
-# Keep prose and source references honest: any repository-relative tool path
-# mentioned by the maintained files becomes a validation dependency.
+# Keep prose and source references honest: any repository-relative tools or
+# source path mentioned by the maintained files becomes a validation dependency.
 $referenceInputs = @((Join-Path $PSScriptRoot 'README.md'))
 $referenceInputs += Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'source_bbc') -File -Recurse |
     Select-Object -ExpandProperty FullName
-$toolReferencePattern = 'tools/[A-Za-z0-9_./-]+\.(?:py|ps1|json)'
+$standaloneReferencePattern = '(?:tools|source_bbc)/[A-Za-z0-9_./-]+\.(?:py|ps1|json|md|asm|inc)'
 foreach ($inputPath in $referenceInputs) {
     $inputText = Get-Content -LiteralPath $inputPath -Raw
-    foreach ($match in [regex]::Matches($inputText, $toolReferencePattern)) {
+    foreach ($match in [regex]::Matches($inputText, $standaloneReferencePattern)) {
         [void]$requiredStandaloneFiles.Add($match.Value)
     }
 }

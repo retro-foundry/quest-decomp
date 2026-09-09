@@ -391,27 +391,20 @@ references to another runtime routine or datum.
 Build from the repository root:
 
 ```powershell
-source_bbc/build.ps1
-source_bbc/validate.ps1
+./build.ps1
+./validate.ps1
 ```
 
 Outputs are written below ignored `build/reconstruction/`:
 
 - `QUEST1` -- rebuilt DFS payload;
-- `Quest-rebuilt.ssd` -- copy of the authoritative disk with only `$.QUEST1`
-  replaced;
-- `quest1.labels` -- BeebAsm symbol map; and
-- `disc-build.json` -- exact hashes and changed-byte accounting.
+- `quest1.labels` -- BeebAsm symbol map.
 
-`validate.ps1` also performs the paired original/rebuilt workbench capture,
-then requires the rebuilt run's complete 64 KiB emulator state at cycle
-31,100,000 to match the committed oracle byte for byte.
-
-The workbench can also capture an ordinary JSR/RTS routine call at exact entry
-and return boundaries. That focused view compares registers and flags, the full
-logical 64 KiB address space, selected RAM ranges, saved Video ULA/CRTC state,
-and a display rendered from the checkpoint itself. See
-`tools/reconstruction_workbench/README.md` for checkpoint options and limits.
+`validate.ps1` checks every maintained `tools/` and `source_bbc/` file reference,
+parses all bundled Python and variant JSON, builds the payload, smoke-applies a
+bundled gameplay variant, and verifies the original QUEST1 length and SHA-256.
+The larger emulator workbench and trace corpus belong to the analysis repository
+and are deliberately not required by this standalone source distribution.
 
 Later work should replace another bounded transitional span with code or named
 data. Do not present uncertain bytes as understood assembly merely because they
