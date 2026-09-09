@@ -10773,11 +10773,10 @@ CLEAR advance_room_enemy_vertical_position_source, advance_room_enemy_vertical_p
 ORG show_golden_dragon_ending
 
 ; Print the inline VDU stream that lays out the words
-; "THE GOLDEN DRAGON", then set the gameplay-loop exit flag to $FF. The printer
-; at $3256 consumes its own stacked return address, emits bytes until the zero
-; terminator, and replaces that address so its RTS resumes at $1E67 rather than
-; trying to execute the embedded data. The remaining caller return beneath it
-; takes this routine back to draw_item_graphic_pair.
+; "THE GOLDEN DRAGON", then request exit from the gameplay loop. The inline
+; printer consumes its own stacked return address, emits bytes through the
+; terminator, and replaces that address so execution resumes after the embedded
+; data. The remaining caller return takes this routine back to the item drawer.
 .show_golden_dragon_ending_source
     JSR print_inline_vdu_stream
 
@@ -10793,7 +10792,7 @@ ORG show_golden_dragon_ending
     EQUB INLINE_VDU_STREAM_END
 .golden_dragon_inline_message_end
 
-    LDA #&FF
+    LDA #GOLDEN_DRAGON_EXIT_GAME_LOOP
     STA main_loop_exit_flag
     RTS
 .show_golden_dragon_ending_source_end
@@ -10824,7 +10823,7 @@ ORG initialise_room_moving_objects
 ; four alternating signed selector deltas are initialised. The room-local update,
 ; draw, and advance routines consume those same four instances.
 .initialise_room_moving_objects_source
-    LDX #&00
+    LDX #ROOM_MOVING_OBJECT_FIRST_RECORD_INDEX
     LDA #LO(room_moving_object_record_table)
     STA packed_record_pointer_low
     LDA #HI(room_moving_object_record_table)
@@ -10885,7 +10884,7 @@ ORG initialise_room_moving_objects
     STA moving_entity_horizontal_position
     LDA room_moving_object_graphic_selector_upper_limit
     STA moving_entity_second_horizontal_position
-    LDX #&00
+    LDX #ROOM_MOVING_OBJECT_FIRST_SLOT
 
 .build_xor_sprite_display_pointers
     LDA room_moving_object_graphic_state
@@ -10906,7 +10905,7 @@ ORG initialise_room_moving_objects
     ASL A
     ASL A
     TAY
-    LDX #&00
+    LDX #ROOM_MOVING_OBJECT_POINTER_SET_FIRST_BYTE
 
 .copy_room_moving_object_graphic_pointers
     LDA room_moving_object_pointer_sets,Y
@@ -10957,7 +10956,7 @@ ORG status_icon_graphics
 ; record 1: diamond icon drawn when add_collected_icon increments its count
     EQUB &01, &01, &03, &13, &17, &37, &3F, &F0, &10, &00, &08, &08, &0C, &8C, &9E, &F0
 .initial_status_marker_graphic
-; record 2: marker drawn three times at $3F70 during new-game status setup
+; record 2: marker drawn three times during new-game status setup
     EQUB &13, &17, &1F, &FE, &EF, &47, &07, &F0, &18, &0C, &0E, &EE, &EE, &4C, &1C, &F0
 .blank_status_icon_graphic
 ; record 3: blank tile used to erase either status-icon row
@@ -11098,20 +11097,18 @@ COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_des
 CLEAR lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end
 
 ORG cross_room_robot_ghost_frame_pointer_table
-; Runtime $0B6F-$0B76: the cross-room robot/ghost graphic-pointer table. The ordinary
-; per-level pair updater selects offsets $10/$12 from the common table base
-; $0B5F, reaching the small-bouncing-robot frames here. The alternate updater
-; used on levels 8 and 9 selects offsets $14/$16, reaching the ghost frames.
+; Cross-room robot/ghost graphic-pointer table. The ordinary per-level pair
+; updater selects the two named small-bouncing-robot offsets. The alternate
+; updater used on levels 8 and 9 selects the two named ghost offsets.
 .cross_room_robot_ghost_frame_pointer_table_source
     EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
     EQUW runtime_ghost_frame_0, runtime_ghost_frame_3
 .cross_room_robot_ghost_frame_pointer_table_source_end
 ASSERT cross_room_robot_ghost_frame_pointer_table_source = cross_room_robot_ghost_frame_pointer_table
 
-; Runtime $0B77-$0B82: six player-part pointers. xor_draw_player_two_parts
-; indexes $0500/$0560 with X=$18/$1A and draws two character rows, so the XOR
-; renderer advances by $20 and consumes $0520/$0580 as the corresponding middle
-; record. X=$1C/$1E/$20/$22 selects one of the four single-row lower records.
+; Six player-part pointers. xor_draw_player_two_parts selects an upper frame and
+; draws two character rows, so the XOR renderer advances to the corresponding
+; player-middle record. The four remaining selectors choose the lower frames.
 .player_graphic_frame_pointer_table_source
 .player_upper_right_graphic_pointer
     EQUW runtime_player_upper_facing_right_frame
