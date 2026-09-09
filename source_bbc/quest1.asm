@@ -29,9 +29,9 @@ INCLUDE "source_bbc/memory_map.inc"
 
 ; PLAYER, CREATURE, ROBOT AND LIFT SPRITES
 ; =========================================
-; Runtime $0400-$077F: 28 aligned 32-byte Mode 1 XOR sprite frames. The eight
-; records at $0500-$05E0 are player graphics, while $06C0-$0760 is the six-
-; record ghost set. xor_graphic_into_display proves the storage order: eight source
+; Primary XOR sprite bank: 28 aligned 32-byte Mode 1 frames. The player body
+; records and six-record ghost set are individually named below.
+; xor_graphic_into_display proves the storage order: eight source
 ; scanlines, with the four Mode 1 bytes for scanline N at N+0, N+8, N+16 and
 ; N+24. Some callers double each source scanline to make a 16-pixel-high image.
 ; The names below describe the correctly decoded silhouettes. Where the image
@@ -131,9 +131,9 @@ ASSERT ghost_facing_left_middle_frame = ghost_facing_left_upper_frame+XOR_GRAPHI
 ASSERT ghost_facing_left_lower_frame = ghost_facing_left_middle_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
 ASSERT player_enemy_and_lift_xor_sprite_frames_end-player_enemy_and_lift_xor_sprite_frames_source = PRIMARY_XOR_SPRITE_BANK_BYTES
 
-; Runtime $0800-$087F: four aligned Mode 1-shaped records after the embedded
-; map initializer. No pointer-table entry or committed runtime read selects
-; these addresses, so their source labels identify them as unused originals.
+; Four aligned Mode 1-shaped records after the embedded map initializer. No
+; pointer-table entry or committed runtime read selects them, so their source
+; labels identify them as unused originals.
 ORG INERT_SPRITE_SOURCE_STAGING_ADDRESS
 .inert_xor_sprite_frame_block_source
 .inert_xor_sprite_frame_0
@@ -152,7 +152,7 @@ ORG INERT_SPRITE_SOURCE_STAGING_ADDRESS
 ASSERT inert_xor_sprite_frame_block_end-inert_xor_sprite_frame_block_source = INERT_XOR_SPRITE_BANK_BYTES
 
 ORG room_cell_map_alignment
-; Runtime $37CD-$37CF: three zero bytes aligning the 80-room cell map at $37D0.
+; Three zero bytes aligning the 80-room cell map.
 .room_cell_map_alignment_source
     EQUB &00, &00, &00
 .room_cell_map_alignment_source_end
