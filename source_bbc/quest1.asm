@@ -5663,10 +5663,10 @@ ORG enter_room_to_the_left
 
 ; The left-edge room transition, entered when
 ; move_player_left_with_collision finds the horizontal position already zero.
-; The player is placed at $4C, the right edge, and the display pointer advanced
-; by $0260. The reference value at $90 is then decremented through the
-; $120C vector before the player is redrawn by a tail jump, so the room index
-; moves one step and the new room is what the redraw lands on.
+; The player is placed at PLAYER_RIGHT_EDGE_POSITION and the display pointer is
+; advanced by MODE1_ROW_AFTER_TWO_GRAPHICS. The primary room reference is then
+; decremented through decrement_reference_then_draw_and_initialise_room before
+; the player is redrawn, so the new room is what the redraw lands on.
 .enter_room_to_the_left_source
     LDA #PLAYER_RIGHT_EDGE_POSITION
     STA player_horizontal_position
@@ -5693,15 +5693,15 @@ CLEAR enter_room_to_the_left_source, enter_room_to_the_left_source_end
 ORG enter_room_below
 
 ; The downward room transition, reached from the vertical
-; mover when the halved vertical position is from $60 through $6B, beyond the
-; bottom of the room. As in enter_room_above, shifting
+; mover when the halved vertical position is in the lower transition band,
+; beyond the bottom of the room. As in enter_room_above, shifting
 ; vertical_room_transition_cell_flag abandons the transition when its low bit is set.
 ; Otherwise the horizontal position is converted back into a display pointer,
-; that pointer is advanced by $3C80, and the player is placed at vertical
-; position zero, the top of the new room. The $1209 vector increments the
-; secondary room reference at $8F and redraws the room; the player is then
-; redrawn. Landing on level 8 additionally tail-calls the cross-room robot/ghost
-; initialiser, while every other level returns through the shared RTS at $2ACE.
+; that pointer is advanced by QUEST_DISPLAY_START, and the player is placed at
+; PLAYER_TOP_EDGE_VERTICAL_POSITION. The secondary room reference is advanced
+; and the room redrawn through enter_advance_secondary_reference_and_pointer;
+; the player is then redrawn. Landing on CROSS_ROOM_GHOST_FIRST_LEVEL also
+; tail-calls the cross-room robot/ghost initialiser; other levels return.
 .enter_room_below_source
     LSR vertical_room_transition_cell_flag
     BCS return_from_room_transition
@@ -5740,12 +5740,12 @@ ORG enter_room_above
 ; transition through the shared carry-clear exit. It is a cell attribute, not a room one: the room decoder clears
 ; it and then sets it from a shifted cell bit, so
 ; the ceiling is passable cell by cell.
-; Otherwise $2B24 runs, rebuilding the display pointer as $35 times 8, the
-; vertical position is set to $D0, and the pointer is advanced by $7D80. Those
-; two agree, and together they fix the scale of $2C: $35 * 8 + $7D80 lands in
-; character row 31, and $D0 over 8 plus 5 is 31. The start point's $B0 gives 27,
-; the row its own pointer encodes, so one formula fits both. The reference is stepped through the $1203 vector, the vertical
-; velocity incremented, and the player redrawn by tail jump.
+; Otherwise set_player_pointer_from_horizontal_position rebuilds the horizontal
+; display offset, player_vertical_position is set to
+; PLAYER_BOTTOM_EDGE_VERTICAL_POSITION, and PLAYER_BOTTOM_ROW_POINTER_BASE is
+; added. These values place the player consistently in the bottom character row
+; of the new room. enter_retreat_secondary_reference_and_pointer steps the room
+; reference, then the vertical velocity is incremented and the player redrawn.
 ; Leaving through the top and arriving near the bottom is what makes this the
 ; room above rather than a move within one room.
 .enter_room_above_source
@@ -5781,8 +5781,8 @@ ORG set_player_pointer_from_horizontal_position
 ; multiplied by eight, by three shifts of the sixteen-bit pair.
 ; Eight is one Mode 1 character cell, the same stride the one-cell steps apply,
 ; so this recomputes the pointer from scratch rather than adjusting it. The
-; carry-clear RTS at $2B35 is shared with other routines and runs far more often
-; than this entry.
+; carry-clear return is shared with other routines and runs far more often than
+; this entry.
 .set_player_pointer_from_horizontal_position_source
     LDA player_horizontal_position
     STA player_display_pointer_low
@@ -6525,10 +6525,9 @@ CLEAR save_display_pointer_and_cell_reference_source, save_display_pointer_and_c
 
 ORG consume_matching_item_from_slots
 
-; Search the two slots at $0C and $0D for the code in A,
-; second slot first. A match clears that slot, redraws the slot display through
-; its $2CA1 entry, calls $24D2, and returns carry set; no match returns carry
-; clear leaving both slots untouched.
+; Search the carried-item slots for the code in A, second slot first. A match
+; clears that slot to ITEM_CODE_NONE, redraws both slots, refills energy, and
+; returns carry set; no match returns carry clear with both slots untouched.
 ; This is reached from the blocked path of the movement routines: when the
 ; player is stopped by something, its code is looked up here, and a carry-set
 ; return means the obstruction was resolved by giving up a carried item. The
