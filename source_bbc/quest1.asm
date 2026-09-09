@@ -6509,24 +6509,26 @@ CLEAR drop_carried_item_source, drop_carried_item_source_end
 
 ORG draw_column_sensitive_room_patterns
 
-; Runtime $14F0-$154F. Shared room-cell drawing entries select complete blank or alternating rows, patterned end caps, fixed record-pair motifs, and record-$08 rows from the current column in A.
+; Runtime $14F0-$154F. Shared room-cell entries select complete blank or
+; alternating rows, a blank gap between alternating flanks, fixed rounded/
+; diagonal motifs, and curved-bowl rows according to room_graphics_column.
 .draw_column_sensitive_room_patterns_source
-    CMP #&02
+    CMP #COLUMN_PATTERN_LEFT_END
     BPL draw_blank_or_alternating_row_by_column
-    LDX #&03
+    LDX #COLUMN_PATTERN_FLANK_TILES
     JSR draw_alternating_tile_run
     LDA water_environment_flag
     PHA
-    STX water_environment_flag
-    LDX #&02
+    STX column_pattern_flank_count_saved
+    LDX #COLUMN_PATTERN_CENTRE_BLANK_TILES
     JSR draw_blank_tile_run
     PLA
     STA water_environment_flag
-    LDX #&03
+    LDX #COLUMN_PATTERN_FLANK_TILES
     JMP draw_alternating_tile_run
 
 .draw_blank_or_alternating_row_by_column
-    CMP #&06
+    CMP #COLUMN_PATTERN_RIGHT_START
     BPL draw_column_sensitive_room_patterns_branch_2
     JMP draw_eight_blank_tiles
 
@@ -6537,34 +6539,34 @@ ORG draw_column_sensitive_room_patterns
     JMP draw_fixed_pair_tile_run
 
 .draw_fixed_center_motif_by_column
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BEQ draw_full_fixed_01_02_pair_row
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ draw_full_fixed_01_02_pair_row
-    LDX #&01
+    LDX #GRAPHIC_ROUNDED_PATTERN_A
     JSR set_fixed_tile_pair
-    LDX #&05
+    LDX #FIXED_CENTER_BEAM_TILE_COUNT
     JSR draw_mirrored_diagonal_beam_tile_run
-    LDX #&02
+    LDX #GRAPHIC_ROUNDED_PATTERN_B
     JMP set_fixed_tile_pair
 
 .draw_eight_04_03_pair_tiles
-    LDX #&08
+    LDX #ROOM_CELL_TILE_COUNT
 
 .draw_04_03_pair_tile_run
-    LDA #&04
+    LDA #GRAPHIC_HOLLOW_ARCH
     STA active_tile_pair_first
-    LDA #&03
+    LDA #GRAPHIC_SOLID_DIAGONAL_A
     STA active_tile_pair_second
     JMP draw_selected_fixed_pair_run
 
 .draw_alternating_or_record_08_row
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BEQ draw_column_sensitive_room_patterns_branch_4
     JMP draw_eight_alternating_tiles
 
 .draw_column_sensitive_room_patterns_branch_4
-    LDX #&08
+    LDX #ROOM_CELL_TILE_COUNT
 
 .draw_column_sensitive_room_patterns_branch_5
     LDA #GRAPHIC_CURVED_BOWL
