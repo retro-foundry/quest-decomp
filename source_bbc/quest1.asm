@@ -4116,21 +4116,21 @@ CLEAR advance_bounded_tick_target_source, advance_bounded_tick_target_source_end
 ORG collect_power_crystal_and_refill_energy
 
 ; Runtime $2453-$2470. Handle a collected power crystal: decrement the
-; twelve-diamond status count; decrement $A2 when the final crystal takes that
+; twelve-diamond status count; decrement progress_pattern_pair_count when the final crystal takes that
 ; count to zero; configure and play the collection sound; refill energy; remove
 ; the corresponding status diamond and stamp the collected room cell; then
 ; tail-transfer to the status-divider redraw.
 .collect_power_crystal_and_refill_energy_source
     DEC power_crystals_remaining
     BNE apply_power_crystal_rewards
-    DEC shared_workspace_a2
+    DEC progress_pattern_pair_count
 
 .apply_power_crystal_rewards
-    LDA #&FF
+    LDA #POWER_CRYSTAL_COLLECTION_SOUND_PITCH
     STA sound_block_pitch
-    LDA #&0E
+    LDA #POWER_CRYSTAL_COLLECTION_SOUND_DURATION
     STA sound_block_duration
-    LDA #&02
+    LDA #POWER_CRYSTAL_COLLECTION_SOUND_AMPLITUDE
     JSR play_sound_with_amplitude
     JSR refill_energy_in_28_steps
     JSR remove_last_icon_and_stamp_room_cell
@@ -4347,8 +4347,8 @@ ORG run_startup_room_sequence_until_space
     STA startup_zero_page_clear_base,X
     DEX
     BNE clear_next_startup_zero_page_byte
-    LDX #&04
-    STX shared_workspace_a2
+    LDX #PROGRESS_PATTERN_INITIAL_PAIRS
+    STX progress_pattern_pair_count
     DEX
     STX collected_icon_erase_index
     LDA #&01
@@ -6904,17 +6904,19 @@ CLEAR replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_so
 
 ORG draw_repeated_87_blank_pairs_by_state
 
-; Runtime $158F-$15B0, room-cell type $09. A zero column enters the adjacent edge-pattern handler. Other columns draw twice the leading blank count derived from four minus $A2, followed by $A2 repetitions of graphic selector $87 and a blank.
+; Runtime $158F-$15B0, room-cell type $09. A zero column enters the adjacent
+; edge-pattern handler. Other columns draw leading blanks for removed progress
+; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
 .draw_repeated_87_blank_pairs_by_state_source
     CMP #&00
     BEQ draw_58_59_pair_or_edge_pattern_row
-    LDA #&04
+    LDA #PROGRESS_PATTERN_CELL_MAX_PAIRS
     SEC
-    SBC shared_workspace_a2
+    SBC progress_pattern_pair_count
     ASL A
     TAX
     JSR draw_blank_tile_run
-    LDX shared_workspace_a2
+    LDX progress_pattern_pair_count
     CPX #&00
     BEQ record_87_pair_run_finished_exit
 
@@ -7052,7 +7054,7 @@ ORG draw_narrow_bar_fixture_row
     RTS
 
 .select_narrow_bar_column_group
-    CMP #&04
+    CMP #COLLECTED_ICON_EFFECT_RESERVED_COUNT
     BPL select_narrow_bar_right_edge
     LDX #&04
     JMP draw_next_13_07_pair
@@ -8333,7 +8335,7 @@ ORG consume_collected_icon_and_apply_effect
     LDA room_interaction_code
     CMP #ROOM_INTERACTION_LONG_ICON_EFFECT
     BNE play_descending_flash_sequence
-    DEC shared_workspace_a2
+    DEC progress_pattern_pair_count
     DEC collected_icon_erase_index
     LDA collected_icon_erase_index
     JSR erase_collected_icon
