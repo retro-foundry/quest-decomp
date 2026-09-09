@@ -7179,7 +7179,7 @@ ORG update_and_draw_two_indexed_pairs
 ; a countdown, conditionally updates pair state, then draws the resulting
 ; graphic. The final CLC/RTS is shared with the adjacent matching handler.
 .update_and_draw_two_indexed_pairs_source
-    LDX #&00
+    LDX #ROAMING_ENEMY_PAIR_FIRST_INDEX
 .indexed_pair_update_loop
     LDA reference_pair_secondary_value
     CMP #ROAMING_GHOST_FIRST_LEVEL
@@ -7207,7 +7207,7 @@ ORG update_and_draw_two_indexed_pairs
     JSR draw_indexed_pair_if_reference_matches
     INX
     INX
-    CPX #&04
+    CPX #ROAMING_ENEMY_PAIR_END_INDEX
     BNE indexed_pair_update_loop
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
@@ -7476,16 +7476,16 @@ ORG advance_indexed_pair_offset_and_display_pointer
 ; reaching them reverses the delta instead of crossing the boundary.
 .advance_indexed_pair_offset_and_display_pointer_source
     LDA indexed_pair_offset_delta_field,X
-    CMP #&02
+    CMP #ROAMING_GHOST_VERTICAL_STEP_DOWN
     BNE indexed_pair_test_upper_offset
     LDA indexed_pair_offset_field,X
-    CMP #&C0
+    CMP #ROAMING_GHOST_BOTTOM_OFFSET
     BNE move_indexed_pair_vertical_step
     JMP wrap_indexed_pair_to_lower_offset
 
 .indexed_pair_test_upper_offset
     LDA indexed_pair_offset_field,X
-    CMP #&10
+    CMP #ROAMING_GHOST_TOP_OFFSET
     BNE move_indexed_pair_vertical_step
     JMP wrap_indexed_pair_to_upper_offset
 
@@ -7509,37 +7509,37 @@ ORG advance_indexed_pair_offset_and_display_pointer
 
 .wrap_indexed_pair_to_upper_offset
     LDA indexed_pair_secondary_field,X
-    CMP #&08
+    CMP #ROAMING_GHOST_TOP_LEVEL
     BEQ reverse_indexed_pair_offset_downward
     DEC indexed_pair_secondary_field,X
-    LDA #&C0
+    LDA #ROAMING_GHOST_BOTTOM_OFFSET
     STA indexed_pair_offset_field,X
     CLC
     LDA indexed_pair_display_pointer_high,X
-    ADC #&37
+    ADC #ROAMING_GHOST_LEVEL_WRAP_PAGE_DELTA
     STA indexed_pair_display_pointer_high,X
     RTS
 
 .reverse_indexed_pair_offset_downward
-    LDA #&02
+    LDA #ROAMING_GHOST_VERTICAL_STEP_DOWN
     STA indexed_pair_offset_delta_field,X
     RTS
 
 .wrap_indexed_pair_to_lower_offset
     LDA indexed_pair_secondary_field,X
-    CMP #&09
+    CMP #ROAMING_GHOST_BOTTOM_LEVEL
     BEQ reverse_indexed_pair_offset_upward
     INC indexed_pair_secondary_field,X
-    LDA #&10
+    LDA #ROAMING_GHOST_TOP_OFFSET
     STA indexed_pair_offset_field,X
     SEC
     LDA indexed_pair_display_pointer_high,X
-    SBC #&37
+    SBC #ROAMING_GHOST_LEVEL_WRAP_PAGE_DELTA
     STA indexed_pair_display_pointer_high,X
     RTS
 
 .reverse_indexed_pair_offset_upward
-    LDA #&FE
+    LDA #ROAMING_GHOST_VERTICAL_STEP_UP
     STA indexed_pair_offset_delta_field,X
     RTS
 
@@ -7797,7 +7797,7 @@ ORG set_indexed_pair_value_delta_at_thresholds
     LDA indexed_pair_value_field,X
     CMP indexed_pair_positive_delta_threshold
     BPL return_preserving_comparison_flags_2eeb
-    LDA #&01
+    LDA #ROAMING_ENEMY_STEP_POSITIVE
 .store_indexed_pair_value_delta
     STA indexed_pair_value_delta_field,X
     RTS
@@ -7808,7 +7808,7 @@ ORG set_indexed_pair_value_delta_at_thresholds
     LDA indexed_pair_value_field,X
     CMP indexed_pair_negative_delta_threshold
     BMI return_preserving_comparison_flags_2eeb
-    LDA #&FF
+    LDA #ROAMING_ENEMY_STEP_NEGATIVE
     JMP store_indexed_pair_value_delta
 .set_indexed_pair_value_delta_at_thresholds_source_end
 
@@ -7833,7 +7833,7 @@ ORG advance_indexed_pair_value_and_display_pointer
     STA indexed_pair_value_field,X
 
     LDA indexed_pair_value_delta_field,X
-    CMP #&FF
+    CMP #ROAMING_ENEMY_STEP_NEGATIVE
     BEQ advance_indexed_pair_pointer_negative
 
     LDA indexed_pair_value_field,X
@@ -7869,15 +7869,15 @@ ORG advance_indexed_pair_value_and_display_pointer
     STA indexed_pair_value_field,X
     SEC
     LDA indexed_pair_display_pointer_low,X
-    SBC #&60
+    SBC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA indexed_pair_display_pointer_low,X
     LDA indexed_pair_display_pointer_high,X
-    SBC #&02
+    SBC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA indexed_pair_display_pointer_high,X
     RTS
 
 .reverse_indexed_pair_delta_negative
-    LDA #&FF
+    LDA #ROAMING_ENEMY_STEP_NEGATIVE
     STA indexed_pair_value_delta_field,X
     RTS
 
@@ -7885,19 +7885,19 @@ ORG advance_indexed_pair_value_and_display_pointer
     LDA indexed_pair_primary_field,X
     BEQ reverse_indexed_pair_delta_positive
     DEC indexed_pair_primary_field,X
-    LDA #&4C
+    LDA #INDEXED_PAIR_HORIZONTAL_WRAP_POSITION-1
     STA indexed_pair_value_field,X
     CLC
     LDA indexed_pair_display_pointer_low,X
-    ADC #&60
+    ADC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA indexed_pair_display_pointer_low,X
     LDA indexed_pair_display_pointer_high,X
-    ADC #&02
+    ADC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA indexed_pair_display_pointer_high,X
     RTS
 
 .reverse_indexed_pair_delta_positive
-    LDA #&01
+    LDA #ROAMING_ENEMY_STEP_POSITIVE
     STA indexed_pair_value_delta_field,X
     RTS
 .advance_indexed_pair_value_and_display_pointer_source_end
@@ -7921,18 +7921,18 @@ ORG test_display_pointer_in_xor_draw_window
 
 ; Runtime $32A7-$32BE. Return carry clear exactly when the little-endian
 ; display pointer at $7C/$7D is in $4180-$7FFF. The high-byte path used by all
-; 485 committed no-input calls exits after CMP #$42; the $41 low-byte boundary
+; 485 committed no-input calls exits at the first full display page; the $41 low-byte boundary
 ; and carry-set rejection paths are byte-proven but not trace-observed.
 .test_display_pointer_in_xor_draw_window_source
     LDA display_pointer_high
-    CMP #&80
+    CMP #HI(QUEST_DISPLAY_END_EXCLUSIVE)
     BPL display_pointer_outside_xor_draw_window
-    CMP #&42
+    CMP #HI(XOR_DRAW_WINDOW_FIRST_FULL_PAGE)
     BPL display_pointer_inside_xor_draw_window
-    CMP #&41
+    CMP #HI(room_render_display_start)
     BMI display_pointer_outside_xor_draw_window
     LDA display_pointer_low
-    CMP #&80
+    CMP #LO(room_render_display_start)
     BMI display_pointer_outside_xor_draw_window
 .display_pointer_inside_xor_draw_window
     CLC
@@ -8077,17 +8077,17 @@ ORG alternate_indexed_pair_countdown_update
 ; directional graphic, steer the pair relative to the player, toggle the first
 ; pair when both pair positions meet, test the tall overlap, and redraw.
 .alternate_indexed_pair_countdown_update_source
-    LDX #&00
+    LDX #ROAMING_ENEMY_PAIR_FIRST_INDEX
 
 .alternate_indexed_pair_countdown_loop
     LDA shared_workspace_80,X
     BEQ draw_then_decrement_alternate_indexed_pair
-    CMP #&02
+    CMP #ROAMING_GHOST_REDRAW_COUNTDOWN
     BEQ draw_then_decrement_alternate_indexed_pair
 .decrement_alternate_indexed_pair_countdown
     DEC shared_workspace_80,X
     BNE advance_alternate_indexed_pair_selector
-    LDA #&01
+    LDA #ROAMING_GHOST_COUNTDOWN_RESET
     STA shared_workspace_80,X
     LDA indexed_xor_erase_previous_graphic
     BEQ update_alternate_indexed_pair_state
@@ -8102,7 +8102,7 @@ ORG alternate_indexed_pair_countdown_update
 .advance_alternate_indexed_pair_selector
     INX
     INX
-    CPX #&04
+    CPX #ROAMING_ENEMY_PAIR_END_INDEX
     BNE alternate_indexed_pair_countdown_loop
     RTS
 .alternate_indexed_pair_countdown_update_source_end
