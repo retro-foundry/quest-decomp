@@ -1333,11 +1333,11 @@ ORG add_collected_icon
     LDA #HI(collected_icon_row_base)
     ADC #&00
     STA display_pointer_high
-    LDA #&02
+    LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
-    LDA #&01
+    LDA #STATUS_GRAPHIC_COLLECTED_ICON
     JSR enter_copy_16_byte_graphic_to_display
-    LDA #&00
+    LDA #GRAPHIC_BANK_PRIMARY_OFFSET
     STA graphic_source_base_pointer_offset
     RTS
 
@@ -1373,13 +1373,13 @@ ORG process_player_cell_interactions
 ; $3E to be consumed and effect $3C to start. The $20 branch and both final
 ; successful-effect paths remain static-only; all other control flow is traced.
 .process_player_cell_interactions_source
-    LDA #&11
+    LDA #GRAPHIC_PATTERNED_SLOPE_B
     JSR display_pattern_test
     BCC test_pattern_25_interaction
     JSR collect_power_crystal_and_refill_energy
 
 .test_pattern_25_interaction
-    LDA #&25
+    LDA #GRAPHIC_UNIFORM_PATTERN
     JSR display_pattern_test
     BCC test_pattern_06_interaction
     LDA saved_interaction_item_code
@@ -1396,14 +1396,14 @@ ORG process_player_cell_interactions
     JSR replace_saved_cell_then_play_sound
 
 .test_pattern_06_interaction
-    LDA #&06
+    LDA #GRAPHIC_SMALL_MARKER
     JSR display_pattern_test
     BCC test_pattern_16_interaction
     JSR enter_run_terminal_interaction
     JSR xor_draw_player_two_parts
 
 .test_pattern_16_interaction
-    LDA #&16
+    LDA #GRAPHIC_SOLID_FILL
     JSR display_pattern_test
     BCC test_pattern_1a_interaction
     LDA shared_workspace_4e
@@ -1426,7 +1426,7 @@ ORG process_player_cell_interactions
     STA shared_workspace_63
 
 .test_pattern_1a_interaction
-    LDA #&1A
+    LDA #GRAPHIC_DIAGONAL_SLOPE_A
     JSR display_pattern_test
     BCC player_cell_interactions_rts
     LDA shared_workspace_4e
@@ -3784,11 +3784,11 @@ ORG draw_record_three_from_alternate_bank
 ; reads its records from. This sets it to 2, draws record 3 through the blitter
 ; vector, then restores 0, so the caller neither sets up nor cleans up the bank.
 .draw_record_three_from_alternate_bank_source
-    LDA #&02
+    LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
-    LDA #&03
+    LDA #STATUS_GRAPHIC_BLANK_ICON
     JSR enter_copy_16_byte_graphic_to_display
-    LDA #&00
+    LDA #GRAPHIC_BANK_PRIMARY_OFFSET
     STA graphic_source_base_pointer_offset
     RTS
 .draw_record_three_from_alternate_bank_source_end
@@ -4188,7 +4188,7 @@ ORG initialise_new_game
     STA bcd_counter_low
     LDA #&10
     STA bcd_counter_high
-    LDA #&02
+    LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
     LDY #&0C
     STY power_crystals_remaining
@@ -4198,7 +4198,7 @@ ORG initialise_new_game
     STA display_pointer_high
 
 .clear_next_icon_slot
-    LDA #&00
+    LDA #STATUS_GRAPHIC_REMAINING_ICON
     STA shared_workspace_79
     BEQ draw_cleared_icon_slot
 
@@ -4223,7 +4223,7 @@ ORG initialise_new_game
     STA display_pointer_low
     LDA #HI(collected_icon_next_slot_base)
     STA display_pointer_high
-    LDA #&02
+    LDA #STATUS_GRAPHIC_INITIAL_MARKER
     JSR enter_copy_16_byte_graphic_to_display
     JSR enter_copy_16_byte_graphic_to_display
     JSR enter_copy_16_byte_graphic_to_display
@@ -5250,7 +5250,7 @@ ORG check_player_relative_display_pattern_15
     LDA player_display_pointer_high
     ADC #&07
     STA display_pointer_high
-    LDA #&15
+    LDA #GRAPHIC_COLUMN_JUNCTION
     JSR display_pattern_test
     BCC return_carry_clear_2a34
     JMP display_pattern_match_tail_entry
@@ -5564,7 +5564,7 @@ ORG tile_run_shared_rts
 .draw_blank_tile_run_entry
     CPX #&00
     BEQ draw_blank_tile_run_source
-    LDA #&00
+    LDA #GRAPHIC_BLANK
 
 .draw_next_blank_tile
     JSR copy_16_byte_graphic_to_display
@@ -5904,7 +5904,7 @@ ORG dispatch_room_cell
     BNE draw_eight_blank_tiles
     LDX #&08
 .draw_next_pillar_base_tile
-    LDA #&27
+    LDA #GRAPHIC_PILLAR_BASE
     JSR apply_mirror_flag_then_copy_graphic
     DEX
     BNE draw_next_pillar_base_tile
@@ -6588,7 +6588,7 @@ ORG draw_column_sensitive_room_patterns
     LDX #&08
 
 .draw_column_sensitive_room_patterns_branch_5
-    LDA #&08
+    LDA #GRAPHIC_CURVED_BOWL
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_column_sensitive_room_patterns_branch_5
@@ -6605,7 +6605,7 @@ ORG draw_bordered_horizontal_bar_row
 ; entry draws a centred $10/$11 or mirrored $50/$51 slope pair in columns four
 ; and five and delegates other columns to the adjacent pattern handler.
 .draw_bordered_horizontal_bar_row_source
-    LDX #&12
+    LDX #GRAPHIC_HORIZONTAL_BAR
     STX shared_workspace_34
     JMP draw_bordered_row_with_selected_interior
 
@@ -6613,10 +6613,10 @@ ORG draw_bordered_horizontal_bar_row
     LDY #&FF
     JMP store_column_motif_selector
 .draw_first_key_column_motif_source
-    LDY #&28
+    LDY #ITEM_CODE_KEY_1
     JMP store_column_motif_selector
 .draw_second_key_column_motif_source
-    LDY #&2A
+    LDY #ITEM_CODE_KEY_2
 
 .store_column_motif_selector
     STY saved_interaction_item_code
@@ -6639,10 +6639,10 @@ ORG draw_bordered_horizontal_bar_row
     JSR draw_blank_tile_run
     CPY #&00
     BEQ draw_blank_column_motif_pair
-    LDA #&25
+    LDA #GRAPHIC_UNIFORM_PATTERN
     JMP draw_column_motif_pair
 .draw_blank_column_motif_pair
-    LDA #&00
+    LDA #GRAPHIC_BLANK
 .draw_column_motif_pair
     JSR copy_16_byte_graphic_to_display
     JSR copy_16_byte_graphic_to_display
@@ -6656,12 +6656,12 @@ ORG draw_bordered_horizontal_bar_row
     BEQ draw_outer_04_03_pair_row
     LDX #&02
     JSR draw_04_03_alternating_run
-    LDA #&00
+    LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     TYA
     JSR copy_16_byte_graphic_to_display
     JSR copy_16_byte_graphic_to_display
-    LDA #&00
+    LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     LDX #&02
     JMP draw_04_03_alternating_run
@@ -6681,16 +6681,16 @@ ORG draw_bordered_horizontal_bar_row
     CMP #&04
     BNE draw_mirrored_centered_slope_pair
     JSR save_display_pointer_and_cell_reference
-    LDA #&10
+    LDA #GRAPHIC_PATTERNED_SLOPE_A
     JSR copy_16_byte_graphic_to_display
-    LDA #&11
+    LDA #GRAPHIC_PATTERNED_SLOPE_B
     JSR copy_16_byte_graphic_to_display
     LDX #&03
     JMP draw_blank_tile_run
 .draw_mirrored_centered_slope_pair
-    LDA #&50
+    LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_PATTERNED_SLOPE_A
     JSR copy_16_byte_graphic_to_display
-    LDA #&51
+    LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_PATTERNED_SLOPE_B
     JSR copy_16_byte_graphic_to_display
     LDX #&03
     JMP draw_blank_tile_run
@@ -6935,9 +6935,9 @@ ORG draw_repeated_87_blank_pairs_by_state
     BEQ record_87_pair_run_finished_exit
 
 .draw_next_87_blank_pair
-    LDA #&87
+    LDA #GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_CROSSED_DIAGONAL
     JSR copy_16_byte_graphic_to_display
-    LDA #&00
+    LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_87_blank_pair
@@ -7061,9 +7061,9 @@ ORG draw_narrow_bar_fixture_row
     LDX #&04
 
 .draw_next_15_blank_pair
-    LDA #&15
+    LDA #GRAPHIC_COLUMN_JUNCTION
     JSR copy_16_byte_graphic_to_display
-    LDA #&00
+    LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_15_blank_pair
@@ -7080,7 +7080,7 @@ ORG draw_narrow_bar_fixture_row
 .select_narrow_bar_right_edge
     CMP #&07
     BNE draw_narrow_bar_middle_right_column
-    LDA #&14
+    LDA #GRAPHIC_WIDE_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDX #&07
     JMP draw_blank_tile_run
@@ -7091,9 +7091,9 @@ ORG draw_narrow_bar_fixture_row
     SBC shared_workspace_09
     TAX
     JSR draw_next_13_07_pair
-    LDA #&14
+    LDA #GRAPHIC_WIDE_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
-    LDA #&00
+    LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     LDA shared_workspace_09
     CMP #&04
@@ -7105,9 +7105,9 @@ ORG draw_narrow_bar_fixture_row
     JMP draw_blank_tile_run
 
 .draw_next_13_07_pair
-    LDA #&13
+    LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
-    LDA #&07
+    LDA #GRAPHIC_CROSSED_DIAGONAL
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_13_07_pair
@@ -7264,11 +7264,11 @@ ORG draw_state_selected_13_center_row
 .draw_cell_17_framed_center
     LDX #&02
     JSR draw_blank_tile_run
-    LDA #&13
+    LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDX #&02
     JSR draw_04_03_alternating_run
-    LDA #&13
+    LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     LDX #&02
     JMP draw_blank_tile_run
@@ -7437,7 +7437,7 @@ ORG draw_two_13_two_beam_two_13_two_pattern
     LDX #&02
 
 .draw_next_13_tile
-    LDA #&13
+    LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_13_tile
@@ -7711,7 +7711,7 @@ ORG draw_table_selected_left_half_row
     SBC #&04
     STA shared_workspace_09
     JSR load_left_half_graphic_sequence_pointer
-    LDA #&13
+    LDA #GRAPHIC_NARROW_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
     JSR copy_16_byte_graphic_to_display
     LDX #&02
@@ -8655,21 +8655,21 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     JMP draw_fixed_pair_tile_run+2
 
 .draw_bordered_checker_diagonal_row_source
-    LDX #&09
+    LDX #GRAPHIC_CHECKER_DIAGONAL
     STX shared_workspace_34
 
 .draw_bordered_row_with_selected_interior_source
     CMP #&00
     BNE draw_bordered_row_last_or_middle_column
-    LDA #&1A
+    LDA #GRAPHIC_DIAGONAL_SLOPE_A
     JSR copy_16_byte_graphic_to_display
     LDX #&06
     JSR draw_blank_tile_run
-    LDA #&1B
+    LDA #GRAPHIC_DIAGONAL_SLOPE_B
     JMP copy_16_byte_graphic_to_display
 
 .draw_bordered_row_middle_column
-    LDA #&1E
+    LDA #GRAPHIC_FLAT_FILL
     JSR copy_16_byte_graphic_to_display
     LDA shared_workspace_34
     LDX #&06
@@ -8678,22 +8678,22 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_bordered_row_interior_tile
-    LDA #&1E
+    LDA #GRAPHIC_FLAT_FILL
     JMP copy_16_byte_graphic_to_display
 
 .draw_bordered_row_last_or_middle_column
     CMP #&07
     BNE draw_bordered_row_middle_column
-    LDA #&5B
+    LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_B
     JSR copy_16_byte_graphic_to_display
     LDX #&06
-    LDA #&20
+    LDA #GRAPHIC_HORIZONTAL_PLATFORM
 
 .draw_next_last_column_interior_tile
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_last_column_interior_tile
-    LDA #&5A
+    LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A
     JMP copy_16_byte_graphic_to_display
 
 .enter_room_object_configuration_with_0e_10_source
@@ -8743,7 +8743,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     LDX #&08
 
 .draw_next_dynamic_room_object_tile
-    LDA #&26
+    LDA #GRAPHIC_DOUBLE_BAR
     JSR copy_16_byte_graphic_to_display
     DEX
     BNE draw_next_dynamic_room_object_tile
@@ -9323,16 +9323,16 @@ ORG draw_pillar_framed_or_pattern_row
     JMP draw_eight_alternating_tiles
 
 .draw_pillar_framed_first_column
-    LDA #&02
+    LDA #GRAPHIC_ROUNDED_PATTERN_B
     JSR copy_16_byte_graphic_to_display
     LDX #&06
 
 .draw_next_pillar_middle_tile
-    LDA #&27
+    LDA #GRAPHIC_PILLAR_BASE
     JSR apply_mirror_flag_then_copy_graphic
     DEX
     BNE draw_next_pillar_middle_tile
-    LDA #&01
+    LDA #GRAPHIC_ROUNDED_PATTERN_A
     JMP copy_16_byte_graphic_to_display
 
 .draw_fixed_pair_second_column
@@ -10974,6 +10974,10 @@ ORG status_icon_graphics
 ; record 7: decoded multicolour figure fragment; no selector xref located
     EQUB &01, &05, &17, &36, &02, &07, &19, &14, &00, &00, &FF, &7E, &7D, &00, &00, &00
 .unused_status_figure_graphics_source_end
+ASSERT remaining_status_icon_graphic = status_icon_graphics + STATUS_GRAPHIC_REMAINING_ICON*16
+ASSERT collected_status_icon_graphic = status_icon_graphics + STATUS_GRAPHIC_COLLECTED_ICON*16
+ASSERT initial_status_marker_graphic = status_icon_graphics + STATUS_GRAPHIC_INITIAL_MARKER*16
+ASSERT blank_status_icon_graphic = status_icon_graphics + STATUS_GRAPHIC_BLANK_ICON*16
 ASSERT status_icon_graphics_source = status_icon_graphics
 ASSERT unused_status_figure_graphics_source = unused_status_figure_graphics
 ASSERT unused_status_figure_graphics_source_end = item_and_goal_record_table
@@ -11407,6 +11411,45 @@ ORG room_and_item_graphic_records
 ; graphic record &3F
     EQUB &F0, &F0, &F0, &F0, &F0, &F0, &00, &F0, &E0, &F0, &F0, &F0, &F0, &D0, &30, &E0
 .room_and_item_graphic_records_source_end
+ASSERT rounded_pattern_tile_a = room_and_item_graphic_records + (GRAPHIC_ROUNDED_PATTERN_A-1)*16
+ASSERT rounded_pattern_tile_b = room_and_item_graphic_records + (GRAPHIC_ROUNDED_PATTERN_B-1)*16
+ASSERT solid_diagonal_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_DIAGONAL_A-1)*16
+ASSERT hollow_arch_tile = room_and_item_graphic_records + (GRAPHIC_HOLLOW_ARCH-1)*16
+ASSERT diagonal_beam_tile = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BEAM-1)*16
+ASSERT small_marker_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_MARKER-1)*16
+ASSERT crossed_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CROSSED_DIAGONAL-1)*16
+ASSERT curved_bowl_tile = room_and_item_graphic_records + (GRAPHIC_CURVED_BOWL-1)*16
+ASSERT checker_diagonal_tile = room_and_item_graphic_records + (GRAPHIC_CHECKER_DIAGONAL-1)*16
+ASSERT solid_corner_tile_a = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_A-1)*16
+ASSERT solid_corner_tile_b = room_and_item_graphic_records + (GRAPHIC_SOLID_CORNER_B-1)*16
+ASSERT stepped_fixture_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FIXTURE-1)*16
+ASSERT coloured_fixture_tile = room_and_item_graphic_records + (GRAPHIC_COLOURED_FIXTURE-1)*16
+ASSERT chain_link_tile_a = room_and_item_graphic_records + (GRAPHIC_CHAIN_LINK_A-1)*16
+ASSERT chain_link_tile_b = room_and_item_graphic_records + (GRAPHIC_CHAIN_LINK_B-1)*16
+ASSERT patterned_slope_tile_a = room_and_item_graphic_records + (GRAPHIC_PATTERNED_SLOPE_A-1)*16
+ASSERT patterned_slope_tile_b = room_and_item_graphic_records + (GRAPHIC_PATTERNED_SLOPE_B-1)*16
+ASSERT horizontal_bar_tile = room_and_item_graphic_records + (GRAPHIC_HORIZONTAL_BAR-1)*16
+ASSERT narrow_vertical_bar_tile = room_and_item_graphic_records + (GRAPHIC_NARROW_VERTICAL_BAR-1)*16
+ASSERT wide_vertical_bar_tile = room_and_item_graphic_records + (GRAPHIC_WIDE_VERTICAL_BAR-1)*16
+ASSERT column_junction_tile = room_and_item_graphic_records + (GRAPHIC_COLUMN_JUNCTION-1)*16
+ASSERT solid_fill_tile = room_and_item_graphic_records + (GRAPHIC_SOLID_FILL-1)*16
+ASSERT stepped_fill_tile = room_and_item_graphic_records + (GRAPHIC_STEPPED_FILL-1)*16
+ASSERT sloping_ledge_tile_a = room_and_item_graphic_records + (GRAPHIC_SLOPING_LEDGE_A-1)*16
+ASSERT sloping_ledge_tile_b = room_and_item_graphic_records + (GRAPHIC_SLOPING_LEDGE_B-1)*16
+ASSERT diagonal_slope_tile_a = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_SLOPE_A-1)*16
+ASSERT diagonal_slope_tile_b = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_SLOPE_B-1)*16
+ASSERT small_panel_tile = room_and_item_graphic_records + (GRAPHIC_SMALL_PANEL-1)*16
+ASSERT striped_fill_tile = room_and_item_graphic_records + (GRAPHIC_STRIPED_FILL-1)*16
+ASSERT flat_fill_tile = room_and_item_graphic_records + (GRAPHIC_FLAT_FILL-1)*16
+ASSERT corner_fill_tile = room_and_item_graphic_records + (GRAPHIC_CORNER_FILL-1)*16
+ASSERT horizontal_platform_tile = room_and_item_graphic_records + (GRAPHIC_HORIZONTAL_PLATFORM-1)*16
+ASSERT decorative_diamond_tile = room_and_item_graphic_records + (GRAPHIC_DECORATIVE_DIAMOND-1)*16
+ASSERT diagonal_block_tile_a = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BLOCK_A-1)*16
+ASSERT diagonal_block_tile_b = room_and_item_graphic_records + (GRAPHIC_DIAGONAL_BLOCK_B-1)*16
+ASSERT striped_vertical_tile = room_and_item_graphic_records + (GRAPHIC_STRIPED_VERTICAL-1)*16
+ASSERT uniform_pattern_tile = room_and_item_graphic_records + (GRAPHIC_UNIFORM_PATTERN-1)*16
+ASSERT double_bar_tile = room_and_item_graphic_records + (GRAPHIC_DOUBLE_BAR-1)*16
+ASSERT pillar_base_tile = room_and_item_graphic_records + (GRAPHIC_PILLAR_BASE-1)*16
 ASSERT room_and_item_graphic_records_source = room_and_item_graphic_records
 ASSERT room_and_item_graphic_records_source_end = display_action_jump_table
 COPYBLOCK room_and_item_graphic_records_source, room_and_item_graphic_records_source_end, &2610
