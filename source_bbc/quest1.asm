@@ -1116,15 +1116,17 @@ ORG process_player_cell_interactions
 ; Tail target of both horizontal movement routines. Test
 ; the display pattern under/around the newly positioned player and dispatch the
 ; corresponding crystal, carried-item, redraw, damage, or room-effect action.
-; Pattern $11 collects a power crystal. Pattern $25 consumes the item selected
-; by room drawing in $A4, with item $2C accepted as a substitute when that
-; selector is $28, then replaces the saved cell. Pattern $06 runs the $20B3
-; action and redraws the player.
-; Pattern $16 uses current interaction types $20/$21 to require item $36/$34;
-; success starts effect $11 and clears $63. Pattern $1A with type $24 first
-; applies player damage, then a nonzero item-$3E activation flag permits item
-; $3E to be consumed and effect $3C to start. The $20 branch and both final
-; successful-effect paths remain static-only; all other control flow is traced.
+; GRAPHIC_PATTERNED_SLOPE_B collects a power crystal. GRAPHIC_UNIFORM_PATTERN
+; consumes saved_interaction_item_code, accepting ITEM_CODE_KEY_3 when a lock
+; asks for ITEM_CODE_KEY_1, then replaces the saved cell. GRAPHIC_SMALL_MARKER
+; enters the terminal interaction and redraws the player.
+; GRAPHIC_SOLID_FILL uses the Elephant House and Joke Shop interaction codes to
+; require the mouse and herring respectively; success starts the half-row shift
+; effect and clears room_moving_object_puzzle_state. GRAPHIC_DIAGONAL_SLOPE_A
+; at the Hydroponics interaction first damages the player, then an activated
+; bottle may be consumed to start the transition effect. The Elephant House
+; branch and both successful effect paths remain static-only; all other control
+; flow is traced.
 .process_player_cell_interactions_source
     LDA #GRAPHIC_PATTERNED_SLOPE_B
     JSR display_pattern_test
@@ -1208,13 +1210,11 @@ ORG display_action_jump_table
 
 ; Six vectors into the display routines, giving callers a
 ; stable entry for each regardless of where the target moves.
-; The last two entries are five bytes rather than three: they adjust the
-; reference value at $90 by one, downwards then upwards, before dispatching to
-; the same target as the third vector. So the table encodes three plain
-; transfers and two that carry a side effect.
-; The table ends at $1215. What follows is the runtime variable block, not more
-; vectors: $121E, $121F, $1221, $1222, $1224 and $1225 are all read as data
-; elsewhere in this source.
+; The last two entries are five bytes rather than three: they decrement or
+; increment reference_pair_primary_value before dispatching to the same target
+; as the third vector. So the table encodes three plain transfers and two that
+; carry a side effect. The following room-render state is data, not additional
+; vectors; its individual fields are named below and read elsewhere in source.
 .display_action_jump_table_source
     JMP set_display_pointer_from_grid_position
 
@@ -1247,21 +1247,21 @@ CLEAR display_action_jump_table_source, display_action_jump_table_source_end
 ORG room_moving_object_graphic_state
 
 ; Mutable room-render and entity setup state. The initial
-; image is all zero. $121D-$1220 is written as an indexed four-byte state set;
-; the middle two bytes are also the proved lower/upper selector limits. The
+; image is all zero. The first four bytes are written as an indexed state set;
+; the middle two are also the proved lower/upper selector limits. The
 ; remaining fields are populated from room records before their render/update
 ; consumers run. Keeping each byte explicit documents the intentional overlap
 ; and prevents these variables being mistaken for 6502 instructions.
 .room_render_state_source
-    EQUB &00                         ; room-moving-object selector state, slot 0
-    EQUB &00                         ; $121E lower selector limit / element 1
-    EQUB &00                         ; $121F upper selector limit / element 2
-    EQUB &00                         ; $1220 room-moving-object room selector / element 3
-    EQUB &00                         ; $1221 active enemy species
-    EQUB &00                         ; $1222 active enemy last even slot
-    EQUB &00                         ; $1223 room-moving-object even-slot loop limit
-    EQUB &00                         ; $1224 graphic source base pointer offset
-    EQUB &00                         ; $1225 complete current room cell
+    EQUB &00                         ; room_moving_object_graphic_state, slot 0
+    EQUB &00                         ; room_moving_object_graphic_selector_lower_limit, slot 1
+    EQUB &00                         ; room_moving_object_graphic_selector_upper_limit, slot 2
+    EQUB &00                         ; room_moving_objects_active, slot 3
+    EQUB &00                         ; active_enemy_species
+    EQUB &00                         ; active_enemy_last_slot_index
+    EQUB &00                         ; room_moving_object_slot_limit
+    EQUB &00                         ; graphic_source_base_pointer_offset
+    EQUB &00                         ; complete_current_room_cell
 .room_render_state_source_end
 
 ASSERT room_render_state_source = room_moving_object_graphic_state
