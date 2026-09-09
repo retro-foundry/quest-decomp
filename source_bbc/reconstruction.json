@@ -25,10 +25,10 @@
       "record_size": 32,
       "evidence": [
         "all known pointers into this range are $20-aligned and the XOR renderer consumes them as multi-row Mode 1 source graphics",
-        "the enemy renderer consumes the pointer sets that identify $0400/$0420/$0440/$0460 as four type-zero directional frames and $0680/$06A0 as type-two/type-one directional frames",
-        "enemy_graphic_descriptor_table identifies the enemy frame pairs $0480/$04A0, $0640/$0660, $04C0/$04E0 and $0620/$0600; $04C0/$04E0 are also the lift frames selected by the second-entity descriptor",
-        "entity_graphic_frame_pointer_table identifies $0640/$0660/$06C0/$0720/$0500/$0560/$0540/$05E0/$05A0/$05C0; the player renderer selects its upper and lower frames through slots 4/5 and 7/8/9",
-        "frames absent from every pointer table and selector range are individually labelled unused rather than assigned speculative artwork identities"
+        "xor_graphic_into_display proves eight scanlines with source bytes N+0/N+8/N+16/N+24; decoding in that exact order identifies four small-robot directions at $0400-$0460, moth frames at $0480/$04A0, humanoid figures at $04C0/$04E0, a jellyfish at $0600/$0620, striped platforms at $0640/$0660, a mouse at $0680 and a fish at $06A0",
+        "enemy_graphic_descriptor_table selects the moth, striped-platform, humanoid-robot/hazard and jellyfish pairs; the six-byte room records do not select the jellyfish pair",
+        "the decoded bank identifies all $0500-$05E0 records as player artwork and all $06C0-$0760 records as ghost artwork; the player renderer selects $0500/$0560/$0540/$05E0/$05A0/$05C0 while the remaining player and ghost frames currently have no proved selector",
+        "graphic identity and runtime reachability are recorded separately: decoded player and ghost frames retain those identities even where no pointer-table selector has yet been proved"
       ]
     },
     {
@@ -614,7 +614,7 @@
       "meaning_level": "behavioral",
       "record_size": 4,
       "evidence": [
-        "initialise_room_entity_from_table selects one of four pairs of enemy sprite-frame pointers by enemy type",
+        "initialise_room_entity_from_table selects the decoded moth, striped-platform or humanoid-robot/hazard frame pair; its fourth jellyfish pair has no selecting room record",
         "draw_indexed_entity_with_xor_graphic consumes the selected pair; suppressing that renderer makes enemy robots disappear"
       ]
     },

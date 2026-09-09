@@ -274,101 +274,101 @@
 
 INCLUDE "source_bbc/memory_map.inc"
 
-; PLAYER, ENEMY AND LIFT SPRITES
-; ==============================
-; Runtime $0400-$077F: 28 aligned 32-byte Mode 1 XOR sprite frames. The player
-; is the five explicitly named player_* frames at $0500/$0560/$05A0/$05C0/
-; $05E0. Enemy types select the enemy_* pairs through the descriptor table at
-; $1FDF. The lift renderer selects $04C0/$04E0 through the second-entity
-; descriptor at $2086. Names are derived from those consumers and from the
-; renderer-suppression play tests; frames with no proven consumer retain an
-; explicit unused name instead of an invented visual identity.
+; PLAYER, CREATURE, ROBOT AND LIFT SPRITES
+; =========================================
+; Runtime $0400-$077F: 28 aligned 32-byte Mode 1 XOR sprite frames. The eight
+; records at $0500-$05E0 are player graphics, while $06C0-$0760 is the six-
+; record ghost set. xor_graphic_into_display proves the storage order: eight source
+; scanlines, with the four Mode 1 bytes for scanline N at N+0, N+8, N+16 and
+; N+24. Some callers double each source scanline to make a 16-pixel-high image.
+; The names below describe the correctly decoded silhouettes. Where the image
+; does not establish a species, the label deliberately names its visible form.
 ; Stage this data outside the loaded/runtime alias range. It is copied to its
 ; transport location only after all relocated routines have been assembled.
 ORG &9000
 .player_enemy_and_lift_xor_sprite_frames_source
-.enemy_type_0_direction_frame_0
+.small_bouncing_robot_direction_frame_0
     EQUB &00, &00, &00, &00, &06, &6F, &6F, &06, &00, &00, &00, &06, &6F, &6F, &6F, &06
     EQUB &00, &00, &06, &6F, &7F, &7F, &6F, &06, &77, &88, &0E, &6F, &69, &0F, &08, &0E
-.enemy_type_0_direction_frame_1
+.small_bouncing_robot_direction_frame_1
     EQUB &EE, &11, &07, &69, &6F, &0F, &01, &07, &00, &00, &06, &6F, &EF, &EF, &6F, &06
     EQUB &00, &00, &00, &06, &6F, &6F, &6F, &06, &00, &00, &00, &00, &06, &6F, &6F, &06
-.enemy_type_0_direction_frame_2
+.small_bouncing_robot_direction_frame_2
     EQUB &00, &00, &00, &00, &07, &6F, &6F, &06, &00, &06, &6F, &6F, &6F, &0E, &00, &00
     EQUB &33, &06, &6F, &6F, &6F, &06, &00, &00, &88, &44, &0E, &69, &6F, &0F, &08, &0E
-.enemy_type_0_direction_frame_3
+.small_bouncing_robot_direction_frame_3
     EQUB &11, &22, &07, &6F, &69, &0F, &01, &07, &CC, &06, &6F, &6F, &6F, &06, &00, &00
     EQUB &00, &06, &6F, &6F, &6F, &07, &00, &00, &00, &00, &00, &00, &0E, &6F, &6F, &06
-.enemy_type_0_frame_0
+.moth_wings_raised_frame
     EQUB &0C, &86, &C3, &61, &30, &10, &00, &00, &88, &44, &22, &0F, &6F, &87, &E3, &22
     EQUB &11, &22, &44, &0F, &6F, &1E, &4C, &44, &03, &16, &3C, &68, &C0, &80, &00, &00
-.enemy_type_0_frame_1
+.moth_wings_lowered_frame
     EQUB &00, &00, &00, &03, &34, &70, &00, &00, &22, &22, &22, &0F, &6F, &87, &23, &22
     EQUB &44, &44, &44, &0F, &6F, &1E, &4C, &44, &00, &00, &00, &0E, &E1, &F0, &00, &00
-.enemy_type_2_and_hazard_frame_0
+.humanoid_robot_and_hazard_frame_0
     EQUB &02, &05, &00, &00, &33, &CC, &11, &EE, &00, &00, &68, &61, &CF, &03, &CD, &01
     EQUB &00, &00, &61, &68, &3F, &0C, &3B, &08, &04, &0A, &00, &00, &CC, &33, &88, &77
-.enemy_type_2_and_hazard_frame_1
+.humanoid_robot_and_hazard_frame_1
     EQUB &03, &00, &00, &EE, &11, &CC, &33, &00, &08, &04, &60, &61, &CF, &03, &CD, &01
     EQUB &01, &02, &60, &68, &3F, &0C, &3B, &08, &0C, &00, &00, &77, &88, &33, &CC, &00
-.player_upper_frame_0
+.player_upper_facing_right_frame
     EQUB &00, &00, &11, &11, &11, &11, &16, &78, &77, &F8, &F0, &C3, &C3, &C3, &6B, &A5
     EQUB &FF, &F1, &87, &FF, &0F, &0F, &0C, &87, &88, &00, &00, &88, &88, &08, &00, &00
-.unused_xor_sprite_frame_0520
+.player_unused_upper_facing_right_frame
     EQUB &9E, &F8, &F0, &F0, &F0, &70, &70, &00, &C3, &87, &C3, &87, &C3, &87, &C3, &07
     EQUB &08, &84, &08, &84, &48, &84, &48, &84, &00, &00, &00, &00, &00, &00, &00, &00
-.entity_pointer_slot_6_frame
+.player_lower_standing_frame
     EQUB &00, &00, &11, &11, &32, &32, &03, &03, &FA, &E8, &E4, &C0, &88, &80, &4E, &0E
     EQUB &E0, &EA, &71, &75, &31, &32, &03, &03, &00, &00, &00, &00, &00, &80, &4E, &0E
-.player_upper_frame_1
+.player_upper_facing_left_frame
     EQUB &11, &00, &00, &11, &11, &01, &00, &00, &FF, &F8, &1E, &FF, &0F, &0F, &03, &1E
     EQUB &EE, &F1, &F0, &3C, &3C, &3C, &6D, &5A, &00, &00, &88, &88, &88, &88, &86, &E1
-.unused_xor_sprite_frame_0580
+.player_unused_upper_facing_left_frame
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &01, &12, &01, &12, &21, &12, &21, &12
     EQUB &B4, &1E, &3C, &1E, &3C, &1E, &3C, &0E, &97, &F1, &F0, &F0, &F0, &E0, &E0, &EE
-.player_lower_alternate_frame
+.player_lower_wide_stride_frame
     EQUB &00, &00, &00, &00, &00, &10, &27, &07, &70, &75, &E8, &EA, &C8, &C4, &0C, &0C
     EQUB &F5, &71, &72, &30, &11, &10, &27, &07, &00, &00, &88, &88, &C4, &C4, &0C, &0C
-.player_lower_frame_1
+.player_lower_step_left_frame
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &11, &10, &00, &00, &00, &00, &27, &07
     EQUB &F5, &FA, &E4, &EA, &E4, &EA, &0E, &0E, &00, &00, &00, &00, &00, &00, &00, &00
-.player_lower_frame_0
+.player_lower_step_right_frame
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &FA, &F5, &72, &75, &72, &75, &07, &07
     EQUB &88, &80, &00, &00, &00, &00, &4E, &0E, &00, &00, &00, &00, &00, &00, &00, &00
-.enemy_type_3_frame_1
+.jellyfish_frame_1
     EQUB &00, &03, &07, &0F, &9F, &09, &99, &05, &0F, &0F, &0F, &0F, &22, &02, &22, &04
     EQUB &0F, &0F, &0F, &0F, &99, &09, &44, &04, &00, &0C, &0E, &0F, &2F, &02, &AA, &09
-.enemy_type_3_frame_0
+.jellyfish_frame_0
     EQUB &03, &07, &0F, &0F, &99, &04, &22, &02, &08, &0F, &0F, &0F, &33, &0A, &AA, &0A
     EQUB &01, &0F, &0F, &0F, &99, &0A, &AA, &0A, &0C, &0E, &0F, &0E, &22, &04, &88, &08
-.enemy_type_1_and_lift_frame_0
+.striped_lift_platform_frame_0
     EQUB &57, &57, &00, &30, &0F, &0F, &30, &00, &5F, &5F, &30, &F0, &FF, &FF, &F0, &30
     EQUB &5F, &5F, &C0, &F0, &0F, &0F, &F0, &C0, &4E, &4E, &00, &C0, &FF, &FF, &C0, &00
-.enemy_type_1_and_lift_frame_1
+.striped_lift_platform_frame_1
     EQUB &00, &00, &00, &30, &FF, &FF, &30, &00, &07, &07, &30, &F0, &0F, &0F, &F0, &30
     EQUB &0E, &0E, &C0, &F0, &FF, &FF, &F0, &C0, &00, &00, &00, &C0, &0F, &0F, &C0, &00
-.enemy_type_2_direction_frame
+.mouse_direction_frame
     EQUB &11, &22, &44, &44, &44, &33, &00, &00, &00, &33, &77, &77, &FF, &FF, &EE, &77
     EQUB &00, &CC, &FF, &FF, &FF, &EE, &33, &00, &CC, &CC, &88, &4C, &FF, &00, &00, &88
-.enemy_type_1_direction_frame
+.fish_direction_frame
     EQUB &08, &0C, &86, &0F, &4B, &86, &0C, &08, &01, &07, &0F, &0F, &0F, &0F, &07, &01
     EQUB &0E, &0F, &3C, &3C, &0F, &0C, &0F, &0E, &00, &08, &0C, &0E, &0F, &00, &0C, &00
-.entity_pointer_slot_2_frame
+.ghost_frame_0
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &10, &72, &74, &F0
     EQUB &30, &60, &40, &C0, &80, &80, &80, &00, &C0, &20, &00, &0A, &00, &00, &20, &40
-.unused_xor_sprite_frame_06e0
+.ghost_frame_1
     EQUB &00, &10, &10, &30, &30, &72, &74, &70, &F1, &F2, &F0, &F8, &F0, &A0, &F8, &F0
     EQUB &F2, &F0, &F4, &F0, &E0, &10, &F0, &F0, &FA, &E0, &C3, &01, &80, &80, &80, &80
-.unused_xor_sprite_frame_0700
+.ghost_frame_2
     EQUB &60, &80, &10, &10, &00, &30, &70, &C0, &F0, &F0, &F0, &B0, &70, &F0, &E0, &D0
     EQUB &F0, &E0, &D0, &D0, &B0, &60, &60, &E0, &80, &80, &80, &00, &00, &00, &00, &00
-.entity_pointer_slot_3_frame
+.ghost_frame_3
     EQUB &70, &80, &00, &0A, &00, &00, &80, &40, &80, &C0, &60, &20, &30, &30, &30, &00
     EQUB &00, &00, &00, &00, &80, &E0, &C0, &F0, &00, &00, &00, &00, &00, &00, &00, &00
-.unused_xor_sprite_frame_0740
+.ghost_frame_4
     EQUB &72, &3C, &38, &00, &00, &00, &00, &00, &FA, &F0, &F0, &70, &B0, &C0, &F0, &F0
     EQUB &D0, &E0, &F0, &F0, &D0, &30, &F0, &F0, &00, &00, &80, &00, &C0, &C0, &E0, &E0
-.unused_xor_sprite_frame_0760
+.ghost_frame_5
     EQUB &10, &10, &10, &00, &00, &00, &00, &00, &F0, &B0, &F0, &B0, &D0, &60, &70, &30
     EQUB &60, &70, &D0, &E0, &F0, &F0, &70, &B0, &60, &10, &80, &C0, &00, &E0, &E0, &30
 .player_enemy_and_lift_xor_sprite_frames_end
@@ -2676,14 +2676,14 @@ ORG initialise_room_entity_from_table
 ; resolves to a room inside the grid, and the set contains every room the
 ; player's account calls out for an enemy.
 ;
-; $1221 is the enemy type, and it selects the four-byte descriptor copied from
-; $1FDF. Three types are used, and they group the rooms as
-;   type 0  B5 D0 A1 G2 E3 D6   including the room with the homing enemy
-;   type 1  C3 F1 C1 B3 B6 E2 A2 C7
-;   type 2  C5 E5 F4 E4 H7 D7   mostly the hydroponics and water rooms
+; $1221 selects the four-byte graphic descriptor copied from $1FDF. The three
+; selected graphic pairs and their rooms are
+;   moth                      B5 D0 A1 G2 E3 D6
+;   striped lift/platform     C3 F1 C1 B3 B6 E2 A2 C7
+;   humanoid robot/hazard     C5 E5 F4 E4 H7 D7
 ; See analysis/room_map.md for the rooms alongside what the account says of
-; them. Which behaviour belongs to which type is not established: the type only
-; selects a descriptor and a graphic here.
+; them. These are decoded graphic identities; the shared state machine means a
+; visual identity alone must not be used to infer movement or collision rules.
 .initialise_room_entity_from_table_source
     LDX #&00
     LDA #&00
@@ -11059,9 +11059,10 @@ COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_des
 CLEAR lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end
 
 ORG unused_graphic_frame_pointer_words
-; Runtime $0B6F-$0B76: four aligned graphic pointers not selected by any known
-; index. They precede the player table, but the player renderer's minimum
-; selector X=$18 starts at runtime $0B77.
+; Runtime $0B6F-$0B76: lift-frame 0/1 and ghost-frame 0/3 pointers. No known
+; runtime selector reaches these four words: the adjacent player renderer's
+; minimum selector X=$18 starts at runtime $0B77. Their graphic identities are
+; nevertheless established by decoding the complete sprite bank.
 .unused_graphic_frame_pointer_words_source
     EQUW &0640, &0660, &06C0, &0720
 .unused_graphic_frame_pointer_words_source_end
@@ -11071,7 +11072,9 @@ ASSERT unused_graphic_frame_pointer_words_source = unused_graphic_frame_pointer_
 ; indexes these exact words with X=$18/$1A for the upper frame and
 ; X=$1C/$1E/$20/$22 for the normal/alternate lower frame.
 .player_graphic_frame_pointer_table_source
-    EQUW &0500, &0560, &0540, &05E0, &05A0, &05C0
+    EQUW &0500, &0560 ; player_upper_facing_right/left_frame
+    EQUW &0540, &05E0 ; player_lower_standing/step_right_frame
+    EQUW &05A0, &05C0 ; player_lower_wide_stride/step_left_frame
 .player_graphic_frame_pointer_table_source_end
 ASSERT player_graphic_frame_pointer_table_source = player_graphic_frame_pointer_table
 ASSERT player_graphic_frame_pointer_table_source_end = &0B83
@@ -11423,7 +11426,11 @@ COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, &3590
 CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
 ORG indexed_xor_graphic_pointer_sets
-; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers.
+; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
+; the four-direction small robot; fish alternating with item-graphic record
+; $33; mouse alternating with the herring's record $35; and a background-only
+; set. These roaming/puzzle graphics are separate from the room-entity pairs
+; selected by the descriptor table at $1FDF.
 .indexed_xor_graphic_pointer_sets_source
     EQUW &0400, &0420, &0440, &0460
     EQUW &06A0, &1140, &06A0, &1140
@@ -11623,12 +11630,13 @@ COPYBLOCK graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_
 CLEAR graphic_copy_alignment_padding_source, graphic_copy_alignment_padding_source_end
 
 ORG enemy_graphic_descriptor_table
-; Four pairs of enemy sprite-frame pointers selected by enemy type at $1FB9.
+; Four decoded graphic pairs selected by room-entity type at $1FB9. The fourth
+; jellyfish pair is present but no six-byte room record selects it.
 .enemy_graphic_descriptor_table_source
-    EQUB &80, &04, &A0, &04
-    EQUB &40, &06, &60, &06
-    EQUB &C0, &04, &E0, &04
-    EQUB &20, &06, &00, &06
+    EQUW &0480, &04A0 ; moth_wings_raised/lowered_frame
+    EQUW &0640, &0660 ; striped_lift_platform_frame_0/1
+    EQUW &04C0, &04E0 ; humanoid_robot_and_hazard_frame_0/1
+    EQUW &0620, &0600 ; jellyfish_frame_0/1 (unselected here)
 .enemy_graphic_descriptor_table_source_end
 ASSERT enemy_graphic_descriptor_table_source = enemy_graphic_descriptor_table
 ASSERT enemy_graphic_descriptor_table_source_end = initialise_second_room_entity_from_table
