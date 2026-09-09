@@ -4680,7 +4680,7 @@ ORG move_player_down_by_velocity
 ; The tail adjusts velocity when the display scan found its special marker.
 .move_player_down_by_velocity_source
     SEC
-    LDA #&FF
+    LDA #PLAYER_VERTICAL_STEP_COUNT_COMPLEMENT_BASE
     SBC player_vertical_velocity
     ADC #PLAYER_VERTICAL_VELOCITY_STEP_BIAS
     LSR A
@@ -4700,12 +4700,13 @@ ORG move_player_down_by_velocity
 .test_ground
     JSR prepare_player_relative_display_scan
     BCC apply_downward_step
-    LDA #&01
+    LDA #PLAYER_GROUND_CONTACT_SET
     STA player_ground_contact_flag
     LDA player_vertical_velocity
     CMP #PLAYER_HARD_LANDING_VELOCITY
     BPL test_landing_pattern
     JSR apply_player_damage_and_redraw_energy
+    ; Two increments add one PLAYER_VERTICAL_STEP_DOWN unit after a hard landing.
     INC player_vertical_velocity
     INC player_vertical_velocity
     RTS
@@ -4718,23 +4719,23 @@ ORG move_player_down_by_velocity
     BNE stop_fall
     LDA #PLAYER_BOUNCE_VELOCITY
     STA player_vertical_velocity
-    LDA #&05
+    LDA #PLAYER_BOUNCE_SOUND_DURATION
     STA sound_block_duration
-    LDA #&3C
+    LDA #PLAYER_BOUNCE_SOUND_PITCH
     STA sound_block_pitch
-    LDA #&03
+    LDA #PLAYER_BOUNCE_SOUND_AMPLITUDE
     JSR play_sound_with_amplitude
     JMP move_player_up_by_velocity
 
 .stop_fall
-    LDA #&00
+    LDA #PLAYER_VERTICAL_VELOCITY_STOPPED
     STA player_vertical_velocity
 
-.move_player_down_by_velocity_branch_5
+.return_from_downward_movement
     RTS
 
 .apply_downward_step
-    LDA #&00
+    LDA #PLAYER_GROUND_CONTACT_CLEAR
     STA player_ground_contact_flag
     LDA #PLAYER_VERTICAL_STEP_DOWN
     STA vertical_step_delta
@@ -4742,7 +4743,7 @@ ORG move_player_down_by_velocity
     DEC player_vertical_steps_remaining
     BNE fall_one_step
     LDA water_environment_flag
-    BEQ move_player_down_by_velocity_branch_5
+    BEQ return_from_downward_movement
 
 .adjust_velocity_after_fall
     LDA player_vertical_velocity
@@ -4755,8 +4756,8 @@ ORG move_player_down_by_velocity
 
 .force_velocity_on_marker
     LDA player_jump_or_swim_requested
-    BEQ move_player_down_by_velocity_branch_5
-    LDA #&0A
+    BEQ return_from_downward_movement
+    LDA #PLAYER_WATER_SWIM_VELOCITY
     STA player_vertical_velocity
 .move_player_down_by_velocity_source_end
 
