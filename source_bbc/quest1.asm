@@ -5450,31 +5450,31 @@ CLEAR terminal_interaction_text_padding_source, terminal_interaction_text_paddin
 ORG check_player_candidate_bounds_overlap
 
 ; Reject non-overlapping horizontal and vertical bounds
-; through the shared carry-clear return at $2B35. Nonzero $6C selects a fixed
-; $17 vertical extent and advances the candidate coordinate at $3C by six.
+; through the shared carry-clear return. Repeated-source drawing selects a fixed
+; vertical extent and biases candidate_half_vertical_position before comparison.
 ; If all four comparisons overlap, execution falls through to the original
-; action routine at $2B88. The branches deliberately consume N, not V-aware
-; signed comparisons, and the second LSR carry deliberately feeds ADC $41.
+; player-damage action. The branches deliberately consume N, not V-aware signed
+; comparisons, and the second LSR carry deliberately feeds the extent addition.
 .check_player_candidate_bounds_overlap_source
     LDA xor_graphic_repeat_source_scanlines
     BEQ candidate_bounds_mode_ready
-    LDA #&17
+    LDA #PLAYER_REPEATED_GRAPHIC_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     CLC
     LDA candidate_half_vertical_position
-    ADC #&06
+    ADC #PLAYER_REPEATED_GRAPHIC_VERTICAL_BIAS
     STA candidate_half_vertical_position
 
 .candidate_bounds_mode_ready
     CLC
     LDA player_horizontal_position
-    ADC #&03
+    ADC #PLAYER_COLLISION_HORIZONTAL_HALF_EXTENT
     CMP candidate_horizontal_position
     BMI player_candidate_no_overlap_return
 
     CLC
     LDA candidate_horizontal_position
-    ADC #&03
+    ADC #PLAYER_COLLISION_HORIZONTAL_HALF_EXTENT
     CMP player_horizontal_position
     BMI player_candidate_no_overlap_return
 
@@ -5500,21 +5500,21 @@ CLEAR check_player_candidate_bounds_overlap_source, check_player_candidate_bound
 
 ORG apply_player_damage_and_redraw_energy
 
-; Mark this tick's damage, play pitch 6, subtract
+; Mark this tick's damage, play the named damage pitch, subtract
 ; one from the stored energy, and set the main-loop exit flag only when the
 ; decrement reaches zero. Redraw the affected energy-bar segment either way
-; and return carry set. The separately lifted $2B8F entry deliberately skips
+; and return carry set. The decrement-only entry deliberately skips
 ; the contact/damage flag write and sound while sharing the decrement, death,
 ; redraw and exit.
 .apply_player_damage_and_redraw_energy_source
-    LDA #&06
+    LDA #PLAYER_DAMAGE_FLAG_AND_SOUND_PITCH
     STA player_contact_or_damage_flag
     JSR submit_sound_block_with_pitch
 
 .decrement_player_energy_and_redraw_source
     DEC player_energy
     BNE redraw_damaged_energy
-    LDA #&01
+    LDA #MAIN_LOOP_EXIT_REQUESTED
     STA main_loop_exit_flag
 
 .redraw_damaged_energy
@@ -5541,22 +5541,19 @@ CLEAR apply_player_damage_and_redraw_energy_source, apply_player_damage_and_redr
 ORG tile_run_shared_rts
 
 ; The blank-tile run painter and the two entries that
-; share it. $1361 is the zero-length RTS both run painters branch to. $1362
-; presets a run of eight tiles and falls through; the initial-render trace
-; reaches it 14 times through JMP $1362. $1364 is the general entry, taking
+; share it. The first entry is the zero-length RTS both run painters branch to.
+; The next presets a complete room-cell run and falls through; the general entry takes
 ; the run length in X. Each tile goes through the 16-byte graphic blitter,
 ; which advances the display pointer by 16, and X = 0 is rejected up front
-; rather than wrapping to a 256-tile run. The trace enters at $1364 123 times
-; and issues 307 blitter calls; the observed callers are the room element
-; loop at $19AA/$19B2 and the tile dispatcher at $14AD/$14F4/$1500.
+; rather than wrapping to a 256-tile run.
 .draw_blank_tile_run_source
     RTS
 
 .draw_eight_blank_tiles_entry
-    LDX #&08
+    LDX #ROOM_CELL_TILE_COUNT
 
 .draw_blank_tile_run_entry
-    CPX #&00
+    CPX #TILE_RUN_EMPTY_COUNT
     BEQ draw_blank_tile_run_source
     LDA #GRAPHIC_BLANK
 
@@ -5579,12 +5576,11 @@ CLEAR draw_blank_tile_run_source, draw_blank_tile_run_source_end
 
 ORG test_marker_below_player
 
-; Report whether an $FF marker sits three Mode 1 character
+; Report whether a DISPLAY_MARKER_ROOM_TRANSITION byte sits three Mode 1 character
 ; rows below the player.
-; $29A2 is the shared carry-set exit, reached both by falling in from elsewhere
-; and by the two tests below it. $29A4 is the test proper: two bytes are sampled
-; at the three-row pointer, at offsets 0 and $18, and either being $FF leaves
-; through that exit. Neither matching returns carry clear.
+; The shared carry-set exit is reached both by falling in from elsewhere and by
+; the two tests below it. The test proper samples the first byte and the byte at
+; PLAYER_COLLISION_SPAN_BYTES; either marker match takes the carry-set exit.
 ; The two offsets are three cells apart, so this samples the ends of a span
 ; rather than two unrelated bytes.
 .test_marker_below_player_source
@@ -5593,13 +5589,13 @@ ORG test_marker_below_player
 
 .sample_markers_below_player
     JSR set_display_pointer_three_mode1_rows_below_player
-    LDY #&00
+    LDY #DISPLAY_POINTER_FIRST_BYTE_OFFSET
     LDA (display_pointer_low),Y
-    CMP #&FF
+    CMP #DISPLAY_MARKER_ROOM_TRANSITION
     BEQ test_marker_below_player_source
     LDY #PLAYER_COLLISION_SPAN_BYTES
     LDA (display_pointer_low),Y
-    CMP #&FF
+    CMP #DISPLAY_MARKER_ROOM_TRANSITION
     BEQ test_marker_below_player_source
     CLC
     RTS
