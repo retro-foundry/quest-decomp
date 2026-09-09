@@ -275,7 +275,7 @@
       ]
     },
     {
-      "name": "unused_graphic_frame_pointer_words",
+      "name": "roaming_enemy_graphic_frame_pointer_table",
       "runtime_start": 2927,
       "runtime_end_exclusive": 2935,
       "loaded_start": 9327,
@@ -284,8 +284,8 @@
       "meaning_level": "behavioral",
       "record_size": 2,
       "evidence": [
-        "all four words are $20-byte-aligned graphic pointers, but every runtime selector is bounded to $0B77 or above",
-        "xor_draw_player_two_parts uses minimum X=$18 relative to $0B5F and therefore starts at the following word"
+        "draw_indexed_pair_if_reference_matches uses X=$10/$12 relative to $0B5F and selects the two small-bouncing-robot frame pointers",
+        "draw_directional_indexed_pair_if_matching uses X=$14/$16 relative to $0B5F and selects the two ghost frame pointers on the alternate levels-8-and-9 path"
       ]
     },
     {
@@ -2389,7 +2389,7 @@
       ]
     },
     {
-      "name": "run_game_tick_with_flag_88_cleared",
+      "name": "run_game_tick_with_player_contact_flag_cleared",
       "runtime_start": 8759,
       "runtime_end_exclusive": 8763,
       "loaded_start": 14903,
@@ -2765,7 +2765,7 @@
       ]
     },
     {
-      "name": "apply_3a_3b_difference_to_4b",
+      "name": "apply_player_energy_delta_to_budget",
       "runtime_start": 9668,
       "runtime_end_exclusive": 9692,
       "loaded_start": 15812,

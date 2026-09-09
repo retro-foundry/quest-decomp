@@ -46,9 +46,9 @@ routines highlighted in detail below include:
 - runtime `$2453-$2470`, loaded `$3C53-$3C70`,
   `collect_power_crystal_and_refill_energy`;
 - runtime `$2237-$223A`, loaded `$3A37-$3A3A`,
-  `run_game_tick_with_flag_88_cleared`;
+  `run_game_tick_with_player_contact_flag_cleared`;
 - runtime `$25C4-$25DB`, loaded `$3DC4-$3DDB`,
-  `apply_3a_3b_difference_to_4b`;
+  `apply_player_energy_delta_to_budget`;
 - runtime `$265A-$2781`, loaded `$3E5A-$3F81`,
   `poll_controls_and_apply_gameplay_actions`;
 - runtime `$2790-$2796`, loaded `$3F90-$3F96`, `osbyte_81_inkey`;
@@ -142,17 +142,18 @@ the original dispatcher at `$223B` without changing the caller's stack frame.
 Five committed calls prove the two-instruction sequence from sole observed
 caller `$2553`. A focused full-tick call returns to `$2556` after 155,487
 cycles/47,894 traced instructions with exact 198-byte memory, 160-byte screen,
-and video-hardware effects. The passive trace sees `$88` already zero, so its
-higher-level meaning remains deliberately unassigned. See
-`analysis/reconstruction/run_game_tick_with_flag_88_cleared_contract.md`.
+and video-hardware effects. The cleared player-contact/damage flag is set by
+contact and damage paths and gates bounce and item-drop actions. See
+`analysis/reconstruction/run_game_tick_with_player_contact_flag_cleared_contract.md`.
 
-The `$25C4` arithmetic helper computes the byte difference `$3A-$3B`. An
-equal pair takes the adjacent fixed-`$0C` return for `$4B`; an unequal pair
-copies `$3B` to `$3A` and subtracts the difference from `$4B`. A non-negative
+The energy-delta helper compares `player_energy_snapshot` with `player_energy`.
+An equal pair resets `player_energy_delta_budget`; an unequal pair synchronises
+the snapshot and subtracts the difference from that budget. A non-negative
 result returns through the shared preceding `RTS`, while a negative result is
-also stored at `$9F` before falling through to `$25DC`. Five natural equality
-calls and paired explicit-state captures cover all three transfers. See
-`analysis/reconstruction/apply_3a_3b_difference_to_4b_contract.md`.
+also stored in the follow-on state before entering the scripted walk. Five
+natural equality calls and paired explicit-state captures cover all three
+transfers. See
+`analysis/reconstruction/apply_player_energy_delta_to_budget_contract.md`.
 
 The crystal-collection routine decrements the twelve-diamond count, performs
 the final-crystal `$A2` decrement when that count reaches zero, plays the

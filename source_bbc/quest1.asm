@@ -1237,8 +1237,8 @@ ORG main_gameplay_loop
 .main_gameplay_tick
     JSR write_system_clock_via_osword_02
     JSR poll_controls_and_apply_gameplay_actions
-    JSR run_game_tick_with_flag_88_cleared
-    JSR apply_3a_3b_difference_to_4b
+    JSR run_game_tick_with_player_contact_flag_cleared
+    JSR apply_player_energy_delta_to_budget
     LDA main_loop_exit_flag
     BEQ main_gameplay_tick
     BMI completed_game_exit
@@ -1292,7 +1292,7 @@ ASSERT reincarnate_prompt_vdu_stream = &2578
 ASSERT poll_reincarnation_choice = &2591
 ASSERT game_over_vdu_stream = &25A2
 ASSERT completed_game_exit = &25B9
-ASSERT main_gameplay_loop_source_end = apply_3a_3b_difference_to_4b
+ASSERT main_gameplay_loop_source_end = apply_player_energy_delta_to_budget
 COPYBLOCK main_gameplay_loop_source, main_gameplay_loop_source_end, &3D2F
 CLEAR main_gameplay_loop_source, main_gameplay_loop_source_end
 
@@ -2244,28 +2244,28 @@ COPYBLOCK copy_graphic_byte_to_display_source, copy_graphic_byte_to_display_sour
 ; filling the original loaded bytes below.
 CLEAR copy_16_byte_graphic_to_display_source, copy_graphic_byte_to_display_source_end
 
-ORG run_game_tick_with_flag_88_cleared
+ORG run_game_tick_with_player_contact_flag_cleared
 
-; Runtime $2237-$223A. Clear the byte at $88, then fall through directly into
-; the original tick dispatcher at $223B. The dispatcher retains the JSR return
-; address established by the sole observed caller at $2553.
-.run_game_tick_with_flag_88_cleared_source
+; Runtime $2237-$223A. Clear player_contact_or_damage_flag, then fall through
+; directly into dispatch_game_tick_updates. The dispatcher retains the JSR
+; return address established by the gameplay loop.
+.run_game_tick_with_player_contact_flag_cleared_source
     LDA #&00
-    STA shared_workspace_88
-.run_game_tick_with_flag_88_cleared_source_end
+    STA player_contact_or_damage_flag
+.run_game_tick_with_player_contact_flag_cleared_source_end
 
-ASSERT run_game_tick_with_flag_88_cleared_source = run_game_tick_with_flag_88_cleared
-ASSERT run_game_tick_with_flag_88_cleared_source_end = dispatch_game_tick_updates
-COPYBLOCK run_game_tick_with_flag_88_cleared_source, run_game_tick_with_flag_88_cleared_source_end, &3A37
+ASSERT run_game_tick_with_player_contact_flag_cleared_source = run_game_tick_with_player_contact_flag_cleared
+ASSERT run_game_tick_with_player_contact_flag_cleared_source_end = dispatch_game_tick_updates
+COPYBLOCK run_game_tick_with_player_contact_flag_cleared_source, run_game_tick_with_player_contact_flag_cleared_source_end, &3A37
 
 ; Runtime $2237-$223A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3A37-$3A3A.
-CLEAR run_game_tick_with_flag_88_cleared_source, run_game_tick_with_flag_88_cleared_source_end
+CLEAR run_game_tick_with_player_contact_flag_cleared_source, run_game_tick_with_player_contact_flag_cleared_source_end
 
 ORG dispatch_game_tick_updates
 
-; Runtime $223B-$22D5. Dispatch one gameplay tick after the $2237 entry has
-; cleared $88. Optional update groups are gated by their state bytes, while
+; Runtime $223B-$22D5. Dispatch one gameplay tick after the wrapper has cleared
+; player_contact_or_damage_flag. Optional update groups are gated by their state bytes, while
 ; values $0C/$04/$14 at $1242 and room/state values $22/$23/$27 at $4E select
 ; their dedicated handlers. The $23 path also adds a collected icon, sets $6E,
 ; and applies eight energy decrements. Every path rejoins the frame-pacing
@@ -2338,7 +2338,7 @@ ORG dispatch_game_tick_updates
     LDX #&08
 
 .dispatch_game_tick_updates_branch_11
-    DEC shared_workspace_3a
+    DEC player_energy_snapshot
     JSR decrement_player_energy_and_redraw
     DEX
     BNE dispatch_game_tick_updates_branch_11
@@ -3095,7 +3095,7 @@ ORG indexed_pair_initial_state
     EQUB &FE, &00, &FE
 .indexed_pair_initial_state_source_end
 ASSERT indexed_pair_initial_state_source = indexed_pair_initial_state
-ASSERT indexed_pair_initial_state_source_end = run_game_tick_with_flag_88_cleared
+ASSERT indexed_pair_initial_state_source_end = run_game_tick_with_player_contact_flag_cleared
 COPYBLOCK indexed_pair_initial_state_source, indexed_pair_initial_state_source_end, &3A26
 CLEAR indexed_pair_initial_state_source, indexed_pair_initial_state_source_end
 
@@ -3282,35 +3282,35 @@ COPYBLOCK place_initial_map_objects_source, place_initial_map_objects_source_end
 CLEAR place_initial_map_objects_source, place_initial_map_objects_source_end
 
 
-ORG apply_3a_3b_difference_to_4b
+ORG apply_player_energy_delta_to_budget
 
-; Runtime $25C4-$25DB. Subtract $3B from $3A. Equality takes the adjacent
-; routine's fixed-$0C return at $2614. Otherwise preserve the difference in
-; $33, copy $3B to $3A, and subtract the difference from $4B. A non-negative
-; result returns through the shared preceding RTS; a negative result is also
-; stored in $9F before falling through to the original routine at $25DC.
-.apply_3a_3b_difference_to_4b_source
+; Runtime $25C4-$25DB. Compare the saved and live player energy. If unchanged,
+; reset player_energy_delta_budget to twelve. Otherwise synchronise the snapshot
+; and subtract the observed change from that budget. A non-negative result
+; returns to the gameplay loop; a negative result is also copied to the shared
+; follow-on state before falling into the scripted player walk.
+.apply_player_energy_delta_to_budget_source
     SEC
-    LDA shared_workspace_3a
-    SBC shared_workspace_3b
-    BEQ set_4b_to_0c_and_return
+    LDA player_energy_snapshot
+    SBC player_energy
+    BEQ reset_player_energy_delta_budget
     STA shared_workspace_33
-    LDA shared_workspace_3b
-    STA shared_workspace_3a
+    LDA player_energy
+    STA player_energy_snapshot
     SEC
-    LDA shared_workspace_4b
+    LDA player_energy_delta_budget
     SBC shared_workspace_33
-    STA shared_workspace_4b
+    STA player_energy_delta_budget
     BPL return_from_25c4_via_25c3
     STA shared_workspace_9f
-.apply_3a_3b_difference_to_4b_source_end
+.apply_player_energy_delta_to_budget_source_end
 
-ASSERT apply_3a_3b_difference_to_4b_source = apply_3a_3b_difference_to_4b
-ASSERT apply_3a_3b_difference_to_4b_source_end = continue_after_negative_4b_result
-COPYBLOCK apply_3a_3b_difference_to_4b_source, apply_3a_3b_difference_to_4b_source_end, &3DC4
+ASSERT apply_player_energy_delta_to_budget_source = apply_player_energy_delta_to_budget
+ASSERT apply_player_energy_delta_to_budget_source_end = continue_after_negative_energy_delta_budget
+COPYBLOCK apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_budget_source_end, &3DC4
 
 ; Release the runtime range after copying it into the loaded transport image.
-CLEAR apply_3a_3b_difference_to_4b_source, apply_3a_3b_difference_to_4b_source_end
+CLEAR apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_budget_source_end
 
 ORG osbyte_81_inkey
 
@@ -3501,8 +3501,8 @@ ORG apply_moving_entity_to_player
 ; through the $28AE entry with a count of 1.
 ; Any other delta means it is descending: the pointer is taken one Mode 1
 ; character row below instead, the four-byte marker scan runs there, and a
-; positive report sets $88, forces the player vertical velocity to $FE and calls
-; the downward mover.
+; positive report sets player_contact_or_damage_flag, forces an upward player
+; velocity and calls the downward mover.
 ; So the entity pushes the player the way it is going, one step at a time, which
 ; is what a moving platform or a crusher does. Either path then checks $0B, and
 ; a nonzero value costs energy through the damage routine.
@@ -3542,7 +3542,7 @@ ORG apply_moving_entity_to_player
     JSR test_lift_or_hazard_hit_player
     BNE restore_y_and_exit
     LDA #&01
-    STA shared_workspace_88
+    STA player_contact_or_damage_flag
     LDA #&FE
     STA player_vertical_velocity
     JSR move_player_down_by_velocity
@@ -3993,28 +3993,29 @@ CLEAR update_lift_or_hazard_by_class_source, update_lift_or_hazard_by_class_sour
 ORG refill_energy_in_28_steps
 
 ; Runtime $24D2-$24E6. Raise the stored energy by up to twenty-eight, redrawing the bar at every step.
-; X counts $1C iterations. Each one increments the stored value at $3A, clamps it
-; back to $FF if that wrapped, copies it into the displayed value at $3B, and
+; X counts PLAYER_ENERGY_REFILL_STEPS iterations. Each one increments
+; player_energy_snapshot, clamps it at PLAYER_ENERGY_MAX, copies it into
+; player_energy, and
 ; calls redraw_energy_bar_segment. Redrawing once per step rather than once at the
 ; end is what makes a refill visible as a sweep rather than a jump.
 ; The traced call shows the clamp doing its work: the wrap test fell through 27 of
-; the 28 iterations, so $3A entered at $FE, reached $FF on the first step and
+; the 28 iterations, so the snapshot entered one below maximum, reached maximum and
 ; saturated there for the rest, and the remaining 27 steps redrew a full bar.
 ; consume_matching_item_from_slots calls this at $2D93, immediately after it has
 ; found a carried item and cleared its slot, and $2468 is the other caller. So
 ; spending an item returns energy.
 .refill_energy_in_28_steps_source
-    LDX #&1C
+    LDX #PLAYER_ENERGY_REFILL_STEPS
 
 .refill_energy_next_step
-    INC shared_workspace_3a
+    INC player_energy_snapshot
     BNE show_and_redraw_energy
-    LDA #&FF
-    STA shared_workspace_3a
+    LDA #PLAYER_ENERGY_MAX
+    STA player_energy_snapshot
 
 .show_and_redraw_energy
-    LDA shared_workspace_3a
-    STA shared_workspace_3b
+    LDA player_energy_snapshot
+    STA player_energy
     JSR redraw_energy_bar_segment
     DEX
     BNE refill_energy_next_step
@@ -4267,9 +4268,8 @@ ORG walk_player_toward_target_position
 ; difference then selects the one-cell left or right step. Every iteration ends
 ; by waiting for vertical sync through the display helpers, which is what paces
 ; the walk to one step per frame.
-; Arrival requires both axes to match, at which point $0C is stored in $4B. That
-; tail at $2614 runs far more often than this routine is entered, so it is also
-; reached independently by other callers.
+; Arrival requires both axes to match, at which point the energy-delta budget is
+; reset. That shared tail is also reached independently when energy is unchanged.
 .walk_player_toward_target_position_source
     LDX #&09
     JSR flash_background_colour_with_sound
@@ -4305,9 +4305,9 @@ ORG walk_player_toward_target_position
     LDX #&00
     JSR flash_background_colour_with_sound
 
-.set_4b_on_arrival
-    LDA #&0C
-    STA shared_workspace_4b
+.reset_energy_delta_budget_on_arrival
+    LDA #PLAYER_ENERGY_DELTA_BUDGET_RESET
+    STA player_energy_delta_budget
     RTS
 
 .step_horizontally_toward_target
@@ -4471,7 +4471,7 @@ ORG redraw_energy_bar_segment
 
 ; Runtime $2630-$2653. Redraw the one cell of the energy bar that the current
 ; energy value partially fills.
-; The energy count at $3B selects both the cell and the fill. Its top five bits
+; player_energy selects both the cell and the fill. Its top five bits
 ; address the cell, $4071 plus the value masked to $F8, and its low three bits
 ; halved index the four fill patterns at $2222. That pattern is then written to
 ; four consecutive display bytes, Y counting down from 4 to 1.
@@ -4481,7 +4481,7 @@ ORG redraw_energy_bar_segment
 .redraw_energy_bar_segment_source
     TYA
     PHA
-    LDA shared_workspace_3b
+    LDA player_energy
     AND #&F8
     CLC
     ADC #LO(energy_bar_partial_cell_base)
@@ -4489,7 +4489,7 @@ ORG redraw_energy_bar_segment
     LDA #HI(energy_bar_partial_cell_base)
     ADC #&00
     STA display_pointer_high
-    LDA shared_workspace_3b
+    LDA player_energy
     AND #ENERGY_BAR_SUBSTEP_MASK
     LSR A
     TAY
@@ -4741,7 +4741,7 @@ ORG move_player_down_by_velocity
     JSR check_player_relative_display_pattern_15
     LDA shared_workspace_13
     BEQ stop_fall
-    LDA shared_workspace_88
+    LDA player_contact_or_damage_flag
     BNE stop_fall
     LDA #PLAYER_BOUNCE_VELOCITY
     STA player_vertical_velocity
@@ -5505,18 +5505,19 @@ CLEAR check_player_candidate_bounds_overlap_source, check_player_candidate_bound
 
 ORG apply_player_damage_and_redraw_energy
 
-; Runtime $2B88-$2B9B. Mark this tick's damage in $88, play pitch 6, subtract
+; Runtime $2B88-$2B9B. Mark this tick's damage, play pitch 6, subtract
 ; one from the stored energy, and set the main-loop exit flag only when the
 ; decrement reaches zero. Redraw the affected energy-bar segment either way
 ; and return carry set. The separately lifted $2B8F entry deliberately skips
-; the $88 write and sound while sharing the decrement, death, redraw and exit.
+; the contact/damage flag write and sound while sharing the decrement, death,
+; redraw and exit.
 .apply_player_damage_and_redraw_energy_source
     LDA #&06
-    STA shared_workspace_88
+    STA player_contact_or_damage_flag
     JSR submit_sound_block_with_pitch
 
 .decrement_player_energy_and_redraw_source
-    DEC shared_workspace_3b
+    DEC player_energy
     BNE redraw_damaged_energy
     LDA #&01
     STA main_loop_exit_flag
@@ -6422,7 +6423,7 @@ ORG drop_carried_item
 ; player position into that item's four-byte record, and redraws the slots.
 ; Items $3A/$3E have the exact additional state gates retained below.
 .drop_carried_item_source
-    LDA shared_workspace_88
+    LDA player_contact_or_damage_flag
     BNE drop_carried_item_unavailable_exit
     LDA #&32
     STA sound_block_pitch
@@ -8278,7 +8279,7 @@ ORG run_energy_bar_sweep
 
 ; Runtime $30CE-$30E4. Sweep the energy value from 0 to $FE, redrawing the bar at
 ; every step, with a delay between them.
-; X counts the energy level and is written to both $3A and $3B before each
+; X counts the energy level and is written to both the snapshot and live energy before each
 ; redraw, so the stored value and the displayed value stay together. The inner
 ; loop counts Y down from $FF purely to pass time, giving each step a visible
 ; pause; at 255 steps of 255 iterations that is the whole bar filling smoothly
@@ -8294,8 +8295,8 @@ ORG run_energy_bar_sweep
 .delay_between_steps
     DEY
     BNE delay_between_steps
-    STX shared_workspace_3a
-    STX shared_workspace_3b
+    STX player_energy_snapshot
+    STX player_energy
     JSR submit_channel_one_sound_with_x_pitch
     JSR redraw_energy_bar_segment
     INX
