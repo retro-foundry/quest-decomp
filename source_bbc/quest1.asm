@@ -2266,8 +2266,9 @@ ORG dispatch_game_tick_updates
 
 ; Runtime $223B-$22D5. Dispatch one gameplay tick after the wrapper has cleared
 ; player_contact_or_damage_flag. Optional update groups are gated by their state bytes, while
-; values $0C/$04/$14 at $1242 and room/state values $22/$23/$27 at $4E select
-; their dedicated handlers. The $23 path also adds a collected icon, sets $6E,
+; named timed-effect selectors and Teleport, Armoury and Time Warp sign states
+; select their dedicated handlers. The Armoury path also adds a collected icon,
+; enables room_update_suppression_state,
 ; and applies eight energy decrements. Every path rejoins the frame-pacing
 ; loop, which submits OSWORD $01 with block $2226 and waits until its returned
 ; signed byte is at least the target at $4F.
@@ -2278,10 +2279,10 @@ ORG dispatch_game_tick_updates
     JSR update_and_draw_room_enemies
 
 .dispatch_game_tick_updates_branch_1
-    LDA shared_workspace_6e
+    LDA room_update_suppression_state
     BNE dispatch_game_tick_updates_branch_12
     LDA shared_workspace_4e
-    CMP #&22
+    CMP #ROOM_CELL_TELEPORT_SIGN
     BNE dispatch_game_tick_updates_branch_2
     JSR run_horizontal_16_warp_sequence
 
@@ -2330,11 +2331,11 @@ ORG dispatch_game_tick_updates
 
 .dispatch_game_tick_updates_branch_10
     LDA shared_workspace_4e
-    CMP #&23
+    CMP #ROOM_CELL_ARMOURY_SIGN
     BNE dispatch_game_tick_updates_branch_12
     JSR enter_add_collected_icon
-    LDA #&01
-    STA shared_workspace_6e
+    LDA #ROOM_UPDATE_SUPPRESSION_ENABLED
+    STA room_update_suppression_state
     LDX #&08
 
 .dispatch_game_tick_updates_branch_11
@@ -2351,7 +2352,7 @@ ORG dispatch_game_tick_updates
 
 .dispatch_game_tick_updates_branch_13
     LDA shared_workspace_4e
-    CMP #&27
+    CMP #ROOM_CELL_TIME_WARP_SIGN
     BNE dispatch_game_tick_updates_branch_14
     JSR advance_bounded_tick_target
 
@@ -2994,8 +2995,8 @@ ORG run_terminal_interaction
     JSR draw_and_initialise_room
     LDA terminal_interaction_result
     BEQ terminal_interaction_no_result_exit
-    LDA #&00
-    STA shared_workspace_6e
+    LDA #ROOM_UPDATE_SUPPRESSION_CLEAR
+    STA room_update_suppression_state
 
 .terminal_return_carry_clear
     CLC
@@ -9087,23 +9088,23 @@ ORG draw_table_selected_sequence_in_columns_five_to_seven
 ; index zero through two, draw two blanks, draw four graphic records selected
 ; from cell_3b_graphic_sequence_table, then draw the final two blanks.
 .draw_table_selected_sequence_in_columns_five_to_seven_source
-    CMP #&05
+    CMP #CELL_3B_FIRST_SEQUENCE_COLUMN
     BPL draw_cell_3b_selected_middle_pair
     JMP draw_eight_blank_tiles
 
 .draw_cell_3b_selected_middle_pair
     SEC
-    SBC #&05
-    STA shared_workspace_09
-    STA shared_workspace_6e
-    LDX #&02
+    SBC #CELL_3B_FIRST_SEQUENCE_COLUMN
+    STA cell_3b_sequence_index
+    STA room_update_suppression_state
+    LDX #CELL_3B_EDGE_BLANK_TILES
     JSR draw_blank_tile_run
     LDA #LO(cell_3b_graphic_sequence_table)
     STA graphic_sequence_pointer_low
     LDA #HI(cell_3b_graphic_sequence_table)
     STA graphic_sequence_pointer_high
     JSR draw_four_graphic_selectors_from_pointer
-    LDX #&02
+    LDX #CELL_3B_EDGE_BLANK_TILES
     JMP draw_blank_tile_run
 .draw_table_selected_sequence_in_columns_five_to_seven_source_end
 
@@ -9875,7 +9876,7 @@ ORG draw_and_initialise_room
     STA room_moving_objects_active
     STA water_environment_flag
     STA room_tick_update_selector
-    STA shared_workspace_6e
+    STA room_update_suppression_state
     STA timed_effect_selector
     STA indexed_xor_erase_previous_graphic
     STA lift_and_hazard_active
