@@ -3323,7 +3323,7 @@ ORG advance_record_counter_then_dispatch
 ; through update_lift_or_hazard_from_preselected_slot. Successive calls therefore
 ; step through consecutive records.
 .advance_record_counter_then_dispatch_source
-    LDY #&08
+    LDY #LIFT_HAZARD_SLOT_GROUP_BASE_INDEX
     INC lift_hazard_secondary_record_counter
     LDA lift_hazard_secondary_record_counter
     STA lift_hazard_update_schedule_mask
@@ -3479,17 +3479,17 @@ ORG apply_moving_entity_to_player
 
 ; Let one moving entity act on the player, in whichever
 ; direction it is travelling.
-; The entity delta at $18 selects the case. A delta of $FE means it is rising:
-; its display pointer at $51/$52 is scanned for markers directly, and if $235C
+; moving_entity_delta selects the case. ENTITY_VERTICAL_STEP_NEGATIVE means it is rising:
+; its display pointer is scanned for markers directly, and if the contact test
 ; reports the player is in the way, one upward step is applied to the player
-; through the $28AE entry with a count of 1.
+; through step_up_by_count.
 ; Any other delta means it is descending: the pointer is taken one Mode 1
 ; character row below instead, the four-byte marker scan runs there, and a
 ; positive report sets player_contact_or_damage_flag, forces an upward player
 ; velocity and calls the downward mover.
 ; So the entity pushes the player the way it is going, one step at a time, which
 ; is what a moving platform or a crusher does. Either path then checks $0B, and
-; a nonzero value costs energy through the damage routine.
+; a nonzero collision result costs energy through the damage routine.
 ;
 ; This is the path a class other than 1 takes, so this is the moving platform
 ; behaviour proper: A4, B2 and B6 are the three rooms whose record selects it.
@@ -3501,7 +3501,7 @@ ORG apply_moving_entity_to_player
     TYA
     PHA
     LDA moving_entity_delta,Y
-    CMP #&FE
+    CMP #ENTITY_VERTICAL_STEP_NEGATIVE
     BNE entity_descending
     LDA moving_entity_display_pointer_low,Y
     STA display_pointer_low
@@ -3517,17 +3517,17 @@ ORG apply_moving_entity_to_player
 .entity_descending
     CLC
     LDA moving_entity_display_pointer_low,Y
-    ADC #&80
+    ADC #LO(MODE1_CHARACTER_ROW_BYTES)
     STA display_pointer_low
     LDA moving_entity_display_pointer_high,Y
-    ADC #&02
+    ADC #HI(MODE1_CHARACTER_ROW_BYTES)
     STA display_pointer_high
     JSR scan_four_display_bytes_for_markers
     JSR test_lift_or_hazard_hit_player
     BNE restore_y_and_exit
-    LDA #&01
+    LDA #PLAYER_CONTACT_FLAG_SET
     STA player_contact_or_damage_flag
-    LDA #&FE
+    LDA #PLAYER_VERTICAL_STEP_UP
     STA player_vertical_velocity
     JSR move_player_down_by_velocity
 
@@ -3556,13 +3556,13 @@ ORG reverse_lift_or_hazard_delta_at_limits
 ; Keep a lift or moth-shaped hazard inside its range by reversing
 ; its delta at either limit, and flag that the check ran.
 ; lift_hazard_limit_check_active is set on entry. The entity position is masked to an even value and tested
-; against the two limits at $1246 and $1247: matching the first stores +2 into
-; the delta at $18, matching the second stores -2, and matching neither leaves
+; against the two named limits: matching the first selects the positive entity
+; step, matching the second selects the negative step, and neither leaves
 ; the delta alone.
 ; This is the third clamp of the same shape. clamp_room_enemy_horizontal_delta_at_limits
-; drives +1 and -1 against $1235 and $1236, reverse_room_enemy_vertical_delta_at_limits
-; drives +2 and -2 against $1237 and $1238 by equality, and this one drives +2
-; and -2 against $1246 and $1247. Those last two limits are the pair
+; drives one-unit horizontal steps, reverse_room_enemy_vertical_delta_at_limits
+; drives two-unit vertical steps by equality, and this one does the same for the
+; lift/hazard limit pair. Those limits are the pair
 ; initialise_lifts_and_hazards_from_table unpacks, so each entity class carries
 ; its own limits and its own clamp.
 .reverse_lift_or_hazard_delta_at_limits_source
@@ -3577,14 +3577,14 @@ ORG reverse_lift_or_hazard_delta_at_limits
     RTS
 
 .set_lift_or_hazard_delta_positive
-    LDA #&02
+    LDA #ENTITY_VERTICAL_STEP_POSITIVE
 
 .store_lift_or_hazard_delta
     STA moving_entity_delta,Y
     RTS
 
 .set_lift_or_hazard_delta_negative
-    LDA #&FE
+    LDA #ENTITY_VERTICAL_STEP_NEGATIVE
     JMP store_lift_or_hazard_delta
 .reverse_lift_or_hazard_delta_at_limits_source_end
 
@@ -3605,8 +3605,8 @@ ORG advance_lift_or_hazard_vertical_position
 ; apply_signed_vertical_step_to_pointer and copied back, exactly as
 ; advance_room_enemy_vertical_position does for the other class and
 ; advance_player_vertical_position_and_display_pointer does for the player. Only
-; the source fields differ: $19 for the position, $18 for the signed step and
-; $51/$52 for the display pointer.
+; the source fields differ: moving_entity_position, moving_entity_delta and the
+; moving_entity_display_pointer pair.
 ; All three movers therefore share one helper, so every moving thing in the game
 ; falls and climbs by the same two display scanlines per unit.
 ; The flag it clears is the one reverse_lift_or_hazard_delta_at_limits sets on
@@ -3644,12 +3644,11 @@ CLEAR advance_lift_or_hazard_vertical_position_source, advance_lift_or_hazard_ve
 ORG xor_draw_lift_or_hazard
 
 ; XOR-draw the Y-indexed lift or moth-shaped hazard.
-; The $23BF entry skips slots 0 and 8 through the shared RTS at $23BE; $23C7 is
-; the entry for callers that have already decided the slot is drawable, and is
-; used far more often.
-; The graphic index defaults to $0C. When bit 0 of $1249 is set, bit 2 of the
-; entity value at $19 selects $0E instead, which is how an entity alternates
-; between two graphics as it moves. A nonzero $124A then makes the draw two
+; The checked entry skips both invalid endpoint slots; the unchecked entry is
+; for callers that have already decided the slot is drawable.
+; The graphic index defaults to the first frame. For the moth/hazard class, a
+; position bit selects the second frame so the moth alternates as it moves.
+; A nonzero lift_and_hazard_slot_limit then makes the draw two
 ; character rows tall with the source scanlines repeated, otherwise one row.
 ; The display pointer comes from $51/$52 and the XOR renderer is tail-called, so
 ; drawing and erasing are the same operation performed twice.
@@ -3680,13 +3679,13 @@ ORG xor_draw_lift_or_hazard
 .test_two_row_lift_or_hazard
     LDA lift_and_hazard_slot_limit
     BEQ single_row_lift_or_hazard
-    LDA #&01
+    LDA #XOR_GRAPHIC_REPEAT_ENABLED
     STA xor_graphic_repeat_source_scanlines
-    LDA #&02
+    LDA #LIFT_HAZARD_REPEATED_CHARACTER_ROWS
     JMP draw_lift_or_hazard_at_pointer
 
 .single_row_lift_or_hazard
-    LDA #&01
+    LDA #LIFT_HAZARD_SINGLE_CHARACTER_ROW
 
 .draw_lift_or_hazard_at_pointer
     STA xor_graphic_character_rows_remaining
