@@ -3405,14 +3405,15 @@ ORG xor_draw_lift_or_hazard
 ; position bit selects the second frame so the moth alternates as it moves.
 ; A nonzero lift_and_hazard_slot_limit then makes the draw two
 ; character rows tall with the source scanlines repeated, otherwise one row.
-; The display pointer comes from $51/$52 and the XOR renderer is tail-called, so
-; drawing and erasing are the same operation performed twice.
+; The display pointer comes from the indexed moving-entity pointer arrays and
+; the XOR renderer is tail-called, so drawing and erasing are the same operation
+; performed twice.
 ;
 ; This is the lift renderer. Suppressing it was tested in play and the vertical
 ; lifts disappeared while the enemy robots were unaffected. It draws the whole
-; second class the same way regardless of $1249, so a hazard and a moving
-; platform look alike to this routine; only what happens on contact differs,
-; which update_lift_or_hazard_by_class decides.
+; second class the same way regardless of active_lift_or_hazard_class, so a
+; hazard and a moving platform look alike to this routine; only what happens on
+; contact differs, which update_lift_or_hazard_by_class decides.
 .xor_draw_lift_or_hazard_source
     CPY #LIFT_HAZARD_FIRST_INVALID_SLOT
     BEQ lift_or_hazard_step_rts
@@ -3522,9 +3523,10 @@ ORG draw_record_three_from_alternate_bank
 
 ; Draw graphic record 3 from the alternate source bank,
 ; leaving the bank selector as it was found.
-; $1224 chooses which of the two pointers in the table at $1D34 the blitter
-; reads its records from. This sets it to 2, draws record 3 through the blitter
-; vector, then restores 0, so the caller neither sets up nor cleans up the bank.
+; graphic_source_base_pointer_offset chooses which entry in
+; graphic_source_base_pointer_table supplies the blitter records. This selects
+; the status bank, draws STATUS_GRAPHIC_BLANK_ICON, then restores the primary
+; bank, so the caller neither sets up nor cleans up the selection.
 .draw_record_three_from_alternate_bank_source
     LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
@@ -3682,9 +3684,10 @@ ORG update_lift_or_hazard_by_class
 ; behaviours according to its class byte, then step it.
 ; The slot index is turned into a scaled offset by subtracting 8 from Y and
 ; doubling, and the range clamp runs first. A class byte of 1 then takes the
-; bounding-box route: the entity position is halved into $3C, its extent
-; computed as $1248 less the scaled offset into $11, and the player overlap
-; tested. Any other class instead pushes the player directly through
+; bounding-box route: the entity position is halved into
+; candidate_half_vertical_position, its horizontal position is derived from
+; lift_or_hazard_horizontal_extent and the scaled slot offset, then player
+; overlap is tested. Any other class instead pushes the player directly through
 ; apply_moving_entity_to_player.
 ; Either way the entity is stepped by a tail jump, so both routes end in the
 ; same movement.
@@ -3738,9 +3741,9 @@ ORG refill_energy_in_28_steps
 ; The traced call shows the clamp doing its work: the wrap test fell through 27 of
 ; the 28 iterations, so the snapshot entered one below maximum, reached maximum and
 ; saturated there for the rest, and the remaining 27 steps redrew a full bar.
-; consume_matching_item_from_slots calls this at $2D93, immediately after it has
-; found a carried item and cleared its slot, and $2468 is the other caller. So
-; spending an item returns energy.
+; consume_matching_item_from_slots calls this immediately after finding a
+; carried item and clearing its slot; collecting a power crystal is the other
+; caller. Spending an item therefore returns energy.
 .refill_energy_in_28_steps_source
     LDX #PLAYER_ENERGY_REFILL_STEPS
 
