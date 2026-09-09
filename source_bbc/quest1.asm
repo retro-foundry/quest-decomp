@@ -347,7 +347,7 @@ ORG &9000
 .small_bouncing_robot_frame_1
     EQUB &00, &00, &00, &30, &FF, &FF, &30, &00, &07, &07, &30, &F0, &0F, &0F, &F0, &30
     EQUB &0E, &0E, &C0, &F0, &FF, &FF, &F0, &C0, &00, &00, &00, &C0, &0F, &0F, &C0, &00
-.mouse_direction_frame
+.mouse_facing_right_frame
     EQUB &11, &22, &44, &44, &44, &33, &00, &00, &00, &33, &77, &77, &FF, &FF, &EE, &77
     EQUB &00, &CC, &FF, &FF, &FF, &EE, &33, &00, &CC, &CC, &88, &4C, &FF, &00, &00, &88
 .fish_direction_frame
@@ -11370,8 +11370,9 @@ ORG room_and_item_graphic_records
     EQUB &00, &01, &03, &07, &0F, &00, &03, &00, &07, &0F, &C3, &C3, &0F, &03, &0F, &07
 ; graphic record &35
     EQUB &08, &0E, &0F, &0F, &0F, &0F, &0E, &08, &01, &03, &16, &0F, &2D, &16, &03, &01
-.mouse_item_graphic_pair
-; graphic records &36-&37: mouse
+.mouse_facing_left_and_item_graphic_pair
+; graphic records &36-&37: mouse facing left; used both as the inventory mouse
+; graphic and as the left-facing partner of mouse_facing_right_frame at $0680
 ; graphic record &36
     EQUB &33, &33, &11, &23, &FF, &00, &00, &11, &00, &33, &FF, &FF, &FF, &77, &CC, &00
 ; graphic record &37
@@ -11431,8 +11432,8 @@ CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 ORG indexed_xor_graphic_pointer_sets
 ; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
 ; the four-direction caterpillar; fish alternating with item-graphic record
-; $33; mouse alternating with the herring's record $35; and a background-only
-; set. These roaming/puzzle graphics are separate from the room-entity pairs
+; $33; the mouse's right- and left-facing graphics; and a background-only set.
+; These roaming/puzzle graphics are separate from the room-entity pairs
 ; selected by the descriptor table at $1FDF.
 .indexed_xor_graphic_pointer_sets_source
     EQUW &0400, &0420, &0440, &0460

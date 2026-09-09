@@ -119,7 +119,7 @@ lift_and_hazard_graphic_descriptor = &0B6B ; behavioral: selected pair of lift/h
 unused_graphic_frame_pointer_words = &0B6F ; structural: small-bouncing-robot frame 0/1 and ghost-frame 0/3 pointers below every proved runtime selector index
 player_graphic_frame_pointer_table = &0B77 ; behavioral: two upper-plus-middle and four lower player part pointers selected by X=$18-$22
 interval_timer_block              = &0B9B ; port-contract: five-byte MOS interval-timer block read by OSWORD $04
-indexed_xor_graphic_pointer_sets = &1F0F ; behavioral: caterpillar, fish/item-record-33, mouse/herring-record-35 and background pointer sets copied to the roaming/effect table
+indexed_xor_graphic_pointer_sets = &1F0F ; behavioral: caterpillar, fish/herring, mouse-right/mouse-left and background pointer sets copied to the roaming/effect table
 terminal_message_text           = &2199 ; dataflow: the terminal's messages - TERMINAL, PASSWORDS, ACCESS GRANTED, ACTIVATED, DENIED and INVALID PASSWORD
 music_tune_progress             = &32BF ; behavioral: count of consecutive correct notes, reset on a wrong one
 sound_block_channel             = &32A0 ; port-contract: OSWORD $07 block word 0, $10 and $12 are flush plus channel 0 and 2

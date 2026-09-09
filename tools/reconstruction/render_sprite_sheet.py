@@ -87,7 +87,7 @@ item_names = (
     "worm_item",
     "access_card_item",
     "herring_item",
-    "mouse_item",
+    "mouse_facing_left__also_item_graphic",
     "cheese_item",
     "cross_item",
     "eye_item",
