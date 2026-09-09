@@ -2085,11 +2085,11 @@ ORG draw_fixed_pair_tile_run
 
 ORG load_display_pointer_from_indexed_pair
 
-; Runtime $3558-$3562. Load the display pointer from the Y-indexed little-endian pair at $47/$48. The high byte is read first, so the two loads are not interchangeable with respect to Y. X and A are not preserved.
+; Runtime $3558-$3562. Load the display pointer from the Y-indexed little-endian pair at room_enemy_display_pointer_low/high. The high byte is read first, so the two loads are not interchangeable with respect to Y. X and A are not preserved.
 .load_display_pointer_from_indexed_pair_source
-    LDA shared_workspace_48,Y
+    LDA room_enemy_display_pointer_high,Y
     STA display_pointer_high
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     STA display_pointer_low
     RTS
 .load_display_pointer_from_indexed_pair_source_end
@@ -2106,7 +2106,7 @@ CLEAR load_display_pointer_from_indexed_pair_source, load_display_pointer_from_i
 ORG advance_secondary_reference_and_pointer
 
 ; Runtime $1CC7-$1CD6. Increment the secondary reference value at $8F, advance
-; the pointer at $70/$71 by $78, and dispatch to $1B98.
+; the pointer at level_room_map_offset_low/high by $78, and dispatch to $1B98.
 ; This is one of the actions reachable through display_action_jump_table, whose
 ; $1209 vector transfers here. The two five-byte table entries adjust the
 ; primary reference at $90 instead and dispatch to the same target, so the three
@@ -2114,11 +2114,11 @@ ORG advance_secondary_reference_and_pointer
 .advance_secondary_reference_and_pointer_source
     INC reference_pair_secondary_value
     CLC
-    LDA shared_workspace_70
+    LDA level_room_map_offset_low
     ADC #&78
-    STA shared_workspace_70
+    STA level_room_map_offset_low
     BCC advance_secondary_reference_and_pointer_branch_1
-    INC shared_workspace_71
+    INC level_room_map_offset_high
 
 .advance_secondary_reference_and_pointer_branch_1
     JMP draw_and_initialise_room
@@ -2660,7 +2660,7 @@ ORG initialise_room_enemy_from_table
 ; active_enemy_species.
 ; The remaining four bytes are two grid positions, each read, scaled by eight
 ; into a movement limit, and converted to a display pointer:
-; the first with a bias of $0A goes to $1237, $1231, $68 and the pointer $47/$48
+; the first with a bias of $0A goes to $1237, $1231, $68 and the pointer room_enemy_display_pointer_low/high
 ; the second with a bias of -6 and -3 goes to $1236, $1233, $1238, $1235, $6A
 ; and the pointer $49/$4A
 ; Four bytes are then copied from the table at $1FDF into $0B67, selected by
@@ -2718,7 +2718,7 @@ ORG initialise_room_enemy_from_table
     STA room_tick_update_selector
     INY
     LDA room_enemy_record_table,Y
-    STA shared_workspace_0a
+    STA display_grid_row
     ASL A
     ASL A
     ASL A
@@ -2729,18 +2729,18 @@ ORG initialise_room_enemy_from_table
     STA enemy_horizontal_lower_limit
     CLC
     ADC #&0A
-    STA shared_workspace_0b
+    STA display_grid_column
     STA shared_workspace_68
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA shared_workspace_47
+    STA room_enemy_display_pointer_low
     LDA display_pointer_high
-    STA shared_workspace_48
+    STA room_enemy_display_pointer_high
     INY
     LDA room_enemy_record_table,Y
     SEC
     SBC #&03
-    STA shared_workspace_0a
+    STA display_grid_row
     ASL A
     ASL A
     ASL A
@@ -2755,7 +2755,7 @@ ORG initialise_room_enemy_from_table
     STA enemy_horizontal_upper_limit
     SEC
     SBC #&06
-    STA shared_workspace_0b
+    STA display_grid_column
     STA shared_workspace_6a
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
@@ -2870,10 +2870,10 @@ ORG initialise_lifts_and_hazards_from_table
     STA lift_or_hazard_horizontal_extent
     SEC
     SBC #&04
-    STA shared_workspace_0b
+    STA display_grid_column
     INY
     LDA lift_and_hazard_room_record_table,Y
-    STA shared_workspace_0a
+    STA display_grid_row
     ASL A
     ASL A
     ASL A
@@ -2885,12 +2885,12 @@ ORG initialise_lifts_and_hazards_from_table
     LDA display_pointer_high
     STA shared_workspace_5c
     LDA lift_or_hazard_horizontal_extent
-    STA shared_workspace_0b
+    STA display_grid_column
     INY
     LDA lift_and_hazard_room_record_table,Y
     SEC
     SBC #&02
-    STA shared_workspace_0a
+    STA display_grid_row
     ASL A
     ASL A
     ASL A
@@ -2948,23 +2948,23 @@ ORG run_terminal_interaction
     PHA
     LDA reference_pair_secondary_value
     PHA
-    LDA shared_workspace_70
+    LDA level_room_map_offset_low
     PHA
-    LDA shared_workspace_71
+    LDA level_room_map_offset_high
     PHA
     LDA #&07
     STA reference_pair_primary_value
     LDA #&09
     STA reference_pair_secondary_value
     LDA #&38
-    STA shared_workspace_70
+    STA level_room_map_offset_low
     LDA #&04
-    STA shared_workspace_71
+    STA level_room_map_offset_high
     JSR draw_and_initialise_room
     PLA
-    STA shared_workspace_71
+    STA level_room_map_offset_high
     PLA
-    STA shared_workspace_70
+    STA level_room_map_offset_low
     PLA
     STA reference_pair_secondary_value
     PLA
@@ -3542,7 +3542,7 @@ ORG apply_moving_entity_to_player
     JSR move_player_down_by_velocity
 
 .test_overlap_damage
-    LDA shared_workspace_0b
+    LDA display_grid_column
     BEQ restore_y_and_exit
     JSR apply_player_damage_and_redraw_energy
 
@@ -3732,9 +3732,9 @@ ORG test_lift_or_hazard_hit_player
 ; three - A4, B2 and B6 - are not, and those are the rooms where the moving
 ; thing is a surface to ride.
 .test_lift_or_hazard_hit_player_source
-    LDX shared_workspace_0b
+    LDX display_grid_column
     LDA #&00
-    STA shared_workspace_0b
+    STA display_grid_column
     LDA active_lift_or_hazard_class
     CMP #LIFT_OR_HAZARD_HAZARD
     BNE test_lift_or_hazard_hit_player_branch_1
@@ -4155,7 +4155,7 @@ ORG initialise_new_game
 ; Three subroutines run first, then the starting room is chosen: the primary
 ; reference at $90 is set to 1 and the secondary at $8F to 0, which is the room
 ; the game opens in. Named across then down, that is room 1,0.
-; $A0 and the pointer at $70/$71 are cleared, the clock at $32C3 and $32C4 is
+; $A0 and the pointer at level_room_map_offset_low/high are cleared, the clock at $32C3 and $32C4 is
 ; seeded with $44 and $10 - BCD minutes and hours, which $376F advances and the
 ; status row shows as a time - and the graphic bank selector is set to the
 ; alternate pointer.
@@ -4180,8 +4180,8 @@ ORG initialise_new_game
     LDA #&00
     STA reference_pair_secondary_value
     STA special_item_3e_activation_flag
-    STA shared_workspace_70
-    STA shared_workspace_71
+    STA level_room_map_offset_low
+    STA level_room_map_offset_high
     LDA #&44
     STA bcd_counter_low
     LDA #&10
@@ -4371,17 +4371,17 @@ ORG run_startup_room_sequence_until_space
     LSR A
     STA reference_pair_secondary_value
     LDA #&00
-    STA shared_workspace_70
-    STA shared_workspace_71
+    STA level_room_map_offset_low
+    STA level_room_map_offset_high
     LDX #&78
 
 .multiply_secondary_reference_by_120
     CLC
-    LDA shared_workspace_70
+    LDA level_room_map_offset_low
     ADC reference_pair_secondary_value
-    STA shared_workspace_70
+    STA level_room_map_offset_low
     BCC startup_room_offset_did_not_carry
-    INC shared_workspace_71
+    INC level_room_map_offset_high
 
 .startup_room_offset_did_not_carry
     DEX
@@ -4976,9 +4976,9 @@ ORG poll_controls_and_apply_gameplay_actions
 .control_clear_transient_state
     LDA #&00
     STA horizontal_input_delta
-    STA shared_workspace_0a
+    STA display_grid_row
     STA shared_workspace_15
-    STA shared_workspace_0b
+    STA display_grid_column
     SEC
     LDA player_vertical_velocity
     SBC vertical_velocity_step
@@ -5176,7 +5176,7 @@ ORG scan_four_display_bytes_for_markers
 .scan_four_display_bytes_for_markers_source
     LDX #&04
     LDY #&00
-    STY shared_workspace_0b
+    STY display_grid_column
     STY shared_workspace_31
     STY shared_workspace_79
     STY shared_workspace_32
@@ -5198,7 +5198,7 @@ ORG scan_four_display_bytes_for_markers
 
 .return_occupied_display_byte
     LDA #&01
-    STA shared_workspace_0b
+    STA display_grid_column
     SEC
     RTS
 
@@ -6429,7 +6429,7 @@ ORG drop_carried_item
     LDA #&32
     STA sound_block_pitch
     JSR prepare_player_relative_display_scan
-    LDA shared_workspace_0b
+    LDA display_grid_column
     BEQ drop_carried_item_unavailable_exit
     JSR sample_markers_below_player
     BCS drop_carried_item_unavailable_exit
@@ -6457,7 +6457,7 @@ ORG drop_carried_item
     STA player_vertical_velocity
     PLA
     TAX
-    LDA shared_workspace_0b
+    LDA display_grid_column
     BNE drop_carried_item_unavailable_exit
     LDA #&00
     STA item_slot_first,X
@@ -7010,7 +7010,7 @@ ORG initialise_indexed_pair_from_record
     STA indexed_pair_positive_delta_threshold
     STA indexed_pair_value_field
     STA indexed_pair_runtime_value_slot_0
-    STA shared_workspace_0b
+    STA display_grid_column
     INY
     LDA indexed_pair_record_table,Y
     AND #INDEXED_PAIR_SELECTOR_MASK
@@ -7023,7 +7023,7 @@ ORG initialise_indexed_pair_from_record
     INY
     LDA indexed_pair_record_table,Y
     AND #INDEXED_PAIR_POSITION_MASK
-    STA shared_workspace_0a
+    STA display_grid_row
     ASL A
     ASL A
     ASL A
@@ -8476,9 +8476,9 @@ ORG warp_to_room_3_4
     LDA #&03
     STA reference_pair_primary_value
     LDA #&E0
-    STA shared_workspace_70
+    STA level_room_map_offset_low
     LDA #&01
-    STA shared_workspace_71
+    STA level_room_map_offset_high
     JMP enter_draw_and_initialise_room
 .warp_to_room_3_4_source_end
 
@@ -9907,9 +9907,9 @@ ORG draw_and_initialise_room
     STA vertical_velocity_step
     LDA #&08
     STA bounded_tick_target_value
-    LDA shared_workspace_70
+    LDA level_room_map_offset_low
     STA shared_workspace_72
-    LDA shared_workspace_71
+    LDA level_room_map_offset_high
     STA shared_workspace_73
     LDA #&07
     STA shared_workspace_04
@@ -10116,12 +10116,12 @@ ORG retreat_secondary_reference_and_pointer
 .retreat_secondary_reference_and_pointer_source
     DEC reference_pair_secondary_value
     SEC
-    LDA shared_workspace_70
+    LDA level_room_map_offset_low
     SBC #&78
-    STA shared_workspace_70
-    LDA shared_workspace_71
+    STA level_room_map_offset_low
+    LDA level_room_map_offset_high
     SBC #&00
-    STA shared_workspace_71
+    STA level_room_map_offset_high
     JMP draw_and_initialise_room
 .retreat_secondary_reference_and_pointer_source_end
 
@@ -10255,10 +10255,10 @@ ORG draw_matching_records_from_table
 .place_and_draw_matched_record
     INY
     LDA item_and_goal_record_table,Y
-    STA shared_workspace_0a
+    STA display_grid_row
     INY
     LDA item_and_goal_record_table,Y
-    STA shared_workspace_0b
+    STA display_grid_column
     JSR set_display_pointer_from_grid_position
     JSR draw_item_graphic_pair
     JMP step_to_previous_record
@@ -10339,10 +10339,10 @@ ORG set_display_pointer_from_grid_position
 .set_display_pointer_from_grid_position_source
     TXA
     PHA
-    LDA shared_workspace_0a
+    LDA display_grid_row
     ASL A
     ASL A
-    ADC shared_workspace_0a
+    ADC display_grid_row
     STA display_pointer_low
     LDA #&00
     STA display_pointer_high
@@ -10353,7 +10353,7 @@ ORG set_display_pointer_from_grid_position
     ROL display_pointer_high
     DEX
     BNE multiply_row_by_character_row
-    LDA shared_workspace_0b
+    LDA display_grid_column
     STA shared_workspace_33
     LDA #&00
     STA shared_workspace_34
@@ -10395,11 +10395,11 @@ ORG scan_column_behind_indexed_entry
 ; tail. reflect_indexed_entity_at_obstacles tries this one first and only falls
 ; through to the other when this reports clear.
 .scan_column_behind_indexed_entry_source
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     SEC
     SBC #&08
     STA display_pointer_low
-    LDA shared_workspace_48,Y
+    LDA room_enemy_display_pointer_high,Y
     SBC #&00
     JMP scan_column_below_indexed_entry
 .scan_column_behind_indexed_entry_source_end
@@ -10422,11 +10422,11 @@ ORG scan_column_ahead_of_indexed_entry
 ; its own: the caller gets the same carry-set-when-blocked answer, measured two
 ; cells further on.
 .scan_column_ahead_of_indexed_entry_source
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     CLC
     ADC #&20
     STA display_pointer_low
-    LDA shared_workspace_48,Y
+    LDA room_enemy_display_pointer_high,Y
     ADC #&00
     JMP scan_column_below_indexed_entry
 .scan_column_ahead_of_indexed_entry_source_end
@@ -10507,13 +10507,13 @@ ORG scan_markers_below_indexed_entry
 ; scan itself does not preserve Y, so the save is what lets the caller keep
 ; iterating over entries.
 .scan_markers_below_indexed_entry_source
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     LDX xor_graphic_repeat_source_scanlines
     BNE offset_two_character_rows
     CLC
     ADC #&80
     STA display_pointer_low
-    LDA shared_workspace_48,Y
+    LDA room_enemy_display_pointer_high,Y
     ADC #&02
 
 .store_pointer_then_scan
@@ -10528,7 +10528,7 @@ ORG scan_markers_below_indexed_entry
 .offset_two_character_rows
     CLC
     STA display_pointer_low
-    LDA shared_workspace_48,Y
+    LDA room_enemy_display_pointer_high,Y
     ADC #&05
     JMP store_pointer_then_scan
 .scan_markers_below_indexed_entry_source_end
@@ -10658,22 +10658,22 @@ ORG advance_indexed_entity_horizontal_position
     LDA secondary_entity_runtime_block,Y
     BMI step_entity_left
     CLC
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     ADC #MODE1_CELL_COLUMN_BYTES
-    STA shared_workspace_47,Y
-    LDA shared_workspace_48,Y
+    STA room_enemy_display_pointer_low,Y
+    LDA room_enemy_display_pointer_high,Y
     ADC #&00
-    STA shared_workspace_48,Y
+    STA room_enemy_display_pointer_high,Y
     RTS
 
 .step_entity_left
     SEC
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     SBC #MODE1_CELL_COLUMN_BYTES
-    STA shared_workspace_47,Y
-    LDA shared_workspace_48,Y
+    STA room_enemy_display_pointer_low,Y
+    LDA room_enemy_display_pointer_high,Y
     SBC #&00
-    STA shared_workspace_48,Y
+    STA room_enemy_display_pointer_high,Y
     RTS
 .advance_indexed_entity_horizontal_position_source_end
 
@@ -10746,17 +10746,17 @@ ORG advance_indexed_entity_vertical_position
     STA indexed_pair_output_half_offset
     LDA enemy_vertical_delta,Y
     STA vertical_step_delta
-    LDA shared_workspace_47,Y
+    LDA room_enemy_display_pointer_low,Y
     STA vertical_step_pointer_low
-    LDA shared_workspace_48,Y
+    LDA room_enemy_display_pointer_high,Y
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
     LDA indexed_pair_output_half_offset
     STA primary_entity_runtime_block,Y
     LDA vertical_step_pointer_low
-    STA shared_workspace_47,Y
+    STA room_enemy_display_pointer_low,Y
     LDA vertical_step_pointer_high
-    STA shared_workspace_48,Y
+    STA room_enemy_display_pointer_high,Y
     RTS
 .advance_indexed_entity_vertical_position_source_end
 
@@ -10888,9 +10888,9 @@ ORG initialise_room_moving_objects
 
 .build_indexed_xor_display_pointers
     LDA indexed_xor_graphic_state
-    STA shared_workspace_0a
+    STA display_grid_row
     LDA indexed_xor_graphic_selector_state,X
-    STA shared_workspace_0b
+    STA display_grid_column
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
     STA indexed_xor_display_pointer_low,X
