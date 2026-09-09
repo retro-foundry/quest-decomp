@@ -1761,8 +1761,8 @@ ORG apply_signed_vertical_step_to_pointer
     LDA vertical_step_delta
     BMI step_pointer_upwards
     LDA vertical_step_pointer_low
-    AND #&07
-    CMP #&05
+    AND #MODE1_SCANLINE_INDEX_MASK
+    CMP #VERTICAL_STEP_DOWN_WRAP_LIMIT
     BPL cross_to_next_character_row
     INC vertical_step_pointer_low
     INC vertical_step_pointer_low
@@ -1771,17 +1771,17 @@ ORG apply_signed_vertical_step_to_pointer
 .cross_to_next_character_row
     CLC
     LDA vertical_step_pointer_low
-    ADC #&7A
+    ADC #MODE1_ROW_WRAP_LOW_ADJUST
     STA vertical_step_pointer_low
     LDA vertical_step_pointer_high
-    ADC #&02
+    ADC #MODE1_ROW_WRAP_HIGH_ADJUST
     STA vertical_step_pointer_high
     RTS
 
 .step_pointer_upwards
     LDA vertical_step_pointer_low
-    AND #&07
-    CMP #&02
+    AND #MODE1_SCANLINE_INDEX_MASK
+    CMP #VERTICAL_STEP_UP_WRAP_LIMIT
     BMI cross_to_previous_character_row
     DEC vertical_step_pointer_low
     DEC vertical_step_pointer_low
@@ -1790,10 +1790,10 @@ ORG apply_signed_vertical_step_to_pointer
 .cross_to_previous_character_row
     SEC
     LDA vertical_step_pointer_low
-    SBC #&7A
+    SBC #MODE1_ROW_WRAP_LOW_ADJUST
     STA vertical_step_pointer_low
     LDA vertical_step_pointer_high
-    SBC #&02
+    SBC #MODE1_ROW_WRAP_HIGH_ADJUST
     STA vertical_step_pointer_high
     RTS
 .apply_signed_vertical_step_to_pointer_source_end
@@ -4552,12 +4552,12 @@ ORG move_player_right_with_collision
 .scan_column_ahead_of_player
     CLC
     LDA player_display_pointer_low
-    ADC #&20
+    ADC #PLAYER_COLLISION_LOOKAHEAD_BYTES
     STA display_pointer_low
     LDA player_display_pointer_high
     ADC #&00
     STA display_pointer_high
-    LDA #&18
+    LDA #PLAYER_COLLISION_SCAN_ROWS
     STA xor_graphic_character_rows_remaining
     JSR scan_display_column_for_blocking_byte
     BCC advance_player_one_cell_right
@@ -4575,7 +4575,7 @@ ORG move_player_right_with_collision
     INC player_horizontal_position
     LDA player_display_pointer_low
     CLC
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     STA player_display_pointer_low
     BCC player_right_pointer_no_carry_exit
     INC player_display_pointer_high
@@ -4611,12 +4611,12 @@ ORG move_player_left_with_collision
 .scan_column_left_of_player
     SEC
     LDA player_display_pointer_low
-    SBC #&08
+    SBC #MODE1_CELL_COLUMN_BYTES
     STA display_pointer_low
     LDA player_display_pointer_high
     SBC #&00
     STA display_pointer_high
-    LDA #&18
+    LDA #PLAYER_COLLISION_SCAN_ROWS
     STA xor_graphic_character_rows_remaining
     JSR scan_display_column_for_blocking_byte
     BCC advance_player_one_cell_left
@@ -4636,7 +4636,7 @@ ORG move_player_left_with_collision
     DEC player_horizontal_position
     SEC
     LDA player_display_pointer_low
-    SBC #&08
+    SBC #MODE1_CELL_COLUMN_BYTES
     STA player_display_pointer_low
     BCS player_step_rts
     DEC player_display_pointer_high
@@ -7838,11 +7838,11 @@ ORG advance_indexed_pair_value_and_display_pointer
     BEQ advance_indexed_pair_pointer_negative
 
     LDA indexed_pair_value_field,X
-    CMP #&4D
+    CMP #INDEXED_PAIR_HORIZONTAL_WRAP_POSITION
     BPL indexed_pair_positive_wrap_entry
     CLC
     LDA indexed_pair_display_pointer_low,X
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     STA indexed_pair_display_pointer_low,X
     LDA indexed_pair_display_pointer_high,X
     ADC #&00
@@ -7854,7 +7854,7 @@ ORG advance_indexed_pair_value_and_display_pointer
     BMI indexed_pair_negative_wrap_entry
     SEC
     LDA indexed_pair_display_pointer_low,X
-    SBC #&08
+    SBC #MODE1_CELL_COLUMN_BYTES
     STA indexed_pair_display_pointer_low,X
     LDA indexed_pair_display_pointer_high,X
     SBC #&00
@@ -7863,7 +7863,7 @@ ORG advance_indexed_pair_value_and_display_pointer
 
 .indexed_pair_positive_wrap_entry
     LDA indexed_pair_primary_field,X
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ reverse_indexed_pair_delta_negative
     INC indexed_pair_primary_field,X
     LDA #&00
@@ -10035,7 +10035,7 @@ ORG advance_room_moving_object_state_and_pointer
 
     CLC
     LDA indexed_xor_display_pointer_low,Y
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     STA indexed_xor_display_pointer_low,Y
     LDA indexed_xor_display_pointer_high,Y
     ADC #&00
@@ -10045,7 +10045,7 @@ ORG advance_room_moving_object_state_and_pointer
 .indexed_xor_move_display_pointer_left
     SEC
     LDA indexed_xor_display_pointer_low,Y
-    SBC #&08
+    SBC #MODE1_CELL_COLUMN_BYTES
     STA indexed_xor_display_pointer_low,Y
     LDA indexed_xor_display_pointer_high,Y
     SBC #&00
@@ -10659,7 +10659,7 @@ ORG advance_indexed_entity_horizontal_position
     BMI step_entity_left
     CLC
     LDA shared_workspace_47,Y
-    ADC #&08
+    ADC #MODE1_CELL_COLUMN_BYTES
     STA shared_workspace_47,Y
     LDA shared_workspace_48,Y
     ADC #&00
@@ -10669,7 +10669,7 @@ ORG advance_indexed_entity_horizontal_position
 .step_entity_left
     SEC
     LDA shared_workspace_47,Y
-    SBC #&08
+    SBC #MODE1_CELL_COLUMN_BYTES
     STA shared_workspace_47,Y
     LDA shared_workspace_48,Y
     SBC #&00
