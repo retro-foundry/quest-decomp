@@ -4698,17 +4698,18 @@ ORG move_player_down_by_velocity
 ; position inside the lower transition band snapshots the player and enters the
 ; room below.
 ; A clear player-relative scan applies a signed +2 vertical step and loops. A
-; blocked scan is the ground. Landing below velocity $F2 costs energy through
+; blocked scan is the ground. Landing below PLAYER_HARD_LANDING_VELOCITY costs
+; energy through
 ; the damage routine and adds two to the velocity; otherwise the landing is
 ; tested against the bounce pattern, and an available action sets the
-; velocity to 9, plays a sound at pitch $3C and transfers to the climb, which is
-; a bounce. Any other landing simply zeroes the velocity.
+; velocity to PLAYER_BOUNCE_VELOCITY and transfers to the climb. Any other
+; landing simply zeroes the velocity.
 ; The tail adjusts velocity when the display scan found its special marker.
 .move_player_down_by_velocity_source
     SEC
     LDA #&FF
     SBC player_vertical_velocity
-    ADC #&04
+    ADC #PLAYER_VERTICAL_VELOCITY_STEP_BIAS
     LSR A
     LSR A
     STA player_vertical_steps_remaining
@@ -4716,9 +4717,9 @@ ORG move_player_down_by_velocity
 .fall_one_step
     LDA player_vertical_position
     LSR A
-    CMP #&60
+    CMP #PLAYER_LOWER_TRANSITION_HALF_POSITION_START
     BMI test_ground
-    CMP #&6C
+    CMP #PLAYER_LOWER_TRANSITION_HALF_POSITION_END
     BPL test_ground
     JSR capture_player_state_for_redraw
     JMP enter_room_below
@@ -4729,7 +4730,7 @@ ORG move_player_down_by_velocity
     LDA #&01
     STA player_ground_contact_flag
     LDA player_vertical_velocity
-    CMP #&F2
+    CMP #PLAYER_HARD_LANDING_VELOCITY
     BPL test_landing_pattern
     JSR apply_player_damage_and_redraw_energy
     INC player_vertical_velocity
@@ -4742,7 +4743,7 @@ ORG move_player_down_by_velocity
     BEQ stop_fall
     LDA shared_workspace_88
     BNE stop_fall
-    LDA #&09
+    LDA #PLAYER_BOUNCE_VELOCITY
     STA player_vertical_velocity
     LDA #&05
     STA sound_block_duration
@@ -4762,7 +4763,7 @@ ORG move_player_down_by_velocity
 .apply_downward_step
     LDA #&00
     STA player_ground_contact_flag
-    LDA #&02
+    LDA #PLAYER_VERTICAL_STEP_DOWN
     STA vertical_step_delta
     JSR advance_player_vertical_position_and_display_pointer
     DEC player_vertical_steps_remaining
@@ -4772,10 +4773,10 @@ ORG move_player_down_by_velocity
 
 .adjust_velocity_after_fall
     LDA player_vertical_velocity
-    CMP #&FC
+    CMP #PLAYER_POST_FALL_ADJUST_THRESHOLD
     BPL force_velocity_on_marker
     CLC
-    ADC #&04
+    ADC #PLAYER_VERTICAL_VELOCITY_STEP_BIAS
     STA player_vertical_velocity
     RTS
 
@@ -5101,14 +5102,13 @@ ORG move_player_up_by_velocity
 ; area; unless the shared transition gate blocks it, the player enters the room
 ; above. Otherwise the marker scan runs from the player display pointer; a clear
 ; scan applies a signed -2 vertical step and loops until the count runs out.
-; A blocked scan is a ceiling. Hitting one below velocity $0A simply stops the
-; climb by zeroing the velocity; at $0A or above it costs energy through the
-; damage routine and takes three off the velocity instead, so a fast climb into
-; a ceiling hurts and a slow one does not.
+; A blocked scan is a ceiling. Hitting one below
+; PLAYER_CEILING_DAMAGE_VELOCITY simply stops the climb; at or above that
+; threshold it costs energy and takes three off the velocity instead.
 .move_player_up_by_velocity_source
     CLC
     LDA player_vertical_velocity
-    ADC #&04
+    ADC #PLAYER_VERTICAL_VELOCITY_STEP_BIAS
     LSR A
     LSR A
 
@@ -5133,7 +5133,7 @@ ORG move_player_up_by_velocity
     JSR adjust_display_pointer_then_scan_markers
     BCC apply_upward_step
     LDA player_vertical_velocity
-    CMP #&0A
+    CMP #PLAYER_CEILING_DAMAGE_VELOCITY
     BMI stop_climb
     JSR apply_player_damage_and_redraw_energy
     DEC player_vertical_velocity
@@ -5147,7 +5147,7 @@ ORG move_player_up_by_velocity
     RTS
 
 .apply_upward_step
-    LDA #&FE
+    LDA #PLAYER_VERTICAL_STEP_UP
     STA vertical_step_delta
     JSR advance_player_vertical_position_and_display_pointer
     DEC player_vertical_steps_remaining
