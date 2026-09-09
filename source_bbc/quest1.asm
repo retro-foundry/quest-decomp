@@ -768,16 +768,17 @@ ORG irq1v_handler
 
 ; The installed IRQ1V handler. It changes the Video ULA
 ; palette twice per frame and passes every interrupt down the chain.
-; On a System VIA vertical sync interrupt it arms User VIA timer 2 with $10E0
-; so that timer expires part-way down the frame, then writes the twelve
+; On a System VIA vertical sync interrupt it arms User VIA timer 2 from
+; RASTER_TIMER2_COUNTER_LOW/HIGH so that it expires part-way down the frame,
+; then writes the twelve
 ; palette entries for the upper part of the display.
 ; On the resulting User VIA timer 2 interrupt it clears the flag by writing the
 ; timer-2 mask back to the flag register, spins a short fixed delay so the
 ; change lands on a stable raster position, and writes four more entries based
 ; on lower_screen_palette_base. When alternate_palette_selector is nonzero it
 ; instead writes sixteen entries as four selector groups.
-; Every path restores X and the MOS accumulator save at $FC and leaves through
-; the chained IRQ1V vector at $0380, so other interrupt sources are unaffected.
+; Every path restores X and mos_irq_accumulator_save, then leaves through
+; chained_irq1v_vector, so other interrupt sources are unaffected.
 .irq1v_handler_source
     LDA mos_irq_accumulator_save
     PHA
@@ -848,12 +849,11 @@ ORG draw_record_row_pairs
 
 ; Draw X rows of two graphic records each, stepping down one
 ; Mode 1 character row between rows.
-; Each iteration draws record_row_graphic_index twice through the blitter vector, which
-; advances the display pointer by $10 per call, then adds $0260. The two
-; additions come to $0280, which is one character row, so the constant is the
-; row stride less the two tiles already drawn.
-; $2496 presets the record to zero, drawing blank rows; $249A is the entry for
-; callers that have already chosen a record.
+; Each iteration draws record_row_graphic_index twice through the blitter, which
+; advances by two graphic records, then adds MODE1_ROW_AFTER_TWO_GRAPHICS. The
+; combined movement is one MODE1_CHARACTER_ROW_BYTES stride. The public entry
+; presets GRAPHIC_RECORD_BLANK; draw_next_record_row is for callers that have
+; already selected a record.
 .draw_record_row_pairs_source
     LDA #GRAPHIC_RECORD_BLANK
     STA record_row_graphic_index
@@ -3075,8 +3075,8 @@ CLEAR apply_player_energy_delta_to_budget_source, apply_player_energy_delta_to_b
 
 ORG osbyte_81_inkey
 
-; X supplies the negative BBC key number. Select OSBYTE
-; function $81 with Y=$FF, then tail-call the MOS so its key result returns
+; X supplies the negative BBC key number. Select OSBYTE_INKEY with
+; OSBYTE_INKEY_KEYBOARD_SCAN_Y, then tail-call the MOS so its key result returns
 ; directly to the original caller.
 .osbyte_81_inkey_source
     LDY #OSBYTE_INKEY_KEYBOARD_SCAN_Y
@@ -3140,9 +3140,9 @@ ORG game_entry_jump_table
 ; A fixed-address table of three-byte JMP vectors, giving
 ; callers a stable entry for each gameplay routine regardless of where that
 ; routine moves. Seven of the eleven vectors are observed being taken, and four
-; of them dispatch into routines this source already owns. The $221E NOP is
-; table padding, not a reached instruction, and the table ends at $2221; $2222
-; is data.
+; of them dispatch into routines this source already owns. The trailing NOP is
+; table padding, not a reached instruction; energy_bar_fill_patterns begins
+; immediately after the table.
 .game_entry_jump_table_source
     JMP main_gameplay_loop
 
@@ -4197,12 +4197,13 @@ CLEAR run_startup_room_sequence_until_space_source, run_startup_room_sequence_un
 
 ORG wait_vsync_then_call_display_helpers
 
-; The per-frame display update. OSBYTE $13 waits for
-; vertical sync, then the player is XOR-drawn, $2ABA runs, and the player is
-; XOR-drawn again through a tail jump.
+; The per-frame display update. OSBYTE_WAIT_VSYNC waits for vertical sync, then
+; the player is XOR-drawn, capture_player_state_for_redraw runs, and the player
+; is XOR-drawn again through a tail jump.
 ; Drawing the same XOR sprite twice erases and redraws it: the first call
-; removes the player from where it was, $2ABA advances the state and the rest
-; of the display, and the second call puts it back at its new position. Doing
+; removes the player from where it was, capture_player_state_for_redraw advances
+; the state and remaining display, and the second call puts it back at its new
+; position. Doing
 ; that immediately after the vsync wait is what keeps the redraw off the
 ; visible raster.
 .wait_vsync_then_call_display_helpers_source
