@@ -14,12 +14,16 @@ $requiredStandaloneFiles = [System.Collections.Generic.HashSet[string]]::new([Sy
     'tools/reconstruction/quest_addr.py'
     'tools/runtime_trace/find_start_point.py'
     'tools/reconstruction/variants/sector_e_level_1.json'
+    'analysis/runtime_memory_map.json'
 ) | ForEach-Object { [void]$requiredStandaloneFiles.Add($_) }
 
 # Keep prose and source references honest: any repository-relative tools or
 # source path mentioned by the maintained files becomes a validation dependency.
 $referenceInputs = @((Join-Path $PSScriptRoot 'README.md'))
 $referenceInputs += Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'source_bbc') -File -Recurse |
+    Select-Object -ExpandProperty FullName
+$referenceInputs += Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools') -File -Recurse |
+    Where-Object { $_.Extension -in @('.py', '.ps1', '.json', '.md') } |
     Select-Object -ExpandProperty FullName
 $standaloneReferencePattern = '(?:tools|source_bbc)/[A-Za-z0-9_./-]+\.(?:py|ps1|json|md|asm|inc)'
 foreach ($inputPath in $referenceInputs) {

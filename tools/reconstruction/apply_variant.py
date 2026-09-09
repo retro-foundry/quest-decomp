@@ -108,7 +108,7 @@ def main() -> int:
         print(f"no such variant: {definition}", file=sys.stderr)
         return 1
     if not PAYLOAD.exists():
-        print("build the byte-exact payload first: source_bbc/build.ps1", file=sys.stderr)
+        print("build the byte-exact payload first: ./build.ps1", file=sys.stderr)
         return 1
 
     overrides: dict[str, int] = {}
