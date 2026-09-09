@@ -1294,7 +1294,7 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all eighteen instructions 721 times, driving the five-cell loop 2,000 times",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves the sole caller 0x1c27 inside draw_and_initialise_room",
-        "the pointer it dereferences is $76/$77, which set_room_data_pointer builds and advance_76_77_pointer_by_40 steps one row at a time"
+        "room_data_pointer is built by set_room_data_pointer and stepped one row plane at a time by advance_room_data_pointer_to_next_row_plane"
       ]
     },
     {
@@ -2014,7 +2014,7 @@
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all one hundred and nine instructions 29 times, once per room entered",
         "the row loop runs 696 times against 87 row starts, which is 8 cells to a row, and the 87 rows across 29 rooms is 3 rows per room short of the $1F limit because the loop is entered mid-count",
         "nine of its callees are already source-owned, including both entity initialisers, the appearance byte fetch, the record table scan and the room pointer build",
-        "the $28 bias it subtracts from the room pointer is the same 40 bytes advance_76_77_pointer_by_40 adds per row, so the draw starts exactly one row early"
+        "the forty-byte bias it subtracts is the same row-plane stride added by advance_room_data_pointer_to_next_row_plane, so drawing starts exactly one row early"
       ]
     },
     {
@@ -2032,7 +2032,7 @@
       ]
     },
     {
-     "name": "advance_76_77_pointer_by_40",
+     "name": "advance_room_data_pointer_to_next_row_plane",
      "runtime_start": 7337,
      "runtime_end_exclusive": 7349,
      "loaded_start": 13481,

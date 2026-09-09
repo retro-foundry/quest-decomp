@@ -9851,9 +9851,8 @@ ORG draw_and_initialise_room
 
 ; Draw the current room and set up everything in it.
 ; The per-room state is cleared first: a dozen flags and counters, the music
-; tune progress, the vertical velocity step set to 1 and the game speed at $4F
-; to 8.
-; Among those cleared flags is jet_boots_enabled_this_room at $1BAA, so every
+; tune progress, the initial vertical velocity step, and the bounded tick target.
+; Among those cleared flags is jet_boots_enabled_this_room, so every
 ; room begins with the jet boots disabled and a room has to grant them back.
 ; The triangle-symbol room-cell handler writes one into the flag while drawing,
 ; visibly marking rooms where flight is allowed. The
@@ -9874,13 +9873,13 @@ ORG draw_and_initialise_room
 ; fields. Finally, levels below CROSS_ROOM_GHOST_FIRST_LEVEL initialise the
 ; per-level robot pair before the routine tail-jumps into the clock write.
 .draw_and_initialise_room_source
-    LDA #&01
+    LDA #ROOM_ALTERNATE_PALETTE_ENABLED
     STA alternate_palette_selector
     LDA #LO(room_render_display_start)
     STA display_pointer_low
     LDA #HI(room_render_display_start)
     STA display_pointer_high
-    LDA #&00
+    LDA #ROOM_INITIAL_STATE_CLEAR
     STA lift_hazard_primary_updates_active
     STA lift_hazard_secondary_updates_active
     STA jet_boots_enabled_this_room
@@ -9911,7 +9910,7 @@ ORG draw_and_initialise_room
     SBC #ROOM_LEVEL_ROW_PLANE_BYTES
     STA room_data_pointer_low
     LDA room_data_pointer_high
-    SBC #&00
+    SBC #HI(ROOM_LEVEL_ROW_PLANE_BYTES) ; propagate the low-byte subtraction's borrow
     STA room_data_pointer_high
     DEC reference_pair_secondary_value
     JSR load_room_palette_and_tile_pair
@@ -9928,28 +9927,28 @@ ORG draw_and_initialise_room
     LDA #HI(room_render_display_start)
     STA graphic_source_pointer_high
 
-.draw_and_initialise_room_branch_2
-    LDY #&00
+.scan_next_room_top_edge_cell
+    LDY #ROOM_TOP_EDGE_SCAN_FIRST_OFFSET
     LDA (graphic_source_pointer_low),Y
     CMP #DISPLAY_MARKER_WATER
-    BEQ draw_and_initialise_room_branch_3
-    LDA #&00
+    BEQ preserve_room_top_edge_water_marker
+    LDA #ROOM_TOP_EDGE_CLEAR_VALUE
     STA (graphic_source_pointer_low),Y
     INY
     STA (graphic_source_pointer_low),Y
     INY
 
-.draw_and_initialise_room_branch_3
+.preserve_room_top_edge_water_marker
     JSR store_byte_and_advance_source_pointer
-    BNE draw_and_initialise_room_branch_2
+    BNE scan_next_room_top_edge_cell
 
 .reload_appearance_for_this_room
     JSR load_room_palette_and_tile_pair
 
 .start_next_room_row
-    LDA #&00
+    LDA #ROOM_COLUMN_FIRST
     STA room_graphics_column
-    JSR advance_76_77_pointer_by_40
+    JSR advance_room_data_pointer_to_next_row_plane
 
 .draw_next_row_cell
     INC room_graphics_y_low
@@ -9965,7 +9964,7 @@ ORG draw_and_initialise_room
     JSR initialise_room_moving_objects
     JSR initialise_room_enemy_from_table
     JSR initialise_lifts_and_hazards_from_table
-    LDA #&00
+    LDA #ROOM_ALTERNATE_PALETTE_DISABLED
     STA alternate_palette_selector
     LDX #ROOM_PALETTE_FLASH_PERIOD
     LDA #OSBYTE_SET_FLASH_MARK_PERIOD
@@ -9983,7 +9982,7 @@ ORG draw_and_initialise_room
     LDA #OSBYTE_FLUSH_BUFFER
     LDX #OSBYTE_BUFFER_SOUND_CHANNEL_0
     JSR OSBYTE
-    LDA #&00 ; clear renderer, jump/swim, and vertical-transition state together
+    LDA #ROOM_INITIAL_STATE_CLEAR ; clear renderer, jump/swim, and vertical-transition state together
     STA xor_graphic_repeat_source_scanlines
     STA player_jump_or_swim_requested
     STA vertical_room_transition_cell_flag
@@ -10123,10 +10122,12 @@ COPYBLOCK retreat_secondary_reference_and_pointer_source, retreat_secondary_refe
 CLEAR retreat_secondary_reference_and_pointer_source, retreat_secondary_reference_and_pointer_source_end
 
 
-ORG advance_76_77_pointer_by_40
+ORG advance_room_data_pointer_to_next_row_plane
 
-; Add $28 to the little-endian pointer at $76/$77, carrying into the high byte. A clear carry branches backward to the shared RTS at $1CA8 rather than falling through to the INC, so the high byte is touched only on a low-byte wrap.
-.advance_76_77_pointer_by_40_source
+; Add one ROOM_LEVEL_ROW_PLANE_BYTES stride to room_data_pointer. A clear carry
+; uses the preceding shared return, so the high byte changes only after a
+; low-byte wrap.
+.advance_room_data_pointer_to_next_row_plane_source
     CLC
     LDA room_data_pointer_low
     ADC #ROOM_LEVEL_ROW_PLANE_BYTES
@@ -10134,15 +10135,15 @@ ORG advance_76_77_pointer_by_40
     BCC room_row_pointer_no_carry_return
     INC room_data_pointer_high
     RTS
-.advance_76_77_pointer_by_40_source_end
+.advance_room_data_pointer_to_next_row_plane_source_end
 
-ASSERT advance_76_77_pointer_by_40_source = advance_76_77_pointer_by_40
-ASSERT advance_76_77_pointer_by_40_source_end = &1CB5
-COPYBLOCK advance_76_77_pointer_by_40_source, advance_76_77_pointer_by_40_source_end, &34A9
+ASSERT advance_room_data_pointer_to_next_row_plane_source = advance_room_data_pointer_to_next_row_plane
+ASSERT advance_room_data_pointer_to_next_row_plane_source_end = &1CB5
+COPYBLOCK advance_room_data_pointer_to_next_row_plane_source, advance_room_data_pointer_to_next_row_plane_source_end, &34A9
 
 ; Runtime $1CA9-$1CB4 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $34A9-$34B4.
-CLEAR advance_76_77_pointer_by_40_source, advance_76_77_pointer_by_40_source_end
+CLEAR advance_room_data_pointer_to_next_row_plane_source, advance_room_data_pointer_to_next_row_plane_source_end
 
 
 ORG reflect_room_enemy_at_obstacles
