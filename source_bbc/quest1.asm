@@ -5624,7 +5624,7 @@ ORG dispatch_room_cell
     EQUW draw_ff_state_column_motif-1 ; ROOM_CELL_FF_STATE_MOTIF
     EQUW draw_narrow_bar_fixture_row-1 ; ROOM_CELL_NARROW_BAR_FIXTURE
     EQUW draw_last_column_special_pair_row-1 ; ROOM_CELL_LAST_COLUMN_SPECIAL
-    EQUW draw_state_selected_13_center_row-1 ; ROOM_CELL_STATE_SELECTED_NARROW_BAR_CENTER; alternate layout remains unexecuted
+    EQUW draw_state_selected_narrow_bar_center_row-1 ; ROOM_CELL_STATE_SELECTED_NARROW_BAR_CENTER; alternate layout remains unexecuted
     EQUW draw_blank_marker_before_alternating_suffix-1 ; ROOM_CELL_BLANK_BEFORE_SUFFIX
     EQUW draw_blank_marker_after_alternating_prefix-1 ; ROOM_CELL_BLANK_AFTER_PREFIX
     EQUW draw_room_flag_then_fixed_pair_row-1 ; ROOM_CELL_FLAG_AND_FIXED_PAIR
@@ -5649,7 +5649,7 @@ ORG dispatch_room_cell
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_PASSWORD_PROMPT
     EQUW select_blank_or_right_half_pattern_by_column-1 ; ROOM_CELL_RIGHT_HALF_PATTERN
     EQUW set_ff_state_and_draw_last_column_special_row-1 ; ROOM_CELL_FF_LAST_COLUMN
-    EQUW draw_column_gated_58_59_pair_row-1 ; ROOM_CELL_COLUMN_GATED_EDGE_PAIR
+    EQUW draw_column_gated_edge_pair_row-1 ; ROOM_CELL_COLUMN_GATED_EDGE_PAIR
     EQUW draw_fixed_pair_gap_row-1 ; ROOM_CELL_FIXED_PAIR_GAP
     EQUW draw_bordered_checker_diagonal_row-1 ; ROOM_CELL_BORDERED_CHECKER
     EQUW draw_and_configure_dynamic_room_object-1 ; ROOM_CELL_DYNAMIC_OBJECT
@@ -6912,7 +6912,7 @@ ORG draw_curved_bowl_or_edge_pattern_row
 .draw_blank_row_from_record_edge_handlers
     JMP draw_eight_blank_tiles
 
-.draw_column_gated_58_59_pair_row_source
+.draw_column_gated_edge_pair_row_source
     CMP #EDGE_PATTERN_BLANK_FIRST_COLUMN
     BMI draw_fixed_edge_pair_or_alternating_pattern_row
     JSR mirror_cell_direction
@@ -6934,7 +6934,7 @@ ORG draw_curved_bowl_or_edge_pattern_row
 .draw_curved_bowl_or_edge_pattern_row_source_end
 
 ASSERT draw_curved_bowl_or_edge_pattern_row_source = draw_curved_bowl_or_edge_pattern_row
-ASSERT draw_column_gated_58_59_pair_row_source = draw_column_gated_58_59_pair_row
+ASSERT draw_column_gated_edge_pair_row_source = draw_column_gated_edge_pair_row
 ASSERT draw_fixed_edge_pair_or_alternating_pattern_row_source = draw_fixed_edge_pair_or_alternating_pattern_row
 ASSERT draw_curved_bowl_or_edge_pattern_row_source_end = &15DF
 COPYBLOCK draw_curved_bowl_or_edge_pattern_row_source, draw_curved_bowl_or_edge_pattern_row_source_end, &2DB1
@@ -7024,22 +7024,22 @@ COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pai
 ; copying its bytes to loaded $2E39-$2E4F.
 CLEAR draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end
 
-ORG draw_state_selected_13_center_row
+ORG draw_state_selected_narrow_bar_center_row
 ; ROOM_CELL_STATE_SELECTED_NARROW_BAR_CENTER. The first and final room graphics Y coordinates
 ; draw alternating tiles. Other values draw two blanks, a narrow vertical bar,
 ; the two-tile hollow-arch/solid-diagonal centre run, another narrow bar, and
 ; two trailing blanks. Only the
 ; alternating outcome is present in committed traces; the dispatch entry and
 ; static flow establish the alternate layout without assigning gameplay lore.
-.draw_state_selected_13_center_row_source
+.draw_state_selected_narrow_bar_center_row_source
     LDX room_graphics_y_low
     CPX #ROOM_GRAPHICS_Y_FINAL_ROW
-    BEQ draw_state_13_center_alternating_row
+    BEQ draw_narrow_bar_center_alternating_row
     CPX #ROOM_GRAPHICS_Y_BEFORE_FIRST_ROW
-    BNE draw_state_13_center_framed_row
-.draw_state_13_center_alternating_row
+    BNE draw_narrow_bar_center_framed_row
+.draw_narrow_bar_center_alternating_row
     JMP draw_eight_alternating_tiles
-.draw_state_13_center_framed_row
+.draw_narrow_bar_center_framed_row
     LDX #TWO_TILE_RUN_COUNT
     JSR draw_blank_tile_run
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
@@ -7050,11 +7050,11 @@ ORG draw_state_selected_13_center_row
     JSR copy_16_byte_graphic_to_display
     LDX #TWO_TILE_RUN_COUNT
     JMP draw_blank_tile_run
-.draw_state_selected_13_center_row_source_end
-ASSERT draw_state_selected_13_center_row_source = draw_state_selected_13_center_row
-ASSERT draw_state_selected_13_center_row_source_end = draw_room_flag_then_fixed_pair_row
-COPYBLOCK draw_state_selected_13_center_row_source, draw_state_selected_13_center_row_source_end, &2E50
-CLEAR draw_state_selected_13_center_row_source, draw_state_selected_13_center_row_source_end
+.draw_state_selected_narrow_bar_center_row_source_end
+ASSERT draw_state_selected_narrow_bar_center_row_source = draw_state_selected_narrow_bar_center_row
+ASSERT draw_state_selected_narrow_bar_center_row_source_end = draw_room_flag_then_fixed_pair_row
+COPYBLOCK draw_state_selected_narrow_bar_center_row_source, draw_state_selected_narrow_bar_center_row_source_end, &2E50
+CLEAR draw_state_selected_narrow_bar_center_row_source, draw_state_selected_narrow_bar_center_row_source_end
 
 
 ORG handle_matching_cross_room_robot_ghost

@@ -1660,7 +1660,7 @@
       ]
     },
     {
-     "name": "draw_state_selected_13_center_row",
+     "name": "draw_state_selected_narrow_bar_center_row",
      "runtime_start": 5712,
      "runtime_end_exclusive": 5750,
      "loaded_start": 11856,
