@@ -3549,7 +3549,7 @@ ORG draw_record_three_from_alternate_bank
 ; Draw graphic record 3 from the alternate source bank,
 ; leaving the bank selector as it was found.
 ; graphic_source_base_pointer_offset chooses which entry in
-; graphic_source_base_pointer_table supplies the blitter records. This selects
+; graphic_source_base_pointers supplies the blitter records. This selects
 ; the status bank, draws STATUS_GRAPHIC_BLANK_ICON, then restores the primary
 ; bank, so the caller neither sets up nor cleans up the selection.
 .draw_record_three_from_alternate_bank_source
