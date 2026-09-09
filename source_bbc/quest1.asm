@@ -3277,8 +3277,8 @@ ORG apply_player_energy_delta_to_budget
 ; Runtime $25C4-$25DB. Compare the saved and live player energy. If unchanged,
 ; reset player_energy_delta_budget to twelve. Otherwise synchronise the snapshot
 ; and subtract the observed change from that budget. A non-negative result
-; returns to the gameplay loop; a negative result is also copied to the shared
-; follow-on state before falling into the scripted player walk.
+; returns to the gameplay loop; a negative result also seeds
+; slow_damage_countdown before falling into the scripted player walk.
 .apply_player_energy_delta_to_budget_source
     SEC
     LDA player_energy_snapshot
@@ -3292,7 +3292,7 @@ ORG apply_player_energy_delta_to_budget
     SBC observed_player_energy_delta
     STA player_energy_delta_budget
     BPL return_from_25c4_via_25c3
-    STA shared_workspace_9f
+    STA slow_damage_countdown
 .apply_player_energy_delta_to_budget_source_end
 
 ASSERT apply_player_energy_delta_to_budget_source = apply_player_energy_delta_to_budget
@@ -3422,7 +3422,7 @@ ORG update_lift_and_hazard_slots
     INC lift_hazard_primary_record_counter
     LDA lift_hazard_primary_record_counter
     STA lift_hazard_update_schedule_mask
-    LDY #&00
+    LDY #LIFT_HAZARD_FIRST_SLOT_INDEX
 .update_lift_or_hazard_from_preselected_slot
     JSR draw_lift_or_hazard_without_slot_check
     JSR update_one_lift_or_hazard
@@ -4861,13 +4861,13 @@ ORG poll_controls_and_apply_gameplay_actions
 
 .control_apply_horizontal_movement
     LDA horizontal_input_delta
-    CMP #&01
+    CMP #PLAYER_HORIZONTAL_INPUT_RIGHT
     BNE control_apply_left_movement
     JSR move_player_right_with_collision
 
 .control_apply_left_movement
     LDA horizontal_input_delta
-    CMP #&FF
+    CMP #PLAYER_HORIZONTAL_INPUT_LEFT
     BNE control_apply_vertical_movement
     JSR move_player_left_with_collision
 
@@ -4883,20 +4883,20 @@ ORG poll_controls_and_apply_gameplay_actions
 
 .control_update_slow_damage
     LDA player_display_pointer_high
-    CMP #&41
+    CMP #SLOW_DAMAGE_DISPLAY_HIGH_THRESHOLD
     BMI control_tick_slow_damage
-    LDY #&00
+    LDY #SLOW_DAMAGE_COUNTDOWN_CLEAR
     LDA (player_display_pointer_low),Y
-    AND #&EE
+    AND #SLOW_DAMAGE_DISPLAY_BYTE_MASK
     BNE control_tick_slow_damage
-    STY shared_workspace_9f
+    STY slow_damage_countdown
     JMP control_check_stable_player_state
 
 .control_tick_slow_damage
-    DEC shared_workspace_9f
+    DEC slow_damage_countdown
     BNE control_check_stable_player_state
     JSR apply_player_damage_and_redraw_energy
-    INC shared_workspace_9f
+    INC slow_damage_countdown
 
 .control_check_stable_player_state
     LDA player_display_pointer_snapshot_low
@@ -6498,7 +6498,7 @@ ORG drop_carried_item
     LDA shared_workspace_4e
     CMP #ROOM_CELL_HYDROCHLORIC_ACID_SIGN
     BNE write_dropped_item_record
-    LDA shared_workspace_9f
+    LDA slow_damage_countdown
     BEQ write_dropped_item_record
     LDA #SPECIAL_ITEM_ACTIVATED
     STA special_item_3e_activation_flag
@@ -8318,7 +8318,7 @@ ORG consume_collected_icon_and_apply_effect
 ; Runtime $30ED-$3141. Consume one collected status icon unless the count is
 ; exactly four, then run the common descending flash effect. A $FF marker at
 ; $4E selects the longer cleanup path: remove a second icon, restore the saved
-; cell with $53, clear the selected room-appearance byte and $4E/$9F, flash
+; cell with $53, clear the selected room-appearance byte and effect state, flash
 ; once, then sweep X from 1 through $FF using OSBYTE calls and pitch-X sounds.
 .consume_collected_icon_and_apply_effect_source
     LDA collected_icon_count
@@ -8344,20 +8344,20 @@ ORG consume_collected_icon_and_apply_effect
     LDA #&00
     STA room_appearance_table,Y
     STA shared_workspace_4e
-    STA shared_workspace_9f
+    STA slow_damage_countdown
     JSR play_descending_flash_sequence
     LDX #&01
 
 .collected_icon_effect_next_step
-    STX inline_vdu_stream_pointer_low
-    LDA #&09
+    STX collected_icon_effect_step_saved
+    LDA #OSBYTE_SET_FLASH_MARK_PERIOD
     JSR OSBYTE
-    LDA #&0A
+    LDA #OSBYTE_SET_FLASH_SPACE_PERIOD
     JSR OSBYTE
     JSR submit_channel_one_sound_with_x_pitch
-    LDA #&13
+    LDA #OSBYTE_WAIT_VSYNC
     JSR OSBYTE
-    LDX inline_vdu_stream_pointer_low
+    LDX collected_icon_effect_step_saved
     INX
     BNE collected_icon_effect_next_step
     STX lower_screen_palette_base
@@ -9673,7 +9673,7 @@ ORG update_and_draw_room_moving_objects
 
     ; Static-only carry-set path: retain the candidate delta when the required
     ; item is carried, otherwise replace it with the helper's scratch result.
-    LDA inline_vdu_stream_pointer_low
+    LDA candidate_horizontal_step
     STA indexed_xor_graphic_selector_delta,Y
     LDA current_room_cell
     CMP #ROOM_MOVING_OBJECT_FISH
