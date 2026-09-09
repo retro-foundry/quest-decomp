@@ -2076,9 +2076,9 @@ ORG dispatch_game_tick_updates
 
 .after_game_clock_update
     LDA timed_effect_selector
-    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_14
+    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_WITH_FF_STATE_MOTIF
     BNE after_ff_state_cell_effect
-    JSR replace_saved_cell_with_14_then_play_sound
+    JSR replace_saved_cell_with_ff_state_motif_then_play_sound
 
 .after_ff_state_cell_effect
     LDA lift_and_hazard_active
@@ -6625,27 +6625,27 @@ COPYBLOCK draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_
 CLEAR draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_source_end
 
 
-ORG replace_saved_cell_with_14_then_play_sound
+ORG replace_saved_cell_with_ff_state_motif_then_play_sound
 
 ; Select GRAPHIC_UNIFORM_PATTERN for the redraw and save
 ; it as the interaction item code, then enter the shared replacement tail with
 ; ROOM_CELL_FF_STATE_MOTIF. Unlike the ordinary entry, this prefix skips the
 ; ROOM_CELL_BLANK_STATE_MOTIF setup before the common write/redraw/sound tail.
-.replace_saved_cell_with_14_then_play_sound_source
+.replace_saved_cell_with_ff_state_motif_then_play_sound_source
     LDY #GRAPHIC_UNIFORM_PATTERN
     STY record_row_graphic_index
     STY saved_interaction_item_code
     LDA #ROOM_CELL_FF_STATE_MOTIF
     JMP write_saved_cell_and_redraw
-.replace_saved_cell_with_14_then_play_sound_source_end
+.replace_saved_cell_with_ff_state_motif_then_play_sound_source_end
 
-ASSERT replace_saved_cell_with_14_then_play_sound_source = replace_saved_cell_with_14_then_play_sound
-ASSERT replace_saved_cell_with_14_then_play_sound_source_end = replace_saved_cell_then_play_sound
-COPYBLOCK replace_saved_cell_with_14_then_play_sound_source, replace_saved_cell_with_14_then_play_sound_source_end, &4598
+ASSERT replace_saved_cell_with_ff_state_motif_then_play_sound_source = replace_saved_cell_with_ff_state_motif_then_play_sound
+ASSERT replace_saved_cell_with_ff_state_motif_then_play_sound_source_end = replace_saved_cell_then_play_sound
+COPYBLOCK replace_saved_cell_with_ff_state_motif_then_play_sound_source, replace_saved_cell_with_ff_state_motif_then_play_sound_source_end, &4598
 
 ; Runtime $2D98-$2DA2 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4598-$45A2.
-CLEAR replace_saved_cell_with_14_then_play_sound_source, replace_saved_cell_with_14_then_play_sound_source_end
+CLEAR replace_saved_cell_with_ff_state_motif_then_play_sound_source, replace_saved_cell_with_ff_state_motif_then_play_sound_source_end
 
 
 ORG replace_saved_cell_then_play_sound
