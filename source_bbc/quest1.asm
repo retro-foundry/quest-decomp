@@ -5629,8 +5629,8 @@ ORG dispatch_room_cell
     EQUW draw_blank_marker_after_alternating_prefix-1 ; ROOM_CELL_BLANK_AFTER_PREFIX
     EQUW draw_room_flag_then_fixed_pair_row-1 ; ROOM_CELL_FLAG_AND_FIXED_PAIR
     EQUW draw_table_selected_left_half_row-1 ; ROOM_CELL_LEFT_HALF_SEQUENCE
-    EQUW draw_two_13_two_beam_two_13_two_pattern-1 ; ROOM_CELL_NARROW_BAR_BEAM_PATTERN
-    EQUW draw_left_half_sequence_twice_or_13_beam_pattern-1 ; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM
+    EQUW draw_narrow_bar_beam_pattern_row-1 ; ROOM_CELL_NARROW_BAR_BEAM_PATTERN
+    EQUW draw_left_half_sequence_twice_or_narrow_bar_beam_pattern-1 ; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_MUSIC_ROOM_SIGN
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_LEVEL_SECTOR_SIGN
     EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_ELEPHANT_HOUSE_SIGN
@@ -7203,12 +7203,12 @@ COPYBLOCK draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_ro
 ; copying its bytes to loaded $46AA-$46DC.
 CLEAR draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_robot_ghost_if_reference_matches_source_end
 
-ORG draw_two_13_two_beam_two_13_two_pattern
+ORG draw_narrow_bar_beam_pattern_row
 
 ; ROOM_CELL_NARROW_BAR_BEAM_PATTERN. Draw two narrow vertical bars, two mirrored
 ; diagonal beams, another two narrow bars, then two alternating tiles. The
 ; internal draw_two_narrow_vertical_bar_tiles entry draws exactly two narrow bars.
-.draw_two_13_two_beam_two_13_two_pattern_source
+.draw_narrow_bar_beam_pattern_row_source
     JSR draw_two_narrow_vertical_bar_tiles
     LDX #TWO_TILE_RUN_COUNT
     JSR draw_mirrored_diagonal_beam_tile_run
@@ -7225,29 +7225,29 @@ ORG draw_two_13_two_beam_two_13_two_pattern
     DEX
     BNE draw_next_narrow_vertical_bar_tile
     RTS
-.draw_two_13_two_beam_two_13_two_pattern_source_end
+.draw_narrow_bar_beam_pattern_row_source_end
 
-ASSERT draw_two_13_two_beam_two_13_two_pattern_source = draw_two_13_two_beam_two_13_two_pattern
-ASSERT draw_two_13_two_beam_two_13_two_pattern_source_end = &16DD
+ASSERT draw_narrow_bar_beam_pattern_row_source = draw_narrow_bar_beam_pattern_row
+ASSERT draw_narrow_bar_beam_pattern_row_source_end = &16DD
 ; The adjacent ROOM_CELL_LEFT_SEQUENCE_OR_BEAM entry is assembled next; both are copied together
 ; after the cross-room robot/ghost routines that occupy their loaded destination.
 
-ORG draw_left_half_sequence_twice_or_13_beam_pattern
+ORG draw_left_half_sequence_twice_or_narrow_bar_beam_pattern
 ; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM. Columns zero through three draw
 ; their four-selector record from left_half_four_tile_graphic_sequences twice.
 ; Columns four through seven reuse ROOM_CELL_NARROW_BAR_BEAM_PATTERN.
 ; This entry has not appeared in committed traces; its dispatch-table target
 ; and direct shared-tail structure establish the dataflow contract.
-.draw_left_half_sequence_twice_or_13_beam_pattern_source
+.draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source
     CMP #ROOM_HALF_COLUMN_COUNT
     BPL draw_left_sequence_or_beam_right_half_pattern
     JSR load_left_half_graphic_sequence_pointer
     JMP load_left_half_graphic_sequence_pointer
 .draw_left_sequence_or_beam_right_half_pattern
-    JMP draw_two_13_two_beam_two_13_two_pattern
-.draw_left_half_sequence_twice_or_13_beam_pattern_source_end
-ASSERT draw_left_half_sequence_twice_or_13_beam_pattern_source = draw_left_half_sequence_twice_or_13_beam_pattern
-ASSERT draw_left_half_sequence_twice_or_13_beam_pattern_source_end = draw_room_sign_or_collect_password
+    JMP draw_narrow_bar_beam_pattern_row
+.draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end
+ASSERT draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source = draw_left_half_sequence_twice_or_narrow_bar_beam_pattern
+ASSERT draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end = draw_room_sign_or_collect_password
 
 ORG advance_cross_room_robot_ghost_offset_and_display_pointer
 
@@ -7527,7 +7527,7 @@ ORG left_half_four_tile_graphic_sequences
     EQUB GRAPHIC_SOLID_FILL, GRAPHIC_NARROW_VERTICAL_BAR, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_DIAGONAL_SLOPE_B ; columns three/seven
 .left_half_four_tile_graphic_sequences_source_end
 ASSERT left_half_four_tile_graphic_sequences_source = left_half_four_tile_graphic_sequences
-ASSERT left_half_four_tile_graphic_sequences_source_end = draw_two_13_two_beam_two_13_two_pattern
+ASSERT left_half_four_tile_graphic_sequences_source_end = draw_narrow_bar_beam_pattern_row
 COPYBLOCK left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_sequences_source_end, &2EB2
 CLEAR left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_sequences_source_end
 
@@ -7704,8 +7704,8 @@ CLEAR advance_cross_room_robot_ghost_value_and_display_pointer_source, advance_c
 
 ; Copy these earlier-assembled room-cell blocks only after the cross-room robot/ghost
 ; routines that occupy the same runtime addresses as their loaded images.
-COPYBLOCK draw_two_13_two_beam_two_13_two_pattern_source, draw_left_half_sequence_twice_or_13_beam_pattern_source_end, &2EC2
-CLEAR draw_two_13_two_beam_two_13_two_pattern_source, draw_left_half_sequence_twice_or_13_beam_pattern_source_end
+COPYBLOCK draw_narrow_bar_beam_pattern_row_source, draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end, &2EC2
+CLEAR draw_narrow_bar_beam_pattern_row_source, draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end
 COPYBLOCK draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_password_source_end, &2EEA
 CLEAR draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_password_source_end
 
