@@ -11849,8 +11849,8 @@ CLEAR dfs_execution_entry_stub_source, dfs_execution_entry_stub_source_end
 
 ; Install the two staged XOR graphic-bank parts only after every relocated
 ; routine that assembles in the aliased $1D00-$217F address window is finished.
-COPYBLOCK player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end, &1D00
-COPYBLOCK inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end, &2100
+COPYBLOCK player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end, player_enemy_and_lift_xor_sprite_frames+LOW_RUNTIME_TO_LOADED_DELTA
+COPYBLOCK inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end, inert_xor_sprite_frame_block+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR player_enemy_and_lift_xor_sprite_frames_source, player_enemy_and_lift_xor_sprite_frames_end
 CLEAR inert_xor_sprite_frame_block_source, inert_xor_sprite_frame_block_end
 
