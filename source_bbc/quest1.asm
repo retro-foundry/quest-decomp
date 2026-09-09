@@ -9956,14 +9956,15 @@ ORG reflect_room_enemy_at_obstacles
 ; Probe around the Y-selected room enemy and reverse its movement
 ; deltas wherever it is blocked, then set up its graphic and dispatch.
 ; The four probes come in two opposed pairs. The first pair drives the delta at
-; $123A to +1 or -1, the second drives the adjacent delta at $123B to +2 or -2,
-; and in each pair only the second probe is tried when the first reports clear.
+; room_enemy_horizontal_delta to its named positive or negative step; the second
+; pair likewise drives enemy_vertical_delta. In each pair only the opposite
+; probe is tried when the first reports clear.
 ; Each delta is therefore pushed away from whatever the probe found, which is
 ; what makes an entity turn back at an obstacle rather than pass through it.
-; The tail from $35E8 loads the entity output fields, presets the three
-; graphic-selection bytes to $05, $01 and $10, and tail-jumps through the $2215
-; vector. That tail runs 3,987 times against 235 entries here, so it is also
-; reached directly by other callers.
+; The shared tail loads the collision coordinates, installs the named obstacle
+; range extents, and tail-jumps through enter_test_range_with_supplied_box. That
+; tail runs much more often than this entry, so it is also reached directly by
+; other callers.
 .reflect_room_enemy_at_obstacles_source
     JSR scan_column_behind_room_enemy
     BCC probe_opposite_horizontal
@@ -10008,23 +10009,23 @@ CLEAR reflect_room_enemy_at_obstacles_source, reflect_room_enemy_at_obstacles_so
 
 ORG draw_matching_records_from_table
 
-; Walk the record table at $0900 from the last entry to the
+; Walk item_and_goal_record_table from the last entry to the
 ; first, drawing every record that matches the current references.
-; The table holds twelve four-byte item/goal records: X counts down from $0B
-; and is multiplied by four to index them. The first two bytes are the packed match,
-; tested by match_packed_record_against_references; the remaining two are the
-; grid row and column, which are copied into $0A and $0B so
-; set_display_pointer_from_grid_position can place the record before $1E29
-; draws it.
+; It holds ITEM_GOAL_RECORD_COUNT records of ITEM_GOAL_RECORD_BYTES each. X
+; counts down from ITEM_GOAL_LAST_RECORD_INDEX and is scaled to the record. The
+; first two bytes are the packed match; the remaining bytes become
+; display_grid_row and display_grid_column so the pointer can be set before
+; draw_item_graphic_pair draws the record.
 ; Scanning continues past a match rather than stopping, so several records can
 ; be drawn in one pass.
 ;
 ; Eleven records put pickups in their rooms. Their indices line up with
-; item_name_table, so record n draws pair $28 + 2n, and seven item rooms match
-; the player's account exactly, including all three keys. Two records name down
-; 10, outside the grid, for the puzzle-produced herring and mouse. Record 3 is
-; the exception: in H8 its draw path prints THE GOLDEN DRAGON and sets the
-; gameplay-loop exit flag, matching the reported goal rather than placing salt.
+; item_name_table, so record n selects the pair beginning at ITEM_CODE_KEY_1
+; with ITEM_GRAPHIC_RECORDS_PER_PAIR spacing. Seven item rooms match the
+; player's account exactly, including all three keys. The herring and mouse use
+; off-grid records until their puzzles produce them. GOLDEN_DRAGON_ITEM_RECORD_INDEX
+; is the exception: in H8 it prints THE GOLDEN DRAGON and requests gameplay exit,
+; matching the reported goal rather than placing salt.
 ; analysis/room_map.md has the full correspondence and the two remaining item
 ; rows that disagree.
 .draw_matching_records_from_table_source
@@ -10488,8 +10489,8 @@ ORG reverse_room_enemy_vertical_delta_at_limits
 ; ENEMY_EVEN_VERTICAL_POSITION_MASK, dropping its low bit, and tested for
 ; equality against the vertical patrol limits:
 ; the first sets the delta to +2, the second to -2, and neither leaves it alone.
-; Unlike the $123A clamp this tests equality rather than ordering, which is why
-; the masked value has to land exactly on a limit. The two setters share one
+; Unlike clamp_room_enemy_horizontal_delta_at_limits this tests equality rather
+; than ordering, so the masked value must land exactly on a limit. The setters share one
 ; store, the second jumping into the first, and both entries are also called
 ; directly by reflect_room_enemy_at_obstacles, so they are named for what
 ; they do rather than for either caller reason.
@@ -10532,8 +10533,9 @@ ORG advance_room_enemy_vertical_position
 ; two display scanlines per unit, and the results are copied straight back.
 ; This is the same shape as
 ; advance_player_vertical_position_and_display_pointer, which does exactly this
-; for the player using $2C and $38/$39. The two share the helper, so an entity
-; and the player fall and climb through identical arithmetic.
+; for the player's named vertical position and display pointer. The two share
+; the helper, so an entity and the player fall and climb through identical
+; arithmetic.
 ; The step it reads is the field reverse_room_enemy_vertical_delta_at_limits and
 ; reflect_room_enemy_at_obstacles drive, so the direction reversals those
 ; apply reach the display here.
