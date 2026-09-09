@@ -2515,58 +2515,59 @@ CLEAR load_room_palette_and_tile_pair_source, load_room_palette_and_tile_pair_so
 
 ORG advance_bcd_counter_and_print
 
-; Runtime $376F-$37CC. Clear the dispatcher gate, increment the low packed-BCD
-; counter, roll it at $60 and increment the high packed-BCD byte. Values zero
-; and one select $0C/$14 for a room-dependent write. An inline VDU 31 stream
-; positions the cursor at column 1, row 4; the continuation prints the high and
-; low two-digit bytes separated by VDU 9.
+; Consume the pending clock tick, increment the low packed-BCD counter, and roll
+; it after 59 while incrementing the high byte. Low-counter states zero and one
+; select ROOM_CELL_BLANK_STATE_MOTIF or ROOM_CELL_FF_STATE_MOTIF for G0. While
+; G0 itself is active the value becomes the transient-effect selector; otherwise
+; it is written directly to the named G0 map cell. The continuation prints the
+; high and low two-digit bytes at the named cursor, separated by a horizontal tab.
 .advance_bcd_counter_and_print_source
     LDA #&00
     STA game_clock_tick_pending
     SED
     CLC
     LDA bcd_counter_low
-    ADC #&01
+    ADC #PACKED_BCD_UNIT_INCREMENT
     STA bcd_counter_low
-    CMP #&60
+    CMP #PACKED_BCD_LOW_ROLLOVER
     BNE finish_bcd_counter_increment
-    LDA #&00
+    LDA #PACKED_BCD_ZERO
     STA bcd_counter_low
     CLC
     LDA bcd_counter_high
-    ADC #&01
+    ADC #PACKED_BCD_UNIT_INCREMENT
     STA bcd_counter_high
 
 .finish_bcd_counter_increment
     CLD
     LDA bcd_counter_low
     BNE test_bcd_counter_one
-    LDA #&0C
+    LDA #ROOM_CELL_BLANK_STATE_MOTIF
     JMP apply_bcd_counter_state_value
 
 .test_bcd_counter_one
-    CMP #&01
+    CMP #GAME_CLOCK_STATE_ONE
     BNE print_bcd_counter
-    LDA #&14
+    LDA #ROOM_CELL_FF_STATE_MOTIF
 
 .apply_bcd_counter_state_value
     LDX reference_pair_primary_value
-    CPX #&06
-    BNE store_bcd_counter_state_at_3842
+    CPX #GAME_CLOCK_SPECIAL_ROOM_COLUMN
+    BNE store_bcd_counter_state_in_room_map
     LDX reference_pair_secondary_value
-    CPX #&00
-    BNE store_bcd_counter_state_at_3842
+    CPX #GAME_CLOCK_SPECIAL_ROOM_LEVEL
+    BNE store_bcd_counter_state_in_room_map
     STA timed_effect_selector
     JMP print_bcd_counter
 
-.store_bcd_counter_state_at_3842
+.store_bcd_counter_state_in_room_map
     STA room_G0_row_2_cell_4
 
 .print_bcd_counter
     JSR print_inline_vdu_stream
 
 .bcd_counter_cursor_vdu_stream
-    EQUB VDU_TEXT_AT, &01, &04, INLINE_VDU_STREAM_END
+    EQUB VDU_TEXT_AT, GAME_CLOCK_CURSOR_X, GAME_CLOCK_CURSOR_Y, INLINE_VDU_STREAM_END
 .bcd_counter_cursor_vdu_stream_end
 
     LDA bcd_counter_high
@@ -3802,7 +3803,7 @@ ORG erase_collected_icon
     CLC
     ADC #LO(collected_icon_next_slot_base)
     STA display_pointer_low
-    LDA #&00
+    LDA #GAME_CLOCK_TICK_CONSUMED
     ADC #HI(collected_icon_next_slot_base)
     STA display_pointer_high
 .erase_collected_icon_source_end
