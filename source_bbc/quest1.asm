@@ -2880,12 +2880,12 @@ ORG initialise_lifts_and_hazards_from_table
     ASL A
     ASL A
     STA lift_or_hazard_lower_position
-    STA shared_workspace_23
+    STA lift_hazard_slot_10_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA shared_workspace_5b
+    STA lift_hazard_slot_10_display_pointer_low
     LDA display_pointer_high
-    STA shared_workspace_5c
+    STA lift_hazard_slot_10_display_pointer_high
     LDA lift_or_hazard_horizontal_extent
     STA display_grid_column
     INY
@@ -2896,17 +2896,17 @@ ORG initialise_lifts_and_hazards_from_table
     ASL A
     ASL A
     ASL A
-    STA shared_workspace_21
+    STA lift_hazard_slot_8_position
     ADC #LIFT_HAZARD_UPPER_POSITION_SPAN
     STA lift_or_hazard_upper_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA shared_workspace_59
+    STA lift_hazard_slot_8_display_pointer_low
     LDA display_pointer_high
-    STA shared_workspace_5a
+    STA lift_hazard_slot_8_display_pointer_high
     LDA #LIFT_HAZARD_INITIAL_STEP
-    STA shared_workspace_20
-    STA shared_workspace_22
+    STA lift_hazard_slot_8_delta
+    STA lift_hazard_slot_10_delta
 .copy_lift_or_hazard_descriptor_for_active_class
     LDA active_lift_or_hazard_class
     ASL A
