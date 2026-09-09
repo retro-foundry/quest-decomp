@@ -5697,13 +5697,13 @@ ORG draw_room_row_cells
     STA current_room_cell
     AND #ROOM_CELL_TYPE_MASK
     STA shared_workspace_31
-    STY shared_workspace_03
+    STY current_room_cell_offset
     JSR dispatch_room_cell
     LDA tile_pair_source_selector
     STA shared_workspace_09
-    LDY shared_workspace_03
+    LDY current_room_cell_offset
     INY
-    CPY #&05
+    CPY #ROOM_CELLS_PER_DRAW_ROW
     BNE draw_next_cell
     RTS
 .draw_room_row_cells_source_end
@@ -6176,42 +6176,43 @@ CLEAR set_display_pointer_three_rows_below_player_cell_source, set_display_point
 
 ORG draw_mirrored_diagonal_beam_tile_run
 
-; Runtime $13F8-$1404. Select graphic record $05 and its bit-6 reversed form $45, then enter the fixed-pair painter for X tiles. Record $05 is the decoded diagonal-beam room tile.
+; Runtime $13F8-$1404. Select the diagonal-beam graphic and its mirrored form,
+; then enter the fixed-pair painter for X tiles.
 .draw_mirrored_diagonal_beam_tile_run_source
-    LDA #&05
+    LDA #GRAPHIC_DIAGONAL_BEAM
     STA active_tile_pair_first
-    LDA #&45
+    LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_BEAM
     STA active_tile_pair_second
     JMP draw_selected_fixed_pair_run
 
 
 ORG pick_up_item_below_player
 
-; Runtime $2C0E-$2C6D. Scan the even-numbered graphic records $28-$3E
+; Runtime $2C0E-$2C6D. Scan the known even-numbered item graphic codes
 ; against the cell three rows below the player. A match is placed in the first
-; empty carried-item slot and its four-byte room record is filled with $FF,
+; empty carried-item slot and its room record is marked inactive,
 ; then execution falls through to draw_two_item_slots. With no match, or with
-; both slots occupied, return directly. Codes $34/$36 additionally consume
-; carried code $30/$38 and perform the exact $1225-gated state update below.
+; both slots occupied, return directly. Herring and mouse pickups additionally
+; consume their worm or cheese prerequisite and update the moving-object state.
 .pick_up_item_below_player_source
-    LDA #&C8
+    LDA #ITEM_PICKUP_SOUND_PITCH
     STA sound_block_pitch
     JSR set_display_pointer_three_rows_below_player_cell
-    LDA #&28
-    STA shared_workspace_03
+    LDA #ITEM_CODE_KEY_1
+    STA pickup_item_code_candidate
 
 .scan_pickup_graphics
     JSR display_pattern_test
     BCS pickup_graphic_matched
-    INC shared_workspace_03
-    INC shared_workspace_03
-    LDA shared_workspace_03
+    INC pickup_item_code_candidate
+    INC pickup_item_code_candidate
+    LDA pickup_item_code_candidate
     CMP #ITEM_CODE_END_EXCLUSIVE
     BNE scan_pickup_graphics
     RTS
 
 .pickup_graphic_matched
-    LDA shared_workspace_03
+    LDA pickup_item_code_candidate
     PHA
     LDX #ITEM_CODE_CHEESE
     CMP #ITEM_CODE_MOUSE
@@ -6226,15 +6227,15 @@ ORG pick_up_item_below_player
     JSR consume_matching_item_from_slots
     LDA current_room_cell
     BEQ find_empty_item_slot
-    CMP #&03
+    CMP #ROOM_MOVING_OBJECT_LIFT
     BEQ find_empty_item_slot
     LDA #&00
     STA room_moving_objects_active
 
 .find_empty_item_slot
     PLA
-    STA shared_workspace_03
-    LDX #&01
+    STA pickup_item_code_candidate
+    LDX #ITEM_SLOT_LAST_INDEX
 
 .test_next_item_slot_for_pickup
     LDA item_slot_first,X
@@ -6244,18 +6245,18 @@ ORG pick_up_item_below_player
     RTS
 
 .store_picked_up_item
-    LDA shared_workspace_03
+    LDA pickup_item_code_candidate
     STA item_slot_first,X
     JSR convert_item_code_to_index
-    LDA #&FF
-    LDX #&04
+    LDA #ITEM_RECORD_INACTIVE
+    LDX #ITEM_GOAL_RECORD_BYTES
 
 .invalidate_picked_up_item_record
     STA item_and_goal_record_table,Y
     INY
     DEX
     BNE invalidate_picked_up_item_record
-    LDA shared_workspace_03
+    LDA pickup_item_code_candidate
 .pick_up_item_below_player_source_end
 
 ASSERT pick_up_item_below_player_source = pick_up_item_below_player
@@ -6361,8 +6362,8 @@ ORG draw_two_item_slots
     PHA
     LDA #&30
     STA display_pointer_low
-    LDX #&01
-    STX shared_workspace_03
+    LDX #ITEM_SLOT_LAST_INDEX
+    STX inventory_slot_index
     LDY #&14
 
 .draw_next_item_slot
@@ -6371,7 +6372,7 @@ ORG draw_two_item_slots
     JSR print_item_slot_label
     LDA #&3E
     STA display_pointer_high
-    LDX shared_workspace_03
+    LDX inventory_slot_index
     LDA item_slot_first,X
     BEQ draw_empty_slot
     JSR enter_copy_16_byte_graphic_to_display
@@ -6384,8 +6385,8 @@ ORG draw_two_item_slots
     LDY #&1E
     LDA #&D0
     STA display_pointer_low
-    DEC shared_workspace_03
-    LDX shared_workspace_03
+    DEC inventory_slot_index
+    LDX inventory_slot_index
     BPL draw_next_item_slot
     PLA
     TAY
@@ -6399,7 +6400,7 @@ ORG draw_two_item_slots
     RTS
 
 .draw_empty_slot
-    LDX #&01
+    LDX #ITEM_GRAPHIC_ROW_COUNT
     JSR draw_record_row_pairs
     JMP move_to_next_slot_position
 .draw_two_item_slots_source_end
@@ -6436,7 +6437,7 @@ ORG drop_carried_item
     LSR A
     CMP #&09
     BMI drop_carried_item_unavailable_exit
-    LDX #&01
+    LDX #ITEM_SLOT_LAST_INDEX
 
 .find_occupied_item_slot_to_drop
     LDA item_slot_first,X
@@ -6767,7 +6768,7 @@ ORG save_display_pointer_and_cell_reference
     STA indirect_write_pointer_low
     LDA room_data_pointer_high
     STA indirect_write_pointer_high
-    LDA shared_workspace_03
+    LDA current_room_cell_offset
     STA saved_cell_write_offset
     RTS
 
