@@ -40,16 +40,16 @@ INCLUDE "source_bbc/memory_map.inc"
 ; transport location only after all relocated routines have been assembled.
 ORG SPRITE_SOURCE_STAGING_ADDRESS
 .player_enemy_and_lift_xor_sprite_frames_source
-.caterpillar_direction_frame_0
+.caterpillar_facing_right_phase_0_frame
     EQUB &00, &00, &00, &00, &06, &6F, &6F, &06, &00, &00, &00, &06, &6F, &6F, &6F, &06
     EQUB &00, &00, &06, &6F, &7F, &7F, &6F, &06, &77, &88, &0E, &6F, &69, &0F, &08, &0E
-.caterpillar_direction_frame_1
+.caterpillar_facing_left_phase_0_frame
     EQUB &EE, &11, &07, &69, &6F, &0F, &01, &07, &00, &00, &06, &6F, &EF, &EF, &6F, &06
     EQUB &00, &00, &00, &06, &6F, &6F, &6F, &06, &00, &00, &00, &00, &06, &6F, &6F, &06
-.caterpillar_direction_frame_2
+.caterpillar_facing_right_phase_1_frame
     EQUB &00, &00, &00, &00, &07, &6F, &6F, &06, &00, &06, &6F, &6F, &6F, &0E, &00, &00
     EQUB &33, &06, &6F, &6F, &6F, &06, &00, &00, &88, &44, &0E, &69, &6F, &0F, &08, &0E
-.caterpillar_direction_frame_3
+.caterpillar_facing_left_phase_1_frame
     EQUB &11, &22, &07, &6F, &69, &0F, &01, &07, &CC, &06, &6F, &6F, &6F, &06, &00, &00
     EQUB &00, &06, &6F, &6F, &6F, &07, &00, &00, &00, &00, &00, &00, &0E, &6F, &6F, &06
 .bat_wings_raised_frame
@@ -11272,14 +11272,14 @@ CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
 ORG room_moving_object_pointer_sets
 ; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
-; the four-direction caterpillar; the fish's right- and left-facing graphics;
+; the caterpillar's two right/left animation phases; the fish's right- and left-facing graphics;
 ; the mouse's right- and left-facing graphics; and the vertical lift graphic.
 ; These room-local creature/puzzle graphics are separate from the room-enemy pairs
 ; selected by the descriptor table at $1FDF.
 .room_moving_object_pointer_sets_source
 .caterpillar_graphic_pointer_set
-    EQUW runtime_caterpillar_direction_frame_0, runtime_caterpillar_direction_frame_1
-    EQUW runtime_caterpillar_direction_frame_2, runtime_caterpillar_direction_frame_3
+    EQUW runtime_caterpillar_facing_right_phase_0_frame, runtime_caterpillar_facing_left_phase_0_frame
+    EQUW runtime_caterpillar_facing_right_phase_1_frame, runtime_caterpillar_facing_left_phase_1_frame
 .fish_graphic_pointer_set
     EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
     EQUW runtime_fish_facing_right_frame, fish_facing_left_and_herring_item_graphic_pair
