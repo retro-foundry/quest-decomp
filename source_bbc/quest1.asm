@@ -11004,21 +11004,45 @@ COPYBLOCK room_moving_object_pointer_sets_source, room_moving_object_pointer_set
 CLEAR room_moving_object_pointer_sets_source, room_moving_object_pointer_sets_source_end
 
 ORG item_and_goal_record_table
-; Runtime 0900-092F: twelve mutable item/goal records.
+; Twelve mutable item/goal records, indexed in item-code order.
 .item_and_goal_record_table_source
+.key_1_item_record
     EQUB &08, &06, &19, &1A
+.key_2_item_record
     EQUB &01, &01, &11, &10
+.key_3_item_record
     EQUB &04, &00, &11, &15
+.golden_dragon_goal_item_record
     EQUB &08, &07, &08, &16
+.worm_item_record
     EQUB &05, &07, &13, &20
+.access_card_item_record
     EQUB &02, &00, &19, &1D
+.herring_item_record
     EQUB &0A, &00, &11, &1A
+.mouse_item_record
     EQUB &0A, &00, &11, &28
+.cheese_item_record
     EQUB &01, &05, &17, &36
+.cross_item_record
     EQUB &02, &07, &19, &12
+.eye_item_record
     EQUB &03, &05, &12, &16
+.bottle_item_record
     EQUB &01, &01, &0A, &45
 .item_and_goal_record_table_source_end
+ASSERT key_1_item_record = item_and_goal_record_table + (ITEM_CODE_KEY_1-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT key_2_item_record = item_and_goal_record_table + (ITEM_CODE_KEY_2-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT key_3_item_record = item_and_goal_record_table + (ITEM_CODE_KEY_3-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT golden_dragon_goal_item_record = item_and_goal_record_table + (ITEM_CODE_GOLDEN_DRAGON_OR_SALT-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT worm_item_record = item_and_goal_record_table + (ITEM_CODE_WORM-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT access_card_item_record = item_and_goal_record_table + (ITEM_CODE_ACCESS_CARD-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT herring_item_record = item_and_goal_record_table + (ITEM_CODE_HERRING-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT mouse_item_record = item_and_goal_record_table + (ITEM_CODE_MOUSE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT cheese_item_record = item_and_goal_record_table + (ITEM_CODE_CHEESE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT cross_item_record = item_and_goal_record_table + (ITEM_CODE_CROSS-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT eye_item_record = item_and_goal_record_table + (ITEM_CODE_EYE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT bottle_item_record = item_and_goal_record_table + (ITEM_CODE_BOTTLE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
 ASSERT item_and_goal_record_table_source_end-item_and_goal_record_table_source = ITEM_GOAL_RECORD_COUNT*ITEM_GOAL_RECORD_BYTES
 ASSERT item_and_goal_record_table_source = item_and_goal_record_table
 ASSERT item_and_goal_record_table_source_end = room_moving_object_record_table
@@ -11052,21 +11076,45 @@ COPYBLOCK room_moving_object_record_table_source, room_moving_object_record_tabl
 CLEAR room_moving_object_record_table_source, room_moving_object_record_table_source_end
 
 ORG initial_item_and_goal_record_table
-; Runtime 0980-09AF: twelve pristine new-game item/goal records.
+; Twelve pristine new-game item/goal records, copied over the mutable table.
 .initial_item_and_goal_record_table_source
+.initial_key_1_item_record
     EQUB &08, &06, &19, &08
+.initial_key_2_item_record
     EQUB &01, &01, &11, &10
+.initial_key_3_item_record
     EQUB &04, &00, &11, &15
+.initial_golden_dragon_goal_item_record
     EQUB &08, &07, &08, &16
+.initial_worm_item_record
     EQUB &05, &07, &13, &20
+.initial_access_card_item_record
     EQUB &02, &00, &19, &1D
+.initial_herring_item_record
     EQUB &0A, &00, &11, &1A
+.initial_mouse_item_record
     EQUB &0A, &00, &11, &28
+.initial_cheese_item_record
     EQUB &01, &05, &17, &36
+.initial_cross_item_record
     EQUB &02, &07, &19, &12
+.initial_eye_item_record
     EQUB &03, &05, &12, &16
+.initial_bottle_item_record
     EQUB &07, &05, &11, &24
 .initial_item_and_goal_record_table_source_end
+ASSERT initial_key_1_item_record = initial_item_and_goal_record_table + (ITEM_CODE_KEY_1-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_key_2_item_record = initial_item_and_goal_record_table + (ITEM_CODE_KEY_2-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_key_3_item_record = initial_item_and_goal_record_table + (ITEM_CODE_KEY_3-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_golden_dragon_goal_item_record = initial_item_and_goal_record_table + (ITEM_CODE_GOLDEN_DRAGON_OR_SALT-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_worm_item_record = initial_item_and_goal_record_table + (ITEM_CODE_WORM-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_access_card_item_record = initial_item_and_goal_record_table + (ITEM_CODE_ACCESS_CARD-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_herring_item_record = initial_item_and_goal_record_table + (ITEM_CODE_HERRING-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_mouse_item_record = initial_item_and_goal_record_table + (ITEM_CODE_MOUSE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_cheese_item_record = initial_item_and_goal_record_table + (ITEM_CODE_CHEESE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_cross_item_record = initial_item_and_goal_record_table + (ITEM_CODE_CROSS-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_eye_item_record = initial_item_and_goal_record_table + (ITEM_CODE_EYE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
+ASSERT initial_bottle_item_record = initial_item_and_goal_record_table + (ITEM_CODE_BOTTLE-ITEM_CODE_KEY_1)/ITEM_GRAPHIC_RECORDS_PER_PAIR*ITEM_GOAL_RECORD_BYTES
 ASSERT initial_item_and_goal_record_table_source_end-initial_item_and_goal_record_table_source = ITEM_GOAL_RECORD_COUNT*ITEM_GOAL_RECORD_BYTES
 ASSERT initial_item_and_goal_record_table_source = initial_item_and_goal_record_table
 ASSERT initial_item_and_goal_record_table_source_end = room_appearance_table
