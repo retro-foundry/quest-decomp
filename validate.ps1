@@ -36,6 +36,27 @@ foreach ($relativePath in $requiredStandaloneFiles) {
     }
 }
 
+$asciiInputs = @(
+    (Join-Path $PSScriptRoot 'README.md')
+    (Join-Path $PSScriptRoot 'build.ps1')
+    (Join-Path $PSScriptRoot 'validate.ps1')
+)
+$asciiExtensions = @('.asm', '.inc', '.json', '.md', '.ps1', '.py')
+$asciiInputs += Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'source_bbc') -File -Recurse |
+    Where-Object { $_.Extension -in $asciiExtensions } |
+    Select-Object -ExpandProperty FullName
+$asciiInputs += Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools') -File -Recurse |
+    Where-Object { $_.Extension -in $asciiExtensions } |
+    Select-Object -ExpandProperty FullName
+foreach ($asciiPath in $asciiInputs) {
+    $nonAsciiByte = [System.IO.File]::ReadAllBytes($asciiPath) |
+        Where-Object { $_ -gt 0x7F } |
+        Select-Object -First 1
+    if ($null -ne $nonAsciiByte) {
+        throw "Standalone maintained file is not ASCII-only: $asciiPath"
+    }
+}
+
 $variantDefinitions = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools\reconstruction\variants') -Filter '*.json' -File
 if ($variantDefinitions.Count -eq 0) {
     throw 'Standalone source has no reconstruction variant definitions.'
