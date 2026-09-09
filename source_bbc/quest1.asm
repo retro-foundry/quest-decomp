@@ -11053,21 +11053,37 @@ ORG room_moving_object_record_table
 ; Runtime 0930-097F: sixteen room-local creature/lift records. The second byte's
 ; high nibble selects ROOM_MOVING_OBJECT_*; the comments decode the packed room.
 .room_moving_object_record_table_source
+.room_B0_caterpillar_record
     EQUB &40, &01, &10, &1D, &46 ; B0 caterpillar
+.room_A3_caterpillar_record
     EQUB &03, &00, &18, &30, &46 ; A3 caterpillar
+.room_B5_caterpillar_record
     EQUB &05, &01, &18, &04, &1B ; B5 caterpillar
+.room_C4_caterpillar_record
     EQUB &C4, &02, &13, &10, &2B ; C4 caterpillar
+.room_C1_caterpillar_record
     EQUB &01, &02, &0A, &2C, &3C ; C1 caterpillar
+.room_B2_caterpillar_record
     EQUB &42, &01, &18, &23, &4A ; B2 caterpillar
+.room_G1_mouse_record
     EQUB &81, ROOM_MOVING_OBJECT_MOUSE*PACKED_RECORD_TYPE_SCALE+&06, &19, &1A, &33 ; G1 mouse
+.room_F0_caterpillar_record
     EQUB &00, &05, &10, &1D, &2F ; F0 caterpillar
+.room_C2_lift_moving_object_record
     EQUB &02, ROOM_MOVING_OBJECT_LIFT*PACKED_RECORD_TYPE_SCALE+&02, &0F, &14, &3F ; C2 lift
+.room_D3_lift_moving_object_record
     EQUB &03, ROOM_MOVING_OBJECT_LIFT*PACKED_RECORD_TYPE_SCALE+&03, &0E, &04, &18 ; D3 lift
+.room_G3_caterpillar_record
     EQUB &03, &06, &0A, &0E, &2D ; G3 caterpillar
+.room_G4_lift_moving_object_record
     EQUB &04, ROOM_MOVING_OBJECT_LIFT*PACKED_RECORD_TYPE_SCALE+&06, &0C, &1C, &40 ; G4 lift
+.room_G5_caterpillar_record
     EQUB &05, &06, &12, &20, &3B ; G5 caterpillar
+.room_G9_mouse_record
     EQUB &09, ROOM_MOVING_OBJECT_MOUSE*PACKED_RECORD_TYPE_SCALE+&06, &19, &1A, &33 ; G9 mouse
+.room_E7_fish_record
     EQUB &07, ROOM_MOVING_OBJECT_FISH*PACKED_RECORD_TYPE_SCALE+&04, &16, &00, &2F ; E7 fish
+.room_E6_caterpillar_record
     EQUB &06, &04, &10, &24, &45 ; E6 caterpillar
 .room_moving_object_record_table_source_end
 ASSERT room_moving_object_record_table_source = room_moving_object_record_table
