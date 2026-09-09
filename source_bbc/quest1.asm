@@ -7043,11 +7043,13 @@ CLEAR initialise_cross_room_robot_ghost_from_record_source, initialise_cross_roo
 
 ORG draw_narrow_bar_fixture_row
 
-; room-cell type $15. Column zero draws four selector-$15/blank pairs; columns one through three draw repeated $13/$07 pairs; column seven draws selector $14 then seven blanks; middle-right columns combine the repeated pair, selector $14/blank and a computed blank suffix.
+; ROOM_CELL_NARROW_BAR_FIXTURE. The first column alternates junction and blank
+; tiles; the next group repeats narrow-bar/crossed-diagonal pairs; the last
+; column draws one wide bar and a blank suffix. Middle-right columns combine them.
 .draw_narrow_bar_fixture_row_source
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BNE select_narrow_bar_column_group
-    LDX #&04
+    LDX #NARROW_BAR_PAIR_COUNT
 
 .draw_next_15_blank_pair
     LDA #GRAPHIC_COLUMN_JUNCTION
@@ -7063,20 +7065,20 @@ ORG draw_narrow_bar_fixture_row
 .select_narrow_bar_column_group
     CMP #COLLECTED_ICON_EFFECT_RESERVED_COUNT
     BPL select_narrow_bar_right_edge
-    LDX #&04
+    LDX #NARROW_BAR_PAIR_COUNT
     JMP draw_next_13_07_pair
 
 .select_narrow_bar_right_edge
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BNE draw_narrow_bar_middle_right_column
     LDA #GRAPHIC_WIDE_VERTICAL_BAR
     JSR copy_16_byte_graphic_to_display
-    LDX #&07
+    LDX #NARROW_BAR_RIGHT_EDGE_BLANK_TILES
     JMP draw_blank_tile_run
 
 .draw_narrow_bar_middle_right_column
     SEC
-    LDA #&07
+    LDA #ROOM_COLUMN_LAST
     SBC room_graphics_column
     TAX
     JSR draw_next_13_07_pair
@@ -7085,10 +7087,10 @@ ORG draw_narrow_bar_fixture_row
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
     LDA room_graphics_column
-    CMP #&04
+    CMP #ROOM_HALF_COLUMN_COUNT
     BEQ return_from_narrow_bar_fixture
     SEC
-    SBC #&04
+    SBC #ROOM_HALF_COLUMN_COUNT
     ASL A
     TAX
     JMP draw_blank_tile_run
@@ -7114,31 +7116,33 @@ CLEAR draw_narrow_bar_fixture_row_source, draw_narrow_bar_fixture_row_source_end
 
 ORG draw_record_08_or_edge_pattern_row
 
-; Runtime $15B1-$15DE contains room-cell entries $12, $13 and their shared tails. Cell $12 draws its record-$08 row in column six, alternates in column seven and blanks elsewhere. Cell $13 selects blanks, alternating tiles, or the $58/$59 pair according to column.
+; ROOM_CELL_RECORD_08_EDGE draws its curved-bowl record in the penultimate
+; column, alternates in the last, and blanks elsewhere. The shared edge-pattern
+; handlers select blanks, alternating tiles, or GRAPHIC_EDGE_PATTERN_A/B.
 .draw_record_08_or_edge_pattern_row_source
-    CMP #&06
+    CMP #CELL_12_PATTERN_COLUMN
     BNE select_cell_12_last_column
     JMP draw_eight_curved_bowl_tiles
 
 .select_cell_12_last_column
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ draw_alternating_row_from_cell_12_13
 
 .draw_blank_row_from_cell_12_13
     JMP draw_eight_blank_tiles
 
 .draw_column_gated_58_59_pair_row_source
-    CMP #&02
+    CMP #EDGE_PATTERN_BLANK_FIRST_COLUMN
     BMI draw_58_59_pair_or_edge_pattern_row
     JSR mirror_cell_direction
 
 .draw_58_59_pair_or_edge_pattern_row_source
-    LDX #&08
-    CMP #&02
+    LDX #ROOM_CELL_TILE_COUNT
+    CMP #EDGE_PATTERN_BLANK_FIRST_COLUMN
     BPL draw_blank_row_from_cell_12_13
-    CMP #&01
+    CMP #EDGE_PATTERN_PAIR_COLUMN
     BNE draw_alternating_row_from_cell_12_13
-    LDY #&58
+    LDY #GRAPHIC_EDGE_PATTERN_A
     STY active_tile_pair_first
     INY
     STY active_tile_pair_second
@@ -7198,7 +7202,7 @@ ORG update_and_draw_two_cross_room_robot_ghosts
     INX
     CPX #CROSS_ROOM_ROBOT_GHOST_PAIR_END_INDEX
     BNE cross_room_robot_ghost_update_loop
-    LDA #&00
+    LDA #XOR_GRAPHIC_REPEAT_DISABLED
     STA xor_graphic_repeat_source_scanlines
     CLC
     RTS
@@ -7215,7 +7219,7 @@ ORG draw_last_column_special_pair_row
 
 ; room-cell type $16. Columns zero through six reuse the cell-$13 edge-pattern row. Column seven draws that row, sets the dynamic-object VDU vertical step to two, changes the active selector to $84, then enters the dynamic-object VDU setup at $19F7.
 .draw_last_column_special_pair_row_source
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ draw_last_column_pair_before_special_setup
     JMP draw_58_59_pair_or_edge_pattern_row
 
@@ -7298,9 +7302,9 @@ ORG draw_room_flag_then_fixed_pair_row
 
 ; room-cell type $1A. Column zero enables the room-local jet-boots flag. Every column preserves its number on the stack, draws four repetitions of the active tile pair, then enters the dynamic-room-object VDU continuation.
 .draw_room_flag_then_fixed_pair_row_source
-    CMP #&00
+    CMP #ROOM_COLUMN_FIRST
     BNE draw_fixed_pair_then_configure_object
-    LDA #&01
+    LDA #JET_BOOTS_ROOM_ENABLED
     STA jet_boots_enabled_this_room
 
 .draw_fixed_pair_then_configure_object
@@ -7333,7 +7337,7 @@ ORG draw_directional_ghost_if_reference_matches
     PHA
     LDA cross_room_robot_ghost_value_delta_field,X
     LDX #CROSS_ROOM_GHOST_FRAME_0_OFFSET
-    CMP #&00
+    CMP #XOR_GRAPHIC_REPEAT_DISABLED
     BPL directional_ghost_selector_ready
     LDX #CROSS_ROOM_GHOST_FRAME_3_OFFSET
 
@@ -7391,7 +7395,7 @@ ORG draw_cross_room_robot_ghost_if_reference_matches
     PHA
     LDA reset_cross_room_robot_ghost_countdowns
     BEQ cross_room_robot_ghost_draw_state_ready
-    LDA #&00
+    LDA #CROSS_ROOM_ROBOT_GHOST_COUNTDOWNS_RESET
     STA cross_room_robot_ghost_redraw_countdown,X
 
 .cross_room_robot_ghost_draw_state_ready
@@ -7416,14 +7420,14 @@ ORG draw_two_13_two_beam_two_13_two_pattern
 ; room-cell type $1C. Draw two selector-$13 tiles, two mirrored diagonal-beam tiles, another two selector-$13 tiles, then two alternating tiles. The internal $16D2 entry draws exactly two selector-$13 tiles.
 .draw_two_13_two_beam_two_13_two_pattern_source
     JSR draw_two_13_tiles
-    LDX #&02
+    LDX #TWO_TILE_RUN_COUNT
     JSR draw_mirrored_diagonal_beam_tile_run
     JSR draw_two_13_tiles
-    LDX #&02
+    LDX #TWO_TILE_RUN_COUNT
     JMP draw_alternating_tile_run
 
 .draw_two_13_tiles
-    LDX #&02
+    LDX #TWO_TILE_RUN_COUNT
 
 .draw_next_13_tile
     LDA #GRAPHIC_NARROW_VERTICAL_BAR
