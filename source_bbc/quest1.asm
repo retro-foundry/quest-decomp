@@ -8948,7 +8948,7 @@ ORG right_columns_four_tile_graphic_sequences
 
 ASSERT right_columns_four_tile_graphic_sequences_source = right_columns_four_tile_graphic_sequences
 ASSERT right_columns_four_tile_graphic_sequences_source_end = draw_transition_row_by_column
-COPYBLOCK right_columns_four_tile_graphic_sequences_source, right_columns_four_tile_graphic_sequences_source_end, &328F
+COPYBLOCK right_columns_four_tile_graphic_sequences_source, right_columns_four_tile_graphic_sequences_source_end, right_columns_four_tile_graphic_sequences+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1A8F-$1A9A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $328F-$329A.
@@ -8996,7 +8996,7 @@ ORG draw_transition_row_by_column
 
 ASSERT draw_transition_row_by_column_source = draw_transition_row_by_column
 ASSERT draw_transition_row_by_column_source_end = middle_columns_transition_graphic_sequences
-COPYBLOCK draw_transition_row_by_column_source, draw_transition_row_by_column_source_end, &329B
+COPYBLOCK draw_transition_row_by_column_source, draw_transition_row_by_column_source_end, draw_transition_row_by_column+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1A9B-$1AC9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $329B-$32C9.
@@ -9090,7 +9090,7 @@ ORG xor_graphic_into_display
 
 ASSERT xor_graphic_into_display_source = xor_graphic_into_display
 ASSERT xor_graphic_into_display_source_end = &3333
-COPYBLOCK xor_graphic_into_display_source, xor_graphic_into_display_source_end, &4AD1
+COPYBLOCK xor_graphic_into_display_source, xor_graphic_into_display_source_end, xor_graphic_into_display+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $32D1-$3332 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4AD1-$4B32.
@@ -9108,7 +9108,7 @@ ORG middle_columns_transition_graphic_sequences
 
 ASSERT middle_columns_transition_graphic_sequences_source = middle_columns_transition_graphic_sequences
 ASSERT middle_columns_transition_graphic_sequences_source_end = draw_table_selected_eight_tiles_in_columns_four_five
-COPYBLOCK middle_columns_transition_graphic_sequences_source, middle_columns_transition_graphic_sequences_source_end, &32CA
+COPYBLOCK middle_columns_transition_graphic_sequences_source, middle_columns_transition_graphic_sequences_source_end, middle_columns_transition_graphic_sequences+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1ACA-$1AD1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $32CA-$32D1.
@@ -9145,7 +9145,7 @@ ORG draw_pillar_framed_or_pattern_row
 
 ASSERT draw_pillar_framed_or_pattern_row_source = draw_pillar_framed_or_pattern_row
 ASSERT draw_pillar_framed_or_pattern_row_source_end = &1B23
-COPYBLOCK draw_pillar_framed_or_pattern_row_source, draw_pillar_framed_or_pattern_row_source_end, &3301
+COPYBLOCK draw_pillar_framed_or_pattern_row_source, draw_pillar_framed_or_pattern_row_source_end, draw_pillar_framed_or_pattern_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1B01-$1B22 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3301-$3322.
@@ -9180,7 +9180,7 @@ ORG draw_table_selected_eight_tiles_in_columns_four_five
 
 ASSERT draw_table_selected_eight_tiles_in_columns_four_five_source = draw_table_selected_eight_tiles_in_columns_four_five
 ASSERT draw_table_selected_eight_tiles_in_columns_four_five_source_end = middle_columns_eight_tile_graphic_sequences
-COPYBLOCK draw_table_selected_eight_tiles_in_columns_four_five_source, draw_table_selected_eight_tiles_in_columns_four_five_source_end, &32D2
+COPYBLOCK draw_table_selected_eight_tiles_in_columns_four_five_source, draw_table_selected_eight_tiles_in_columns_four_five_source_end, draw_table_selected_eight_tiles_in_columns_four_five+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1AD2-$1AF0 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $32D2-$32F0.
@@ -9200,7 +9200,7 @@ ORG middle_columns_eight_tile_graphic_sequences
 
 ASSERT middle_columns_eight_tile_graphic_sequences_source = middle_columns_eight_tile_graphic_sequences
 ASSERT middle_columns_eight_tile_graphic_sequences_source_end = draw_pillar_framed_or_pattern_row
-COPYBLOCK middle_columns_eight_tile_graphic_sequences_source, middle_columns_eight_tile_graphic_sequences_source_end, &32F1
+COPYBLOCK middle_columns_eight_tile_graphic_sequences_source, middle_columns_eight_tile_graphic_sequences_source_end, middle_columns_eight_tile_graphic_sequences+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1AF1-$1B00 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $32F1-$3300.
@@ -9223,7 +9223,7 @@ ORG play_sound_with_amplitude
 
 ASSERT play_sound_with_amplitude_source = play_sound_with_amplitude
 ASSERT play_sound_with_amplitude_source_end = &3343
-COPYBLOCK play_sound_with_amplitude_source, play_sound_with_amplitude_source_end, &4B33
+COPYBLOCK play_sound_with_amplitude_source, play_sound_with_amplitude_source_end, play_sound_with_amplitude+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $3333-$3342 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4B33-$4B42.
@@ -9246,7 +9246,7 @@ ORG configure_two_row_repeated_xor_graphic
 
 ASSERT configure_two_row_repeated_xor_graphic_source = configure_two_row_repeated_xor_graphic
 ASSERT configure_two_row_repeated_xor_graphic_source_end = &334C
-COPYBLOCK configure_two_row_repeated_xor_graphic_source, configure_two_row_repeated_xor_graphic_source_end, &4B43
+COPYBLOCK configure_two_row_repeated_xor_graphic_source, configure_two_row_repeated_xor_graphic_source_end, configure_two_row_repeated_xor_graphic+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $3343-$334B overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4B43-$4B4B.
@@ -9296,7 +9296,7 @@ ORG submit_sound_block_with_pitch
 
 ASSERT submit_sound_block_with_pitch_source = submit_sound_block_with_pitch
 ASSERT submit_sound_block_with_pitch_source_end = &337B
-COPYBLOCK submit_sound_block_with_pitch_source, submit_sound_block_with_pitch_source_end, &4B4C
+COPYBLOCK submit_sound_block_with_pitch_source, submit_sound_block_with_pitch_source_end, submit_sound_block_with_pitch+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $334C-$337A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4B4C-$4B7A.
@@ -9349,7 +9349,7 @@ ORG draw_character_row_as_tiles
 
 ASSERT draw_character_row_as_tiles_source = draw_character_row_as_tiles
 ASSERT draw_character_row_as_tiles_source_end = &1B58
-COPYBLOCK draw_character_row_as_tiles_source, draw_character_row_as_tiles_source_end, &3323
+COPYBLOCK draw_character_row_as_tiles_source, draw_character_row_as_tiles_source_end, draw_character_row_as_tiles+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1B23-$1B57 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3323-$3357.
@@ -9383,7 +9383,7 @@ ORG reverse_room_moving_object_delta_at_limits
 
 ASSERT reverse_room_moving_object_delta_at_limits_source = reverse_room_moving_object_delta_at_limits
 ASSERT reverse_room_moving_object_delta_at_limits_source_end = &3453
-COPYBLOCK reverse_room_moving_object_delta_at_limits_source, reverse_room_moving_object_delta_at_limits_source_end, &4C3A
+COPYBLOCK reverse_room_moving_object_delta_at_limits_source, reverse_room_moving_object_delta_at_limits_source_end, reverse_room_moving_object_delta_at_limits+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $343A-$3452 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C3A-$4C52.
@@ -9446,7 +9446,7 @@ ORG play_note_for_position_and_test_tune
 
 ASSERT play_note_for_position_and_test_tune_source = play_note_for_position_and_test_tune
 ASSERT play_note_for_position_and_test_tune_source_end = &33C1
-COPYBLOCK play_note_for_position_and_test_tune_source, play_note_for_position_and_test_tune_source_end, &4B7B
+COPYBLOCK play_note_for_position_and_test_tune_source, play_note_for_position_and_test_tune_source_end, play_note_for_position_and_test_tune+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $337B-$33C0 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4B7B-$4BC0.
@@ -9545,7 +9545,7 @@ ORG update_and_draw_room_moving_objects
 ASSERT update_and_draw_room_moving_objects_source = update_and_draw_room_moving_objects
 ASSERT update_and_draw_room_moving_objects_source_end = reverse_room_moving_object_delta_at_limits
 ASSERT room_moving_object_test_required_item = &342A
-COPYBLOCK update_and_draw_room_moving_objects_source, update_and_draw_room_moving_objects_source_end, &4BC1
+COPYBLOCK update_and_draw_room_moving_objects_source, update_and_draw_room_moving_objects_source_end, update_and_draw_room_moving_objects+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $33C1-$3439 overlaps the loaded transport image. Release it after
 ; copying its source-built bytes to loaded $4BC1-$4C39.
@@ -9603,7 +9603,7 @@ ORG initialise_four_dynamic_room_object_slots
 
 ASSERT initialise_four_dynamic_room_object_slots_source = initialise_four_dynamic_room_object_slots
 ASSERT initialise_four_dynamic_room_object_slots_source_end = &1B98
-COPYBLOCK initialise_four_dynamic_room_object_slots_source, initialise_four_dynamic_room_object_slots_source_end, &3358
+COPYBLOCK initialise_four_dynamic_room_object_slots_source, initialise_four_dynamic_room_object_slots_source_end, initialise_four_dynamic_room_object_slots+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1B58-$1B97 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3358-$3397.
@@ -9655,7 +9655,7 @@ ORG draw_room_moving_object
 
 ASSERT draw_room_moving_object_source = draw_room_moving_object
 ASSERT draw_room_moving_object_source_end = &3488
-COPYBLOCK draw_room_moving_object_source, draw_room_moving_object_source_end, &4C53
+COPYBLOCK draw_room_moving_object_source, draw_room_moving_object_source_end, draw_room_moving_object+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $3453-$3487 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C53-$4C87.
@@ -9816,7 +9816,7 @@ ORG draw_and_initialise_room
 
 ASSERT draw_and_initialise_room_source = draw_and_initialise_room
 ASSERT draw_and_initialise_room_source_end = &1C87
-COPYBLOCK draw_and_initialise_room_source, draw_and_initialise_room_source_end, &3398
+COPYBLOCK draw_and_initialise_room_source, draw_and_initialise_room_source_end, draw_and_initialise_room+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1B98-$1C86 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3398-$3486.
@@ -9859,7 +9859,7 @@ ORG advance_room_moving_object_state_and_pointer
 
 ASSERT advance_room_moving_object_state_and_pointer_source = advance_room_moving_object_state_and_pointer
 ASSERT advance_room_moving_object_state_and_pointer_source_end = &34BB
-COPYBLOCK advance_room_moving_object_state_and_pointer_source, advance_room_moving_object_state_and_pointer_source_end, &4C88
+COPYBLOCK advance_room_moving_object_state_and_pointer_source, advance_room_moving_object_state_and_pointer_source_end, advance_room_moving_object_state_and_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $3488-$34BA overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C88-$4CBA.
@@ -9899,7 +9899,7 @@ ORG set_room_data_pointer
 
 ASSERT set_room_data_pointer_source = set_room_data_pointer
 ASSERT set_room_data_pointer_source_end = &1CA9
-COPYBLOCK set_room_data_pointer_source, set_room_data_pointer_source_end, &3487
+COPYBLOCK set_room_data_pointer_source, set_room_data_pointer_source_end, set_room_data_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1C87-$1CA8 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3487-$34A8.
@@ -9929,7 +9929,7 @@ ORG retreat_secondary_reference_and_pointer
 
 ASSERT retreat_secondary_reference_and_pointer_source = retreat_secondary_reference_and_pointer
 ASSERT retreat_secondary_reference_and_pointer_source_end = &1CC7
-COPYBLOCK retreat_secondary_reference_and_pointer_source, retreat_secondary_reference_and_pointer_source_end, &34B5
+COPYBLOCK retreat_secondary_reference_and_pointer_source, retreat_secondary_reference_and_pointer_source_end, retreat_secondary_reference_and_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1CB5-$1CC6 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $34B5-$34C6.
@@ -9953,7 +9953,7 @@ ORG advance_room_data_pointer_to_next_row_plane
 
 ASSERT advance_room_data_pointer_to_next_row_plane_source = advance_room_data_pointer_to_next_row_plane
 ASSERT advance_room_data_pointer_to_next_row_plane_source_end = &1CB5
-COPYBLOCK advance_room_data_pointer_to_next_row_plane_source, advance_room_data_pointer_to_next_row_plane_source_end, &34A9
+COPYBLOCK advance_room_data_pointer_to_next_row_plane_source, advance_room_data_pointer_to_next_row_plane_source_end, advance_room_data_pointer_to_next_row_plane+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1CA9-$1CB4 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $34A9-$34B4.
@@ -10009,7 +10009,7 @@ ORG reflect_room_enemy_at_obstacles
 
 ASSERT reflect_room_enemy_at_obstacles_source = reflect_room_enemy_at_obstacles
 ASSERT reflect_room_enemy_at_obstacles_source_end = &35FA
-COPYBLOCK reflect_room_enemy_at_obstacles_source, reflect_room_enemy_at_obstacles_source_end, &4DC2
+COPYBLOCK reflect_room_enemy_at_obstacles_source, reflect_room_enemy_at_obstacles_source_end, reflect_room_enemy_at_obstacles+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $35C2-$35F9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4DC2-$4DF9.
@@ -10071,7 +10071,7 @@ ORG draw_matching_records_from_table
 
 ASSERT draw_matching_records_from_table_source = draw_matching_records_from_table
 ASSERT draw_matching_records_from_table_source_end = &1DF0
-COPYBLOCK draw_matching_records_from_table_source, draw_matching_records_from_table_source_end, &35C4
+COPYBLOCK draw_matching_records_from_table_source, draw_matching_records_from_table_source_end, draw_matching_records_from_table+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1DC4-$1DEF overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $35C4-$35EF.
@@ -10117,7 +10117,7 @@ ORG advance_room_enemy_with_collision_checks
 
 ASSERT advance_room_enemy_with_collision_checks_source = advance_room_enemy_with_collision_checks
 ASSERT advance_room_enemy_with_collision_checks_source_end = &362E
-COPYBLOCK advance_room_enemy_with_collision_checks_source, advance_room_enemy_with_collision_checks_source_end, &4DFA
+COPYBLOCK advance_room_enemy_with_collision_checks_source, advance_room_enemy_with_collision_checks_source_end, advance_room_enemy_with_collision_checks+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $35FA-$362D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4DFA-$4E2D.
@@ -10180,7 +10180,7 @@ ORG set_display_pointer_from_grid_position
 
 ASSERT set_display_pointer_from_grid_position_source = set_display_pointer_from_grid_position
 ASSERT set_display_pointer_from_grid_position_source_end = &1E29
-COPYBLOCK set_display_pointer_from_grid_position_source, set_display_pointer_from_grid_position_source_end, &35F0
+COPYBLOCK set_display_pointer_from_grid_position_source, set_display_pointer_from_grid_position_source_end, set_display_pointer_from_grid_position+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1DF0-$1E28 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $35F0-$3628.
