@@ -1543,22 +1543,22 @@ ORG display_pattern_test
 ; comparisons and a failure usually costs one, which is why the entry runs 2,659
 ; times but the match path only 8.
 .display_pattern_test_source
-    STA shared_workspace_31
+    STA graphic_pattern_record_offset_low
     LDA #&00
-    STA shared_workspace_32
+    STA graphic_pattern_record_offset_high
     LDX #&04
 
 .shift_pattern_index_to_record_offset
-    ASL shared_workspace_31
-    ROL shared_workspace_32
+    ASL graphic_pattern_record_offset_low
+    ROL graphic_pattern_record_offset_high
     DEX
     BNE shift_pattern_index_to_record_offset
     CLC
     LDA #LO(graphic_pattern_sample_base)
-    ADC shared_workspace_31
+    ADC graphic_pattern_record_offset_low
     STA graphic_source_pointer_low
     LDA #HI(graphic_pattern_sample_base)
-    ADC shared_workspace_32
+    ADC graphic_pattern_record_offset_high
     STA graphic_source_pointer_high
     LDY #&00
 
@@ -1872,36 +1872,36 @@ ORG copy_16_byte_graphic_to_display
 .copy_16_byte_graphic_to_display_source
     STA graphic_record_selector_flags
     AND #GRAPHIC_RECORD_INDEX_MASK
-    STA shared_workspace_31
+    STA graphic_record_byte_offset_low
     PHA
     TXA
     PHA
     TYA
     PHA
 
-    LDA shared_workspace_31
+    LDA graphic_record_byte_offset_low
     BNE copy_16_graphic_index_selected
     LDA shared_workspace_79
     BEQ copy_16_graphic_index_selected
     LDA #&12
-    STA shared_workspace_31
+    STA graphic_record_byte_offset_low
 .copy_16_graphic_index_selected
     LDA #&00
-    STA shared_workspace_32
+    STA graphic_record_byte_offset_high
     STA shared_workspace_75
     LDX #&04
 .multiply_graphic_index_by_16
-    ASL shared_workspace_31
-    ROL shared_workspace_32
+    ASL graphic_record_byte_offset_low
+    ROL graphic_record_byte_offset_high
     DEX
     BNE multiply_graphic_index_by_16
 
     LDX graphic_source_base_pointer_offset
     LDA graphic_source_base_pointers,X
-    ADC shared_workspace_31
+    ADC graphic_record_byte_offset_low
     STA graphic_source_pointer_low
     LDA graphic_source_base_pointers+1,X
-    ADC shared_workspace_32
+    ADC graphic_record_byte_offset_high
     STA graphic_source_pointer_high
 
     ASL graphic_record_selector_flags
@@ -2172,9 +2172,9 @@ ORG update_and_draw_room_enemies
 
 .apply_player_direction_if_in_range
     BCC clamp_indexed_entity_horizontal_delta
-    LDA shared_workspace_31
+    LDA candidate_horizontal_step
     STA secondary_entity_runtime_block,Y
-    LDA shared_workspace_32
+    LDA candidate_vertical_step
     STA enemy_vertical_delta,Y
     JMP move_indexed_entity_on_both_axes
 
@@ -5154,33 +5154,32 @@ CLEAR move_player_up_by_velocity_source, move_player_up_by_velocity_source_end
 
 ORG scan_four_display_bytes_for_markers
 
-; Runtime $2957-$29A1. Inspect four bytes at display-pointer offsets 0, 8,
-; 16, and 24. Zero bytes are skipped; $C0 marks $79, and $0A/$05 mark $31.
-; $44 calls the shared action immediately. Any other nonzero byte, including
-; the post-action $44 path, sets $0B and returns carry set. After four marker
-; or zero bytes, a set $31 calls the action and returns carry clear; otherwise
-; return through the shared RTS at $292E. Pointer rejection uses the same RTS
-; while preserving carry set from the window predicate.
+; Runtime $2957-$29A1. Inspect DISPLAY_MARKER_SCAN_COUNT bytes separated by
+; DISPLAY_MARKER_SCAN_STRIDE. Zero bytes are skipped. The C0 byte sets the
+; auxiliary marker flag; either deferred-damage byte requests damage after the
+; scan; and DISPLAY_MARKER_IMMEDIATE_DAMAGE applies it immediately. Any other
+; nonzero byte, including the post-damage path, marks the column occupied and
+; returns carry set. A completed clear scan returns carry clear.
 .scan_four_display_bytes_for_markers_source
     LDX #&04
     LDY #&00
     STY display_grid_column
     STY shared_workspace_31
     STY shared_workspace_79
-    STY shared_workspace_32
+    STY display_marker_scan_auxiliary_state
     JSR test_display_pointer_in_xor_draw_window
     BCS return_via_292e
 
 .scan_next_display_byte
     LDA (display_pointer_low),Y
     BEQ advance_display_scan_offset
-    CMP #&C0
+    CMP #DISPLAY_MARKER_C0_FLAG
     BEQ mark_c0_display_byte
-    CMP #&0A
+    CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_0A
     BEQ mark_0a_or_05_display_byte
-    CMP #&05
+    CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_05
     BEQ mark_0a_or_05_display_byte
-    CMP #&44
+    CMP #DISPLAY_MARKER_IMMEDIATE_DAMAGE
     BNE return_occupied_display_byte
     JSR apply_player_damage_and_redraw_energy
 
@@ -5197,7 +5196,7 @@ ORG scan_four_display_bytes_for_markers
 .advance_display_scan_offset
     TYA
     CLC
-    ADC #&08
+    ADC #DISPLAY_MARKER_SCAN_STRIDE
     TAY
     DEX
     BNE scan_next_display_byte
@@ -9968,7 +9967,7 @@ ORG draw_and_initialise_room
     LDA player_display_pointer_high
     STA room_setup_player_display_pointer_high
     LDA #OSBYTE_FLUSH_BUFFER
-    LDX #&04
+    LDX #DISPLAY_MARKER_SCAN_COUNT
     JSR OSBYTE
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
@@ -10054,16 +10053,16 @@ ORG set_room_data_pointer
     ASL A
     ASL A
     ADC reference_pair_primary_value
-    STA shared_workspace_32
+    STA room_data_map_offset_low
     LDA room_cell_level_base_low
-    ADC shared_workspace_32
-    STA shared_workspace_32
+    ADC room_data_map_offset_low
+    STA room_data_map_offset_low
     LDA room_cell_level_base_high
     ADC #&00
     STA room_data_map_offset_high
     LDA #LO(room_cell_map)
     CLC
-    ADC shared_workspace_32
+    ADC room_data_map_offset_low
     STA room_data_pointer_low
     LDA #HI(room_cell_map)
     ADC room_data_map_offset_high
@@ -10172,7 +10171,7 @@ ORG reflect_indexed_entity_at_obstacles
     LDA #&05
     STA shared_workspace_31
     LDA #&01
-    STA shared_workspace_32
+    STA candidate_range_above_extent
     LDA #&10
     STA candidate_range_below_extent
     JMP enter_test_range_with_supplied_box
