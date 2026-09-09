@@ -2260,111 +2260,111 @@ CLEAR run_game_tick_with_player_contact_flag_cleared_source, run_game_tick_with_
 ORG dispatch_game_tick_updates
 
 ; Dispatch one gameplay tick after the wrapper has cleared
-; player_contact_or_damage_flag. Optional update groups are gated by their state bytes, while
-; named timed-effect selectors and Teleport, Armoury and Time Warp sign states
-; select their dedicated handlers. The Armoury path also adds a collected icon,
-; enables room_update_suppression_state,
-; and applies eight energy decrements. Every path rejoins the frame-pacing
-; loop, which submits OSWORD $01 with block $2226 and waits until its returned
-; signed byte is at least the target at $4F.
+; player_contact_or_damage_flag. Optional update groups are gated by their state
+; bytes, while named timed effects and Teleport, Armoury and Time Warp sign states
+; select dedicated handlers. The Armoury path adds a collected icon, enables
+; room_update_suppression_state, and applies ARMOURY_ENERGY_DECREMENT_COUNT
+; energy decrements. Every path rejoins the frame-pacing loop, which reads the
+; system clock into cross_room_robot_ghost_initial_state and waits until its low
+; byte reaches bounded_tick_target_value.
 .dispatch_game_tick_updates_source
     JSR update_and_draw_two_cross_room_robot_ghosts
     LDA room_tick_update_selector
-    BEQ dispatch_game_tick_updates_branch_1
+    BEQ after_room_enemy_update
     JSR update_and_draw_room_enemies
 
-.dispatch_game_tick_updates_branch_1
+.after_room_enemy_update
     LDA room_update_suppression_state
-    BNE dispatch_game_tick_updates_branch_12
+    BNE finish_optional_room_updates
     LDA room_interaction_code
     CMP #ROOM_CELL_TELEPORT_SIGN
-    BNE dispatch_game_tick_updates_branch_2
+    BNE after_teleport_update
     JSR run_horizontal_16_warp_sequence
 
-.dispatch_game_tick_updates_branch_2
+.after_teleport_update
     LDA room_moving_objects_active
-    BEQ dispatch_game_tick_updates_branch_3
+    BEQ after_room_moving_object_update
     JSR update_and_draw_room_moving_objects
 
-.dispatch_game_tick_updates_branch_3
+.after_room_moving_object_update
     LDA lift_hazard_primary_updates_active
-    BEQ dispatch_game_tick_updates_branch_4
+    BEQ after_primary_lift_hazard_update
     JSR update_lift_and_hazard_slots
 
-.dispatch_game_tick_updates_branch_4
+.after_primary_lift_hazard_update
     LDA lift_hazard_secondary_updates_active
-    BEQ dispatch_game_tick_updates_branch_5
+    BEQ after_secondary_lift_hazard_update
     JSR advance_record_counter_then_dispatch
 
-.dispatch_game_tick_updates_branch_5
+.after_secondary_lift_hazard_update
     LDA timed_effect_selector
     CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_0C
-    BNE dispatch_game_tick_updates_branch_6
+    BNE after_blank_state_cell_effect
     JSR replace_saved_cell_then_play_sound
 
-.dispatch_game_tick_updates_branch_6
+.after_blank_state_cell_effect
     LDA timed_effect_selector
     CMP #TIMED_EFFECT_SHIFT_SAVED_DISPLAY_BLOCK
-    BNE dispatch_game_tick_updates_branch_7
+    BNE after_saved_display_shift_effect
     JSR advance_saved_display_block_shift_effect
 
-.dispatch_game_tick_updates_branch_7
+.after_saved_display_shift_effect
     LDA game_clock_tick_pending
-    BEQ dispatch_game_tick_updates_branch_8
+    BEQ after_game_clock_update
     JSR advance_bcd_counter_and_print
 
-.dispatch_game_tick_updates_branch_8
+.after_game_clock_update
     LDA timed_effect_selector
     CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_14
-    BNE dispatch_game_tick_updates_branch_9
+    BNE after_ff_state_cell_effect
     JSR replace_saved_cell_with_14_then_play_sound
 
-.dispatch_game_tick_updates_branch_9
+.after_ff_state_cell_effect
     LDA lift_and_hazard_active
-    BEQ dispatch_game_tick_updates_branch_10
+    BEQ after_lift_hazard_group_update
     JSR update_lift_and_hazard_group
 
-.dispatch_game_tick_updates_branch_10
+.after_lift_hazard_group_update
     LDA room_interaction_code
     CMP #ROOM_CELL_ARMOURY_SIGN
-    BNE dispatch_game_tick_updates_branch_12
+    BNE finish_optional_room_updates
     JSR enter_add_collected_icon
     LDA #ROOM_UPDATE_SUPPRESSION_ENABLED
     STA room_update_suppression_state
-    LDX #&08
+    LDX #ARMOURY_ENERGY_DECREMENT_COUNT
 
-.dispatch_game_tick_updates_branch_11
+.apply_next_armoury_energy_decrement
     DEC player_energy_snapshot
     JSR decrement_player_energy_and_redraw
     DEX
-    BNE dispatch_game_tick_updates_branch_11
+    BNE apply_next_armoury_energy_decrement
 
-.dispatch_game_tick_updates_branch_12
+.finish_optional_room_updates
     LDA horizontal_band_velocity_effect_state
     LSR A
-    BCC dispatch_game_tick_updates_branch_13
+    BCC after_horizontal_band_velocity_effect
     JSR set_velocity_step_from_horizontal_band
 
-.dispatch_game_tick_updates_branch_13
+.after_horizontal_band_velocity_effect
     LDA room_interaction_code
     CMP #ROOM_CELL_TIME_WARP_SIGN
-    BNE dispatch_game_tick_updates_branch_14
+    BNE prepare_frame_clock_wait
     JSR advance_bounded_tick_target
 
-.dispatch_game_tick_updates_branch_14
-    LDX #&01
+.prepare_frame_clock_wait
+    LDX #XOR_SPRITE_ERASE_ENABLED
     STX erase_previous_xor_sprite_flag
-    DEX
+    DEX ; XOR_SPRITE_ERASE_ENABLED becomes CROSS_ROOM_ROBOT_GHOST_COUNTDOWNS_RESET
     STX reset_cross_room_robot_ghost_countdowns
 
-.dispatch_game_tick_updates_branch_15
-    LDA #&01
-    LDX #&26
-    LDY #&22
+.wait_for_frame_clock_target
+    LDA #OSWORD_READ_SYSTEM_CLOCK
+    LDX #LO(cross_room_robot_ghost_initial_state)
+    LDY #HI(cross_room_robot_ghost_initial_state)
     JSR OSWORD
     LDA cross_room_robot_ghost_initial_state
     CMP bounded_tick_target_value
-    BMI dispatch_game_tick_updates_branch_15
+    BMI wait_for_frame_clock_target
     RTS
 .dispatch_game_tick_updates_source_end
 

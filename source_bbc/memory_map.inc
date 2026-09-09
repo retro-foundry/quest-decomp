@@ -17,6 +17,9 @@ ROOM_INTERACTION_LONG_ICON_EFFECT = &FF ; behavioral: special marker selecting t
 room_update_suppression_state = &006E ; behavioral: nonzero skips most optional tick-update groups; set by cell $3B columns and the Armoury-sign effect
 ROOM_UPDATE_SUPPRESSION_CLEAR = &00 ; behavioral: allow the complete per-tick update dispatcher
 ROOM_UPDATE_SUPPRESSION_ENABLED = &01 ; behavioral: skip optional room update groups after the Armoury-sign icon effect
+ARMOURY_ENERGY_DECREMENT_COUNT = &08 ; behavioral: Armoury interaction applies eight energy decrements
+XOR_SPRITE_ERASE_ENABLED       = &01 ; behavioral: erase the previous XOR image before advancing its sprite
+CROSS_ROOM_ROBOT_GHOST_COUNTDOWNS_RESET = &00 ; behavioral: force both cross-room instances to refresh their countdowns
 right_columns_sequence_index   = &0009 ; dataflow alias: room column minus five selecting one of three four-graphic sequences
 RIGHT_COLUMNS_SEQUENCE_FIRST_COLUMN = &05 ; behavioral: columns five through seven contain the table-selected motif
 RIGHT_COLUMNS_SEQUENCE_EDGE_BLANK_TILES = &02 ; behavioral: two blank tiles bracket the four-graphic motif
@@ -203,6 +206,7 @@ lift_hazard_secondary_updates_active = &00A5 ; behavioral: room drawing enables 
 ; Evidence-backed relocated Quest data/configuration
 ; ---------------------------------------------------------------------------
 OSWORD_READ_INTERVAL_TIMER      = &04 ; MOS API: read the five-byte interval timer block
+OSWORD_READ_SYSTEM_CLOCK        = &01 ; MOS API: read the five-byte system clock block
 OSWORD_SOUND                    = &07 ; MOS API: submit an eight-byte sound parameter block
 OSWORD_DEFINE_CHARACTER        = &0A ; MOS API: define a character from an eight-byte bitmap
 OSBYTE_INKEY                    = &81 ; MOS API: test a key or time-limited keyboard condition
