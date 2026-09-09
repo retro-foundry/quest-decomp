@@ -10689,7 +10689,22 @@ CLEAR room_sign_text_table_source, room_sign_text_table_source_end
 ORG across_to_password_number
 ; Stored password number carried by each map column.
 .across_to_password_number_source
-    EQUB &07, &02, &06, &00, &05, &01, &04, &03
+.column_A_password_number
+    EQUB &07
+.column_B_password_number
+    EQUB &02
+.column_C_password_number
+    EQUB &06
+.column_D_password_number
+    EQUB &00
+.column_E_password_number
+    EQUB &05
+.column_F_password_number
+    EQUB &01
+.column_G_password_number
+    EQUB &04
+.column_H_password_number
+    EQUB &03
 .across_to_password_number_source_end
 ASSERT across_to_password_number_source = across_to_password_number
 ASSERT across_to_password_number_source_end = draw_fixed_pair_gap_row
