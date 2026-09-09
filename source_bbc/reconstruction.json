@@ -10,7 +10,7 @@
     "status": "complete",
     "source_owned_payload_bytes": 16160,
     "unresolved_active_code_or_data_ranges": 0,
-    "classification_rule": "behavioral and port-contract ranges describe active game meaning; structural ranges are retained only when proved to be layout, unused original data, an unreachable remnant, or a literal with no active consumer",
+    "classification_rule": "every source-owned range is behavioral or port-contract; inert ranges are behavioral only where bounded consumers, control flow, relocation, or runtime-access evidence proves their exact no-consumer, unreachable, copied-layout, or alignment contract",
     "audit": "analysis/reconstruction/semantic_completion_audit.md"
   },
   "data_ranges": [
@@ -38,7 +38,7 @@
       "loaded_start": 8448,
       "loaded_end_exclusive": 8576,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "record_size": 32,
       "evidence": [
         "the range is exactly four $20-aligned Mode 1-shaped records between place_initial_map_objects and status_graphic_record_bank",
@@ -52,7 +52,7 @@
       "loaded_start": 9210,
       "loaded_end_exclusive": 9216,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "the preceding second_room_entity_record_table is bounded to exactly twenty five-byte records by the $1FEF scanner's CPX #$14",
         "relocated_game_entry begins independently at the next address $0B00",
@@ -81,7 +81,7 @@
       "loaded_start": 23198,
       "loaded_end_exclusive": 23296,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "the exact 92-character ASCII text begins immediately after the loader's JMP $0B00 and is followed by six zero bytes",
         "the high relocation copies this region to display RAM $429E-$42FF; no code or pointer xref to the literal text has been found"
@@ -121,7 +121,7 @@
       "loaded_start": 23454,
       "loaded_end_exclusive": 23472,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "eighteen $FF bytes fill the copied stack-page block from the end of the encoded payload to its exact $01B0 boundary"
       ]
@@ -147,7 +147,7 @@
       "loaded_start": 23568,
       "loaded_end_exclusive": 23569,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "the loader copies the inclusive loaded range $5BB0-$5C10 to $0380-$03E0",
         "this zero is the single byte after the source-owned IRQ1V handler and before the unrelocated DFS execution entry"
@@ -188,7 +188,7 @@
       "loaded_start": 8640,
       "loaded_end_exclusive": 8704,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "record_size": 16,
       "evidence": [
         "all four records decode as Mode 1 figure fragments in the alternate blitter bank",
@@ -215,7 +215,7 @@
       "loaded_start": 9297,
       "loaded_end_exclusive": 9299,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "two zero bytes between the exact end of the label table and music_tune_sequence"
       ]
@@ -281,7 +281,7 @@
       "loaded_start": 9327,
       "loaded_end_exclusive": 9335,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "record_size": 2,
       "evidence": [
         "all four words are $20-byte-aligned graphic pointers, but every runtime selector is bounded to $0B77 or above",
@@ -348,7 +348,7 @@
       "loaded_start": 9725,
       "loaded_end_exclusive": 9728,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "record_size": 1,
       "evidence": [
         "the loader report proves these are the final three bytes copied into runtime-low at $0CFD-$0CFF before the intentionally unmapped $0D00-$0DFF gap",
@@ -599,7 +599,7 @@
       "loaded_start": 13527,
       "loaded_end_exclusive": 13528,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "single zero byte before apply_mirror_flag_then_copy_graphic; no code reference or execution evidence"
       ]
@@ -664,7 +664,7 @@
       "loaded_start": 18562,
       "loaded_end_exclusive": 18563,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "unreachable RTS after the unconditional $307F tail jump and before the independent $3083 routine body"
       ]
@@ -714,7 +714,7 @@
       "loaded_start": 14829,
       "loaded_end_exclusive": 14848,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "nineteen zero bytes align the following game-entry vector table to runtime $2200"
       ]
@@ -780,7 +780,7 @@
       "loaded_start": 18943,
       "loaded_end_exclusive": 18944,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": ["single unreachable zero alignment byte between the bounded status-panel divider and warp routine"]
     },
     {
@@ -790,7 +790,7 @@
       "loaded_start": 18963,
       "loaded_end_exclusive": 18964,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": ["unreachable NOP alignment byte between warp_to_room_3_4 and terminal activation code"]
     },
     {
@@ -800,7 +800,7 @@
       "loaded_start": 19029,
       "loaded_end_exclusive": 19030,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": ["unreachable NOP alignment byte between item restoration and inline VDU printing"]
     },
     {
@@ -810,7 +810,7 @@
       "loaded_start": 19070,
       "loaded_end_exclusive": 19072,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": ["two zero bytes between print_inline_vdu_stream and stamp_map_bytes_and_store"]
     },
     {
@@ -840,7 +840,7 @@
       "loaded_start": 20429,
       "loaded_end_exclusive": 20432,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": ["three zero bytes between advance_bcd_counter_and_print and the $37D0 room-cell map base used by set_room_data_pointer"]
     },
     {
@@ -879,7 +879,7 @@
       "loaded_start": 10774,
       "loaded_end_exclusive": 10781,
       "source_file": "source_bbc/quest1.asm",
-      "meaning_level": "structural",
+      "meaning_level": "behavioral",
       "evidence": [
         "the authority bytes are six zero bytes and $EA between the bounded display-action vector table and the mutable state beginning at $121D",
         "no committed static reference or runtime trace treats $1216-$121C as executable"
@@ -1139,7 +1139,7 @@
           "loaded_start": 9472,
           "loaded_end_exclusive": 9488,
           "bytes": "7c c6 c6 c6 c6 d6 7c 0f 06 06 0f eb ed 4f 4f ef",
-          "meaning_level": "structural"
+          "meaning_level": "behavioral"
         }
       ],
       "unlifted_instruction_ranges": [
@@ -1190,7 +1190,7 @@
           "loaded_start": 9662,
           "loaded_end_exclusive": 9679,
           "bytes": "1F 0E 07 20 50 52 45 53 53 20 53 50 41 43 45 20 00",
-          "meaning_level": "dataflow"
+          "meaning_level": "behavioral"
         }
       ],
       "evidence": [
@@ -1314,7 +1314,7 @@
           "loaded_end_exclusive": 11090,
           "bytes": "6113001b7013b113bb1304141c14421447148e153614a4149f14ef14171551133d154f15b015c5153d14de1538164f16a919b11975168416c116dc16e916e916e916e916e916e916e916e916e916e916e916e916e916e916e916e91673199f19be15b118c018151903198019b919c719ce19d519dc196b1a9a1ad11ac513cc13",
           "meaning": "64 room-cell handler-minus-one words selected by the low six bits of the cell",
-          "meaning_level": "dataflow"
+          "meaning_level": "behavioral"
         }
       ],
       "unlifted_instruction_ranges": [
@@ -1694,9 +1694,9 @@
       "meaning_level": "behavioral",
       "runtime_only_entry_evidence": "The room-cell dispatch table maps types $1E-$2D to $16EA; traces execute the sign and password paths, while compact disassembly loses instruction alignment at the three inline streams.",
       "embedded_data_ranges": [
-        {"name": "room_sign_cursor_prefix", "runtime_start": 5904, "runtime_end_exclusive": 5910, "loaded_start": 12048, "loaded_end_exclusive": 12054, "bytes": "11 02 11 83 1F 00", "meaning_level": "dataflow"},
-        {"name": "room_sign_second_line_cursor", "runtime_start": 5988, "runtime_end_exclusive": 5993, "loaded_start": 12132, "loaded_end_exclusive": 12137, "bytes": "11 01 11 80 00", "meaning_level": "dataflow"},
-        {"name": "password_equals_inline_text", "runtime_start": 6021, "runtime_end_exclusive": 6023, "loaded_start": 12165, "loaded_end_exclusive": 12167, "bytes": "3D 00", "meaning_level": "dataflow"}
+        {"name": "room_sign_cursor_prefix", "runtime_start": 5904, "runtime_end_exclusive": 5910, "loaded_start": 12048, "loaded_end_exclusive": 12054, "bytes": "11 02 11 83 1F 00", "meaning_level": "behavioral"},
+        {"name": "room_sign_second_line_cursor", "runtime_start": 5988, "runtime_end_exclusive": 5993, "loaded_start": 12132, "loaded_end_exclusive": 12137, "bytes": "11 01 11 80 00", "meaning_level": "behavioral"},
+        {"name": "password_equals_inline_text", "runtime_start": 6021, "runtime_end_exclusive": 6023, "loaded_start": 12165, "loaded_end_exclusive": 12167, "bytes": "3D 00", "meaning_level": "behavioral"}
       ],
       "unlifted_instruction_ranges": [
         {"runtime_start": 5866, "runtime_end_exclusive": 5904, "loaded_start": 12010, "loaded_end_exclusive": 12048, "bytes": "c90230034c6213a58f1869308dc717a59069418dcf1718a57c6980857ca57d6900857d205632", "assembly": "room-sign entry through first inline printer call", "evidence": "committed room traces execute every instruction"},
@@ -2100,7 +2100,7 @@
           "loaded_start": 13620,
           "loaded_end_exclusive": 13624,
           "bytes": "00 0e 80 08",
-          "meaning_level": "dataflow"
+          "meaning_level": "behavioral"
         }
       ],
       "evidence": [
@@ -2198,7 +2198,7 @@
           "loaded_start": 13890,
           "loaded_end_exclusive": 13927,
           "bytes": "1F 0A 07 54 48 45 1F 09 09 47 4F 4C 44 45 4E 1F 09 0D 44 52 41 47 4F 4E 1F 13 12 81 20 81 1F 1B 12 81 20 81 00",
-          "meaning_level": "dataflow"
+          "meaning_level": "behavioral"
         }
       ],
       "unlifted_instruction_ranges": [
@@ -2332,7 +2332,7 @@
       "source_file": "source_bbc/quest1.asm",
       "meaning_level": "port-contract",
       "embedded_data_ranges": [
-        {"name": "terminal_password_list_cursor", "runtime_start": 8570, "runtime_end_exclusive": 8573, "loaded_start": 14714, "loaded_end_exclusive": 14717, "bytes": "1F 1B 00", "meaning_level": "dataflow"}
+        {"name": "terminal_password_list_cursor", "runtime_start": 8570, "runtime_end_exclusive": 8573, "loaded_start": 14714, "loaded_end_exclusive": 14717, "bytes": "1F 1B 00", "meaning_level": "behavioral"}
       ],
       "unlifted_instruction_ranges": [
         {"runtime_start": 8573, "runtime_end_exclusive": 8598, "loaded_start": 14717, "loaded_end_exclusive": 14742, "bytes": "a53320eeffe6338a48206f1768aae8e008d0e368aae84ceb20", "assembly": "collected-password list print loop and terminal-stream resume", "evidence": "committed terminal traces execute all continuation instructions; compact disassembly loses alignment at the inline cursor bytes"}
@@ -2687,7 +2687,7 @@
           "loaded_start": 15661,
           "loaded_end_exclusive": 15663,
           "bytes": "01 08",
-          "meaning_level": "dataflow"
+          "meaning_level": "behavioral"
         }
       ],
       "evidence": [
@@ -4254,7 +4254,7 @@
           "loaded_start": 20408,
           "loaded_end_exclusive": 20412,
           "bytes": "1F 01 04 00",
-          "meaning_level": "dataflow"
+          "meaning_level": "behavioral"
         }
       ],
       "unlifted_instruction_ranges": [
