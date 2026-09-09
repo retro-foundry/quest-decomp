@@ -1871,7 +1871,7 @@ ORG copy_16_byte_graphic_to_display
 ; preserved, while A returns the original masked record index.
 .copy_16_byte_graphic_to_display_source
     STA shared_workspace_33
-    AND #&3F
+    AND #GRAPHIC_RECORD_INDEX_MASK
     STA shared_workspace_31
     PHA
     TXA
@@ -5695,7 +5695,7 @@ ORG draw_room_row_cells
     STA indexed_xor_display_pointer_low
     LDA (room_data_pointer_low),Y
     STA current_room_cell
-    AND #&3F
+    AND #ROOM_CELL_TYPE_MASK
     STA shared_workspace_31
     STY shared_workspace_03
     JSR dispatch_room_cell
@@ -5815,7 +5815,7 @@ ORG dispatch_room_cell
     BCC return_column_counter
 
 .mirror_cell_direction
-    LDA #&07
+    LDA #ROOM_COLUMN_LAST
     SEC
     SBC shared_workspace_09
     STA shared_workspace_09
@@ -5829,76 +5829,76 @@ ORG dispatch_room_cell
 ; One handler-minus-one word for each six-bit room-cell type. The code above
 ; pushes the selected word and RTS enters its handler.
 .room_cell_draw_dispatch_table_source
-    EQUW draw_eight_blank_tiles-1 ; cell type &00
-    EQUW draw_pillar_framed_or_pattern_row-1 ; cell type &01
-    EQUW draw_eight_alternating_tiles-1 ; cell type &02
-    EQUW draw_right_edge_tile_pair-1 ; cell type &03
-    EQUW draw_left_edge_tile_pair-1 ; cell type &04
-    EQUW draw_curved_bowl_after_alternating_prefix-1 ; cell type &05
-    EQUW draw_curved_bowl_before_alternating_suffix-1 ; cell type &06
-    EQUW draw_first_key_column_motif-1 ; cell type &07
-    EQUW draw_second_key_column_motif-1 ; cell type &08: entry load at $1448 remains unexecuted
-    EQUW draw_repeated_87_blank_pairs_by_state-1 ; cell type &09
-    EQUW draw_bordered_horizontal_bar_row-1 ; cell type &0A
-    EQUW draw_centered_slope_pair_by_column-1 ; cell type &0B
-    EQUW draw_blank_state_column_motif-1 ; cell type &0C
-    EQUW draw_column_sensitive_room_patterns-1 ; cell type &0D
-    EQUW draw_fixed_center_motif_by_column-1 ; cell type &0E
-    EQUW draw_pillar_base_row_in_last_column-1 ; cell type &0F
-    EQUW draw_alternating_or_record_08_row-1 ; cell type &10
-    EQUW draw_table_selected_four_tile_half_row-1 ; cell type &11
-    EQUW draw_record_08_or_edge_pattern_row-1 ; cell type &12
-    EQUW draw_58_59_pair_or_edge_pattern_row-1 ; cell type &13
-    EQUW draw_ff_state_column_motif-1 ; cell type &14
-    EQUW draw_narrow_bar_fixture_row-1 ; cell type &15
-    EQUW draw_last_column_special_pair_row-1 ; cell type &16
-    EQUW draw_state_selected_13_center_row-1 ; cell type &17: alternate layout branch at $165D remains unexecuted
-    EQUW draw_blank_marker_before_alternating_suffix-1 ; cell type &18
-    EQUW draw_blank_marker_after_alternating_prefix-1 ; cell type &19
-    EQUW draw_room_flag_then_fixed_pair_row-1 ; cell type &1A
-    EQUW draw_table_selected_left_half_row-1 ; cell type &1B
-    EQUW draw_two_13_two_beam_two_13_two_pattern-1 ; cell type &1C
-    EQUW draw_left_half_sequence_twice_or_13_beam_pattern-1 ; cell type &1D
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &1E: Music Room
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &1F: Level/Sector
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &20: Elephant House
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &21: Joke Shop
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &22: Teleport
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &23: Armoury
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &24: Hydroponics
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &25: Hydrochloric Acid
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &26: Sodium Hydroxide
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &27: Time Warp
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &28: Oracle
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &29: Optician
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &2A: Chemical Supplies
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &2B: Ghost Maze
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &2C: Chapel
-    EQUW draw_room_sign_or_collect_password-1 ; cell type &2D: PASSWORD prompt
-    EQUW select_blank_or_right_half_pattern_by_column-1 ; cell type &2E
-    EQUW set_ff_state_and_draw_last_column_special_row-1 ; cell type &2F
-    EQUW draw_column_gated_58_59_pair_row-1 ; cell type &30
-    EQUW draw_fixed_pair_gap_row-1 ; cell type &31
-    EQUW draw_bordered_checker_diagonal_row-1 ; cell type &32
-    EQUW draw_and_configure_dynamic_room_object-1 ; cell type &33
-    EQUW enter_room_object_configuration_with_0e_10-1 ; cell type &34
-    EQUW draw_centered_alternating_run_by_column-1 ; cell type &35
-    EQUW draw_alternating_only_in_columns_three_or_seven-1 ; cell type &36
-    EQUW draw_alternating_only_in_column_three-1 ; cell type &37
-    EQUW draw_alternating_only_in_last_column-1 ; cell type &38
-    EQUW draw_alternating_in_right_half-1 ; cell type &39
-    EQUW draw_blank_then_configure_column_seven_object-1 ; cell type &3A
-    EQUW draw_table_selected_sequence_in_columns_five_to_seven-1 ; cell type &3B
-    EQUW draw_cell_3c_transition_row_by_column-1 ; cell type &3C
-    EQUW draw_table_selected_eight_tiles_in_columns_four_five-1 ; cell type &3D
-    EQUW draw_left_edge_or_full_last_column-1 ; cell type &3E
-    EQUW draw_right_edge_or_full_last_column-1 ; cell type &3F
+    EQUW draw_eight_blank_tiles-1 ; ROOM_CELL_BLANK
+    EQUW draw_pillar_framed_or_pattern_row-1 ; ROOM_CELL_PILLAR_FRAMED_PATTERN
+    EQUW draw_eight_alternating_tiles-1 ; ROOM_CELL_ALTERNATING_TILES
+    EQUW draw_right_edge_tile_pair-1 ; ROOM_CELL_RIGHT_EDGE_PAIR
+    EQUW draw_left_edge_tile_pair-1 ; ROOM_CELL_LEFT_EDGE_PAIR
+    EQUW draw_curved_bowl_after_alternating_prefix-1 ; ROOM_CELL_CURVED_BOWL_RIGHT
+    EQUW draw_curved_bowl_before_alternating_suffix-1 ; ROOM_CELL_CURVED_BOWL_LEFT
+    EQUW draw_first_key_column_motif-1 ; ROOM_CELL_FIRST_KEY_MOTIF
+    EQUW draw_second_key_column_motif-1 ; ROOM_CELL_SECOND_KEY_MOTIF; entry load remains unexecuted
+    EQUW draw_repeated_87_blank_pairs_by_state-1 ; ROOM_CELL_STATE_87_PAIRS
+    EQUW draw_bordered_horizontal_bar_row-1 ; ROOM_CELL_BORDERED_BAR
+    EQUW draw_centered_slope_pair_by_column-1 ; ROOM_CELL_CENTERED_SLOPE
+    EQUW draw_blank_state_column_motif-1 ; ROOM_CELL_BLANK_STATE_MOTIF
+    EQUW draw_column_sensitive_room_patterns-1 ; ROOM_CELL_COLUMN_PATTERNS
+    EQUW draw_fixed_center_motif_by_column-1 ; ROOM_CELL_FIXED_CENTER_MOTIF
+    EQUW draw_pillar_base_row_in_last_column-1 ; ROOM_CELL_LAST_COLUMN_PILLAR
+    EQUW draw_alternating_or_record_08_row-1 ; ROOM_CELL_ALTERNATING_OR_RECORD_08
+    EQUW draw_table_selected_four_tile_half_row-1 ; ROOM_CELL_FOUR_TILE_HALF_ROW
+    EQUW draw_record_08_or_edge_pattern_row-1 ; ROOM_CELL_RECORD_08_EDGE
+    EQUW draw_58_59_pair_or_edge_pattern_row-1 ; ROOM_CELL_58_59_EDGE
+    EQUW draw_ff_state_column_motif-1 ; ROOM_CELL_FF_STATE_MOTIF
+    EQUW draw_narrow_bar_fixture_row-1 ; ROOM_CELL_NARROW_BAR_FIXTURE
+    EQUW draw_last_column_special_pair_row-1 ; ROOM_CELL_LAST_COLUMN_SPECIAL
+    EQUW draw_state_selected_13_center_row-1 ; ROOM_CELL_STATE_13_CENTER; alternate layout remains unexecuted
+    EQUW draw_blank_marker_before_alternating_suffix-1 ; ROOM_CELL_BLANK_BEFORE_SUFFIX
+    EQUW draw_blank_marker_after_alternating_prefix-1 ; ROOM_CELL_BLANK_AFTER_PREFIX
+    EQUW draw_room_flag_then_fixed_pair_row-1 ; ROOM_CELL_FLAG_AND_FIXED_PAIR
+    EQUW draw_table_selected_left_half_row-1 ; ROOM_CELL_LEFT_HALF_SEQUENCE
+    EQUW draw_two_13_two_beam_two_13_two_pattern-1 ; ROOM_CELL_13_BEAM_PATTERN
+    EQUW draw_left_half_sequence_twice_or_13_beam_pattern-1 ; ROOM_CELL_LEFT_SEQUENCE_OR_BEAM
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_MUSIC_ROOM_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_LEVEL_SECTOR_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_ELEPHANT_HOUSE_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_JOKE_SHOP_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_TELEPORT_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_ARMOURY_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_HYDROPONICS_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_HYDROCHLORIC_ACID_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_SODIUM_HYDROXIDE_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_TIME_WARP_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_ORACLE_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_OPTICIAN_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_CHEMICAL_SUPPLIES_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_GHOST_MAZE_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_CHAPEL_SIGN
+    EQUW draw_room_sign_or_collect_password-1 ; ROOM_CELL_PASSWORD_PROMPT
+    EQUW select_blank_or_right_half_pattern_by_column-1 ; ROOM_CELL_RIGHT_HALF_PATTERN
+    EQUW set_ff_state_and_draw_last_column_special_row-1 ; ROOM_CELL_FF_LAST_COLUMN
+    EQUW draw_column_gated_58_59_pair_row-1 ; ROOM_CELL_COLUMN_GATED_58_59
+    EQUW draw_fixed_pair_gap_row-1 ; ROOM_CELL_FIXED_PAIR_GAP
+    EQUW draw_bordered_checker_diagonal_row-1 ; ROOM_CELL_BORDERED_CHECKER
+    EQUW draw_and_configure_dynamic_room_object-1 ; ROOM_CELL_DYNAMIC_OBJECT
+    EQUW enter_room_object_configuration_with_0e_10-1 ; ROOM_CELL_OBJECT_0E_10
+    EQUW draw_centered_alternating_run_by_column-1 ; ROOM_CELL_CENTERED_ALTERNATING
+    EQUW draw_alternating_only_in_columns_three_or_seven-1 ; ROOM_CELL_ALTERNATING_COLUMNS_3_7
+    EQUW draw_alternating_only_in_column_three-1 ; ROOM_CELL_ALTERNATING_COLUMN_3
+    EQUW draw_alternating_only_in_last_column-1 ; ROOM_CELL_ALTERNATING_LAST_COLUMN
+    EQUW draw_alternating_in_right_half-1 ; ROOM_CELL_ALTERNATING_RIGHT_HALF
+    EQUW draw_blank_then_configure_column_seven_object-1 ; ROOM_CELL_COLUMN_7_OBJECT
+    EQUW draw_table_selected_sequence_in_columns_five_to_seven-1 ; ROOM_CELL_COLUMNS_5_TO_7_SEQUENCE
+    EQUW draw_cell_3c_transition_row_by_column-1 ; ROOM_CELL_TRANSITION_3C
+    EQUW draw_table_selected_eight_tiles_in_columns_four_five-1 ; ROOM_CELL_COLUMNS_4_5_SEQUENCE
+    EQUW draw_left_edge_or_full_last_column-1 ; ROOM_CELL_LEFT_EDGE_OR_FULL
+    EQUW draw_right_edge_or_full_last_column-1 ; ROOM_CELL_RIGHT_EDGE_OR_FULL
 .room_cell_draw_dispatch_table_source_end
 
 ; Cell type $0F's handler. A is the current room column. Columns zero through
 ; six draw blanks; column seven draws eight pillar/base tiles.
 .draw_pillar_base_row_in_last_column_source
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BNE draw_eight_blank_tiles
     LDX #&08
 .draw_next_pillar_base_tile
@@ -7607,7 +7607,7 @@ ORG draw_room_sign_or_collect_password
     ASL A
     STA inline_vdu_stream_pointer_low
     LDA current_room_cell
-    CMP #&21
+    CMP #ROOM_CELL_JOKE_SHOP_SIGN
     BNE test_password_prompt_cell
     STA shared_workspace_4c
 
@@ -7623,7 +7623,7 @@ ORG draw_room_sign_or_collect_password
 .select_room_sign_record
     STA shared_workspace_4e
     SEC
-    SBC #&1E
+    SBC #ROOM_CELL_MUSIC_ROOM_SIGN
     ASL A
     ASL A
     ASL A
@@ -9512,7 +9512,7 @@ ORG draw_character_row_as_tiles
 ; Reached only by the tail JMP at $12AE.
 .draw_character_row_as_tiles_source
     LDA current_room_cell
-    AND #&40
+    AND #ROOM_CELL_MIRROR_FLAG
     CLC
     ADC shared_workspace_31
     ADC #&20
