@@ -11791,7 +11791,7 @@ ORG &8100
     STA display_pointer_low
     LDA #HI(player_enemy_and_lift_xor_sprite_frames)
     STA display_pointer_high
-    LDY #&00
+    LDY #LOADER_COPY_FIRST_INDEX
 .copy_loaded_low_byte
     LDA (graphic_source_pointer_low),Y
     STA (display_pointer_low),Y
@@ -11817,7 +11817,7 @@ ORG &8100
     STA display_pointer_low
     LDA #HI(room_and_item_graphic_bank)
     STA display_pointer_high
-    LDY #&00
+    LDY #LOADER_COPY_FIRST_INDEX
 .copy_loaded_high_byte
     LDA (graphic_source_pointer_low),Y
     STA (display_pointer_low),Y
@@ -11835,7 +11835,7 @@ ORG &8100
     JMP loaded_copy_high_byte_loop
 
 .copy_transient_decoder_source
-    LDX #&00
+    LDX #LOADER_COPY_FIRST_INDEX
 .copy_transient_decoder_byte
     LDA relocation_transport_source_start,X
     STA transient_xor_message_decoder,X
@@ -11845,15 +11845,15 @@ ORG &8100
     RTS
 
 .install_runtime_vectors_source
-    LDA #&83
+    LDA #LO(evntv_read_interval_timer)
     STA EVNTV
-    LDA #&0B
+    LDA #HI(evntv_read_interval_timer)
     STA EVNTV+1
     LDA #OSBYTE_SET_ESCAPE_BREAK_EFFECT
     LDX #ESCAPE_BREAK_EFFECT_DISABLE_ESCAPE
     JSR OSBYTE
     LDA #OSBYTE_ENABLE_EVENT
-    LDX #&05
+    LDX #MOS_EVENT_INTERVAL_TIMER
     JSR OSBYTE
     LDA IRQ1V
     STA chained_irq1v_vector
@@ -11865,46 +11865,46 @@ ORG &8100
     LDA #HI(irq1v_handler)
     STA IRQ1V+1
     CLI
-    LDA #&7F
+    LDA #VIA_DISABLE_ALL_INTERRUPTS
     STA USER_VIA_INTERRUPT_ENABLE
     STA USER_VIA_INTERRUPT_ENABLE_ALIAS
     STA SYSTEM_VIA_INTERRUPT_ENABLE
     STA SYSTEM_VIA_INTERRUPT_ENABLE_ALIAS
-    LDA #&C2
+    LDA #SYSTEM_VIA_ENABLE_REQUIRED_INTERRUPTS
     STA SYSTEM_VIA_INTERRUPT_ENABLE
-    LDA #&40
+    LDA #USER_VIA_AUXILIARY_CONTROL_INITIAL
     STA USER_VIA_AUXILIARY_CONTROL
-    LDA #&A0
+    LDA #USER_VIA_TIMER2_INTERRUPT_MASK
     STA USER_VIA_INTERRUPT_ENABLE
     RTS
 
     NOP                             ; loaded $5A3B alignment byte
 
 .configure_crtc_and_copy_irq_source
-    LDA #&06
+    LDA #CRTC_REGISTER_VERTICAL_DISPLAYED
     STA CRTC_ADDRESS_SELECT
-    LDA #&1B
+    LDA #CRTC_VERTICAL_DISPLAYED_VALUE
     STA CRTC_DATA
-    LDA #&07
+    LDA #CRTC_REGISTER_VERTICAL_SYNC_POSITION
     STA CRTC_ADDRESS_SELECT
-    LDA #&20
+    LDA #CRTC_VERTICAL_SYNC_POSITION_VALUE
     STA CRTC_DATA
-    LDA #&0C
+    LDA #CRTC_REGISTER_SCREEN_START_HIGH
     STA CRTC_ADDRESS_SELECT
-    LDA #&07
+    LDA #CRTC_SCREEN_START_HIGH_VALUE
     STA CRTC_DATA
-    LDA #&0D
+    LDA #CRTC_REGISTER_SCREEN_START_LOW
     STA CRTC_ADDRESS_SELECT
-    LDA #&90
+    LDA #CRTC_SCREEN_START_LOW_VALUE
     STA CRTC_DATA
-    LDA #&02
+    LDA #CRTC_REGISTER_HORIZONTAL_SYNC_POSITION
     STA CRTC_ADDRESS_SELECT
-    LDX #&00
+    LDX #LOADER_COPY_FIRST_INDEX
 .copy_irq_workspace_byte
     LDA relocation_irq_source_start,X
     STA chained_irq1v_vector,X
     INX
-    CPX #&61
+    CPX #IRQ_WORKSPACE_COPY_BYTE_COUNT
     BNE copy_irq_workspace_byte
     SEI
     JMP copy_loaded_low_block_to_runtime
@@ -11912,18 +11912,18 @@ ORG &8100
 .set_vdu_window_then_continue_loader_source
     LDA #VDU_DEFINE_TEXT_WINDOW
     JSR OSWRCH
-    LDA #&00
+    LDA #LOADER_TEXT_WINDOW_LEFT
     JSR OSWRCH
-    LDA #&1E
+    LDA #LOADER_TEXT_WINDOW_BOTTOM
     JSR OSWRCH
-    LDA #&27
+    LDA #LOADER_TEXT_WINDOW_RIGHT
     JSR OSWRCH
-    LDA #&00
+    LDA #LOADER_TEXT_WINDOW_TOP
     JSR OSWRCH
     JMP configure_crtc_and_copy_irq_workspace
 
 .enter_relocated_game_source
-    LDA #&00
+    LDA #LOADER_KEYBOARD_STATE_CLEAR
     STA mos_keyboard_state_workspace                       ; MOS keyboard-state workspace
     JMP relocated_game_entry
 .relocation_loader_source_end
@@ -12026,9 +12026,9 @@ CLEAR irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_e
 ORG &8000
 .dfs_execution_entry_stub_source
     LDA #OSBYTE_READ_KEYBOARD_STATUS
-    LDX #&00
+    LDX #LOADER_COPY_FIRST_INDEX
     JSR OSBYTE
-    LDA #&8C
+    LDA #OSBYTE_SELECT_TAPE_FILING_SYSTEM
     JSR OSBYTE
     JMP loader_initialization_entry
 .dfs_execution_entry_stub_source_end

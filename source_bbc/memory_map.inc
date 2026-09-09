@@ -237,9 +237,14 @@ OSBYTE_SET_FLASH_MARK_PERIOD    = &09 ; MOS API: set palette flash first-colour 
 OSBYTE_SET_FLASH_SPACE_PERIOD   = &0A ; MOS API: set palette flash second-colour duration from X
 OSBYTE_SET_ESCAPE_BREAK_EFFECT  = &C8 ; MOS API: configure Escape/Break behavior from X
 ESCAPE_BREAK_EFFECT_DISABLE_ESCAPE = &02 ; MOS OSBYTE $C8 X value: disable Escape while leaving Break's clear-memory action unchanged
+MOS_EVENT_INTERVAL_TIMER        = &05 ; MOS event number enabled for the interval-timer callback
+OSBYTE_SELECT_TAPE_FILING_SYSTEM = &8C ; MOS API: select the cassette filing system
 OSBYTE_READ_KEYBOARD_STATUS     = &E1 ; MOS API used by the DFS entry stub before relocation
 SYSTEM_VIA_VSYNC_INTERRUPT_MASK = &82 ; hardware: IFR summary bit plus CA1 vertical-sync interrupt bit
 USER_VIA_TIMER2_INTERRUPT_MASK  = &A0 ; hardware: IFR summary bit plus timer-2 interrupt bit
+VIA_DISABLE_ALL_INTERRUPTS      = &7F ; hardware: clear every VIA interrupt-enable source
+SYSTEM_VIA_ENABLE_REQUIRED_INTERRUPTS = &C2 ; hardware: set the System VIA interrupt-enable sources required by the game
+USER_VIA_AUXILIARY_CONTROL_INITIAL = &40 ; hardware: User VIA auxiliary-control value installed by the loader
 RASTER_TIMER2_COUNTER_LOW       = &E0 ; behavioral: low byte of the $10E0 raster palette-change delay
 RASTER_TIMER2_COUNTER_HIGH      = &10 ; behavioral: high byte of the $10E0 raster palette-change delay
 RASTER_STABILISE_DELAY_ITERATIONS = &0A ; behavioral: short loop before the lower-screen palette write
@@ -1469,6 +1474,22 @@ SYSTEM_VIA_INTERRUPT_ENABLE_ALIAS = &FE5E
 USER_VIA_INTERRUPT_ENABLE       = &FE6E
 USER_VIA_INTERRUPT_ENABLE_ALIAS = &FE7E
 USER_VIA_AUXILIARY_CONTROL      = &FE6B
+LOADER_COPY_FIRST_INDEX         = &00 ; dataflow: byte-copy loops begin at offset zero
+IRQ_WORKSPACE_COPY_BYTE_COUNT   = &61 ; structural: previous vector, palette state, handler and trailing byte
+LOADER_KEYBOARD_STATE_CLEAR     = &00 ; behavioral: clear MOS keyboard state before entering relocated gameplay
+LOADER_TEXT_WINDOW_LEFT         = &00 ; presentation: left edge of the loader text window
+LOADER_TEXT_WINDOW_BOTTOM       = &1E ; presentation: bottom edge of the loader text window
+LOADER_TEXT_WINDOW_RIGHT        = &27 ; presentation: right edge of the loader text window
+LOADER_TEXT_WINDOW_TOP          = &00 ; presentation: top edge of the loader text window
+CRTC_REGISTER_VERTICAL_DISPLAYED = &06 ; hardware: 6845 vertical displayed register
+CRTC_VERTICAL_DISPLAYED_VALUE   = &1B ; hardware: 27 displayed character rows
+CRTC_REGISTER_VERTICAL_SYNC_POSITION = &07 ; hardware: 6845 vertical sync-position register
+CRTC_VERTICAL_SYNC_POSITION_VALUE = &20 ; hardware: vertical sync begins at character row 32
+CRTC_REGISTER_SCREEN_START_HIGH = &0C ; hardware: 6845 screen-start high register
+CRTC_SCREEN_START_HIGH_VALUE    = &07 ; hardware: high portion of the configured display start
+CRTC_REGISTER_SCREEN_START_LOW  = &0D ; hardware: 6845 screen-start low register
+CRTC_SCREEN_START_LOW_VALUE     = &90 ; hardware: low portion of the configured display start
+CRTC_REGISTER_HORIZONTAL_SYNC_POSITION = &02 ; hardware: 6845 horizontal sync-position register selected before relocation
 
 ; ---------------------------------------------------------------------------
 ; Standard Acorn MOS entry points
