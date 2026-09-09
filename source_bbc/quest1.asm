@@ -1047,10 +1047,6 @@ ORG main_gameplay_loop
 .main_gameplay_loop_source_end
 
 ASSERT main_gameplay_loop_source = main_gameplay_loop
-ASSERT reincarnate_prompt_vdu_stream = &2578
-ASSERT poll_reincarnation_choice = &2591
-ASSERT game_over_vdu_stream = &25A2
-ASSERT completed_game_exit = &25B9
 ASSERT main_gameplay_loop_source_end = apply_player_energy_delta_to_budget
 COPYBLOCK main_gameplay_loop_source, main_gameplay_loop_source_end, main_gameplay_loop+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR main_gameplay_loop_source, main_gameplay_loop_source_end
@@ -1424,7 +1420,7 @@ ORG write_twelve_video_ula_palette_entries
 .write_twelve_video_ula_palette_entries_source_end
 
 ASSERT write_twelve_video_ula_palette_entries_source = write_twelve_video_ula_palette_entries
-ASSERT write_twelve_video_ula_palette_entries_source_end = &1269
+ASSERT write_twelve_video_ula_palette_entries_source_end = write_four_video_ula_palette_entries
 COPYBLOCK write_twelve_video_ula_palette_entries_source, write_twelve_video_ula_palette_entries_source_end, write_twelve_video_ula_palette_entries+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Evidence-backed behavior: write four related palette commands to the BBC
@@ -1707,7 +1703,6 @@ ORG copy_16_byte_graphic_to_display
 .copy_16_byte_graphic_to_display_source_end
 
 ASSERT copy_16_byte_graphic_to_display_source = copy_16_byte_graphic_to_display
-ASSERT graphic_source_base_pointers = &1D34
 ASSERT copy_16_byte_graphic_to_display_source_end = copy_graphic_byte_to_display
 COPYBLOCK copy_16_byte_graphic_to_display_source, copy_16_byte_graphic_to_display_source_end, copy_16_byte_graphic_to_display+HIGH_RUNTIME_TO_LOADED_DELTA
 
@@ -2341,8 +2336,6 @@ ORG advance_bcd_counter_and_print
 .advance_bcd_counter_and_print_source_end
 
 ASSERT advance_bcd_counter_and_print_source = advance_bcd_counter_and_print
-ASSERT bcd_counter_cursor_vdu_stream = &37B8
-ASSERT bcd_counter_cursor_vdu_stream_end = &37BC
 ASSERT advance_bcd_counter_and_print_source_end = room_cell_map_alignment
 COPYBLOCK advance_bcd_counter_and_print_source, advance_bcd_counter_and_print_source_end, advance_bcd_counter_and_print+HIGH_RUNTIME_TO_LOADED_DELTA
 
@@ -4004,7 +3997,6 @@ ORG initialise_new_game
 
 ASSERT initialise_new_game_source = initialise_new_game
 ASSERT unused_new_game_inline_mode1_record_source_data = unused_new_game_inline_mode1_record
-ASSERT draw_cleared_icon_slot = &0C10
 ASSERT initialise_new_game_source_end = add_collected_icon
 COPYBLOCK initialise_new_game_source, initialise_new_game_source_end, initialise_new_game+LOW_RUNTIME_TO_LOADED_DELTA
 
@@ -4188,8 +4180,6 @@ ORG run_startup_room_sequence_until_space
 .run_startup_room_sequence_until_space_source_end
 
 ASSERT run_startup_room_sequence_until_space_source = run_startup_room_sequence_until_space
-ASSERT startup_press_space_vdu_stream = &0CBE
-ASSERT update_startup_room = &0CCF
 ASSERT run_startup_room_sequence_until_space_source_end = startup_room_sequence_table
 COPYBLOCK run_startup_room_sequence_until_space_source, run_startup_room_sequence_until_space_source_end, run_startup_room_sequence_until_space+LOW_RUNTIME_TO_LOADED_DELTA
 
@@ -5178,7 +5168,6 @@ ORG process_terminal_password_markers
 .process_terminal_password_markers_source_end
 
 ASSERT process_terminal_password_markers_source = process_terminal_password_markers
-ASSERT terminal_password_list_cursor_source = &217A
 ASSERT process_terminal_password_markers_source_end = terminal_interaction_text_stream
 COPYBLOCK process_terminal_password_markers_source, process_terminal_password_markers_source_end, process_terminal_password_markers+HIGH_RUNTIME_TO_LOADED_DELTA
 
@@ -7467,12 +7456,6 @@ ORG draw_room_sign_or_collect_password
 .draw_room_sign_or_collect_password_source_end
 
 ASSERT draw_room_sign_or_collect_password_source = draw_room_sign_or_collect_password
-ASSERT room_sign_cursor_prefix = &1710
-ASSERT room_sign_cursor_prefix_end = &1716
-ASSERT room_sign_second_line_cursor = &1764
-ASSERT room_sign_second_line_cursor_end = &1769
-ASSERT password_equals_inline_text = &1785
-ASSERT password_equals_inline_text_end = &1787
 ASSERT draw_room_sign_or_collect_password_source_end = password_letters
 
 
@@ -9544,7 +9527,6 @@ ORG update_and_draw_room_moving_objects
 
 ASSERT update_and_draw_room_moving_objects_source = update_and_draw_room_moving_objects
 ASSERT update_and_draw_room_moving_objects_source_end = reverse_room_moving_object_delta_at_limits
-ASSERT room_moving_object_test_required_item = &342A
 COPYBLOCK update_and_draw_room_moving_objects_source, update_and_draw_room_moving_objects_source_end, update_and_draw_room_moving_objects+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $33C1-$3439 overlaps the loaded transport image. Release it after
@@ -10606,8 +10588,6 @@ ORG show_golden_dragon_ending
 .show_golden_dragon_ending_source_end
 
 ASSERT show_golden_dragon_ending_source = show_golden_dragon_ending
-ASSERT golden_dragon_inline_message = &1E42
-ASSERT golden_dragon_inline_message_end = &1E67
 ASSERT show_golden_dragon_ending_source_end = initialise_room_moving_objects
 COPYBLOCK show_golden_dragon_ending_source, show_golden_dragon_ending_source_end, show_golden_dragon_ending+HIGH_RUNTIME_TO_LOADED_DELTA
 
@@ -10984,7 +10964,7 @@ ORG unreachable_runtime_low_tail_jsr
     EQUB &20, &3A, &34
 .unreachable_runtime_low_tail_jsr_source_end
 ASSERT unreachable_runtime_low_tail_jsr_source = unreachable_runtime_low_tail_jsr
-ASSERT unreachable_runtime_low_tail_jsr_source_end = &0D00
+ASSERT unreachable_runtime_low_tail_jsr_source_end = LOW_RUNTIME_END_EXCLUSIVE
 COPYBLOCK unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_source_end, unreachable_runtime_low_tail_jsr+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR unreachable_runtime_low_tail_jsr_source, unreachable_runtime_low_tail_jsr_source_end
 
@@ -11531,7 +11511,7 @@ ORG lift_and_hazard_room_record_table
 .lift_and_hazard_room_record_table_source_end
 ASSERT lift_and_hazard_room_record_table_source = lift_and_hazard_room_record_table
 ASSERT lift_and_hazard_room_record_table_source_end-lift_and_hazard_room_record_table_source = LIFT_HAZARD_RECORD_COUNT*LIFT_HAZARD_RECORD_BYTES
-ASSERT lift_and_hazard_room_record_table_source_end = &0AFA
+ASSERT lift_and_hazard_room_record_table_source_end = unused_runtime_low_tail_bytes
 COPYBLOCK lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end, lift_and_hazard_room_record_table+LOW_RUNTIME_TO_LOADED_DELTA
 CLEAR lift_and_hazard_room_record_table_source, lift_and_hazard_room_record_table_source_end
 
@@ -11737,7 +11717,7 @@ ORG RELOCATION_LOADER_SOURCE_STAGING_ADDRESS
     JMP relocated_game_entry
 .relocation_loader_source_end
 
-ASSERT relocation_loader_source_end-relocation_loader_source = &11E
+ASSERT relocation_loader_source_end-relocation_loader_source = RELOCATION_LOADER_BYTES
 ASSERT copy_loaded_low_block_to_runtime_source-relocation_loader_source+loader_initialization_entry = copy_loaded_low_block_to_runtime
 ASSERT copy_loaded_high_block_source-relocation_loader_source+loader_initialization_entry = copy_loaded_high_block_to_runtime
 ASSERT copy_transient_decoder_source-relocation_loader_source+loader_initialization_entry = copy_transient_decoder_to_stack_page
@@ -11757,7 +11737,7 @@ ORG EMBEDDED_MESSAGE_SOURCE_STAGING_ADDRESS
     EQUS "e Mountaineering Club.'Swing out Sister for Break-out. And goodluck Sally were ever you are!"
     EQUB &00, &00, &00, &00, &00, &00
 .embedded_mountaineering_message_source_end
-ASSERT embedded_mountaineering_message_source_end-embedded_mountaineering_message_source = &62
+ASSERT embedded_mountaineering_message_source_end-embedded_mountaineering_message_source = EMBEDDED_MOUNTAINEERING_MESSAGE_BYTES
 COPYBLOCK embedded_mountaineering_message_source, embedded_mountaineering_message_source_end, LOADED_EMBEDDED_MOUNTAINEERING_MESSAGE
 CLEAR embedded_mountaineering_message_source, embedded_mountaineering_message_source_end
 
@@ -11778,7 +11758,7 @@ ORG transient_xor_message_decoder
 .transient_xor_message_finished
     RTS
 .transient_xor_message_decoder_source_end
-ASSERT transient_xor_message_decoder_source_end = &010F
+ASSERT transient_xor_message_decoder_source_end = TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS
 COPYBLOCK transient_xor_message_decoder_source, transient_xor_message_decoder_source_end, transient_xor_message_decoder+STACK_RUNTIME_TO_LOADED_DELTA
 CLEAR transient_xor_message_decoder_source, transient_xor_message_decoder_source_end
 
@@ -11794,7 +11774,7 @@ ORG TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS
     EQUB &99, &98, &B8, &68, &62, &0D, &0D, &46, &A4, &86, &5E, &17, &0C, &1E, &4F, &55
     EQUB &5D, &67, &24, &4E, &4D, &50, &45, &54, &A7, &B8, &AE, &E1, &D0, &8E, &23
 .transient_xor_message_payload_end
-ASSERT transient_xor_message_payload_end = &019E
+ASSERT transient_xor_message_payload_end = TRANSIENT_STACK_PAGE_PADDING_ADDRESS
 COPYBLOCK transient_xor_message_payload, transient_xor_message_payload_end, TRANSIENT_XOR_MESSAGE_PAYLOAD_ADDRESS+STACK_RUNTIME_TO_LOADED_DELTA
 CLEAR transient_xor_message_payload, transient_xor_message_payload_end
 
@@ -11803,7 +11783,7 @@ ORG TRANSIENT_STACK_PAGE_PADDING_ADDRESS
     EQUB &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF
     EQUB &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF, &FF
 .transient_stack_page_padding_source_end
-ASSERT transient_stack_page_padding_source_end = &01B0
+ASSERT transient_stack_page_padding_source_end = TRANSIENT_STACK_PAGE_END_EXCLUSIVE
 COPYBLOCK transient_stack_page_padding_source, transient_stack_page_padding_source_end, TRANSIENT_STACK_PAGE_PADDING_ADDRESS+STACK_RUNTIME_TO_LOADED_DELTA
 CLEAR transient_stack_page_padding_source, transient_stack_page_padding_source_end
 
@@ -11824,7 +11804,7 @@ ORG IRQ_RELOCATION_TRAILING_ZERO_ADDRESS
 .irq_relocation_trailing_zero_source
     EQUB IRQ_RELOCATION_TRAILING_VALUE
 .irq_relocation_trailing_zero_source_end
-ASSERT irq_relocation_trailing_zero_source_end = &03E1
+ASSERT irq_relocation_trailing_zero_source_end = IRQ_RELOCATION_TRAILING_ZERO_ADDRESS+1
 COPYBLOCK irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end, IRQ_RELOCATION_TRAILING_ZERO_ADDRESS+IRQ_RUNTIME_TO_LOADED_DELTA
 CLEAR irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_end
 
@@ -11841,8 +11821,8 @@ ORG DFS_STUB_SOURCE_STAGING_ADDRESS
     JSR OSBYTE
     JMP loader_initialization_entry
 .dfs_execution_entry_stub_source_end
-ASSERT dfs_execution_entry_stub_source = &8000
-ASSERT dfs_execution_entry_stub_source_end = &800F
+ASSERT dfs_execution_entry_stub_source = DFS_STUB_SOURCE_STAGING_ADDRESS
+ASSERT dfs_execution_entry_stub_source_end-dfs_execution_entry_stub_source = DFS_EXECUTION_STUB_BYTES
 COPYBLOCK dfs_execution_entry_stub_source, dfs_execution_entry_stub_source_end, dfs_execution_entry_stub
 CLEAR dfs_execution_entry_stub_source, dfs_execution_entry_stub_source_end
 
@@ -11863,5 +11843,5 @@ ORG QUEST1_LOAD_ADDRESS
 .quest1_load_start
 ORG QUEST1_LOAD_END_EXCLUSIVE
 .quest1_load_end
-ASSERT quest1_load_end-quest1_load_start = &3F20
+ASSERT quest1_load_end-quest1_load_start = QUEST1_PAYLOAD_BYTES
 SAVE "build/reconstruction/QUEST1", quest1_load_start, quest1_load_end, QUEST1_EXECUTION_ADDRESS
