@@ -1,5 +1,9 @@
 # Quest BBC Micro source reconstruction
 
+<p align="center">
+  <img src="assets/quest-cover.jpg" alt="Quest cassette cover art" width="315">
+</p>
+
 This repository contains a complete, byte-exact BeebAsm reconstruction of the
 BBC Micro `$.QUEST1` program payload. All executable code, tables, text,
 graphics, player sprites, enemy sprites, room data, and other payload bytes are
@@ -82,5 +86,6 @@ Those citations document how names and behavior were established and are not a
 build or validation dependency. Referenced variant and start-position scripts,
 however, are present here under `tools/`.
 
-The original game and its assets remain the property of their respective
-copyright holders. No original disk image is included here.
+The original game, cover artwork, and other assets remain the property of their
+respective copyright holders. The cover is included here for identification and
+historical context. No original disk image is included here.
