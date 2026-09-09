@@ -2854,9 +2854,10 @@ COPYBLOCK cross_room_robot_ghost_initial_state_source, cross_room_robot_ghost_in
 CLEAR cross_room_robot_ghost_initial_state_source, cross_room_robot_ghost_initial_state_source_end
 
 ORG last_chance_chord_inkey_codes
-; Six OSBYTE $81 negative key numbers, tested from the last entry to the first.
+; E/R/T/A/N/I OSBYTE negative key numbers, tested from I back to E after the
+; separate C trigger has been detected.
 .last_chance_chord_inkey_codes_source
-    EQUB &DD, &CC, &DC, &BE, &AA, &DA
+    EQUB INKEY_E, INKEY_R, INKEY_T, INKEY_A, INKEY_N, INKEY_I
 .last_chance_chord_inkey_codes_source_end
 ASSERT last_chance_chord_inkey_codes_source = last_chance_chord_inkey_codes
 ASSERT last_chance_chord_inkey_codes_source_end = poll_controls_and_apply_gameplay_actions
