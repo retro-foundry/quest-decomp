@@ -1883,12 +1883,12 @@ ORG copy_16_byte_graphic_to_display
     BNE copy_16_graphic_index_selected
     LDA shared_workspace_79
     BEQ copy_16_graphic_index_selected
-    LDA #&12
+    LDA #GRAPHIC_HORIZONTAL_BAR
     STA graphic_record_byte_offset_low
 .copy_16_graphic_index_selected
-    LDA #&00
+    LDA #&00 ; clear the record-offset high byte and disable the XOR transform
     STA graphic_record_byte_offset_high
-    STA shared_workspace_75
+    STA graphic_byte_xor_transform_enabled
     LDX #&04
 .multiply_graphic_index_by_16
     ASL graphic_record_byte_offset_low
@@ -1906,8 +1906,8 @@ ORG copy_16_byte_graphic_to_display
 
     ASL graphic_record_selector_flags
     BCC copy_16_graphic_without_xor
-    LDA #&01
-    STA shared_workspace_75
+    LDA #GRAPHIC_XOR_TRANSFORM_ENABLED
+    STA graphic_byte_xor_transform_enabled
 .copy_16_graphic_without_xor
     ASL graphic_record_selector_flags
     BCS copy_16_graphic_halves_reversed
@@ -2210,8 +2210,9 @@ CLEAR update_and_draw_room_enemies_source, update_and_draw_room_enemies_source_e
 ORG copy_graphic_byte_to_display
 
 ; Runtime $1D52-$1D68.
-; Inputs: Y selects a byte through graphic_source_pointer; $75 selects an
-; optional EOR #$90 transform; display_pointer names the current destination.
+; Inputs: Y selects a byte through graphic_source_pointer;
+; graphic_byte_xor_transform_enabled selects the optional EOR transform, and
+; display_pointer names the current destination.
 ; Output: one byte is stored, display_pointer advances by one with its page
 ; carry preserved, and the caller's Y source index is restored before return.
 ; The initial-render trace exercises 11,434 entries and 44 page carries. Its
@@ -2220,7 +2221,7 @@ ORG copy_graphic_byte_to_display
 .copy_graphic_byte_to_display_source
     LDA (graphic_source_pointer_low),Y
     STY graphic_byte_saved_source_index
-    LDY shared_workspace_75
+    LDY graphic_byte_xor_transform_enabled
     BEQ copy_graphic_byte_without_xor
     EOR #&90
 .copy_graphic_byte_without_xor
@@ -3559,7 +3560,7 @@ ORG reverse_lift_or_hazard_delta_at_limits
 
 ; Runtime $2375-$2393. Keep a lift or moth-shaped hazard inside its range by reversing
 ; its delta at either limit, and flag that the check ran.
-; $75 is set to 1 on entry. The entity value at $19 is masked to $FE and tested
+; lift_hazard_limit_check_active is set on entry. The entity position is masked to an even value and tested
 ; against the two limits at $1246 and $1247: matching the first stores +2 into
 ; the delta at $18, matching the second stores -2, and matching neither leaves
 ; the delta alone.
@@ -3570,8 +3571,8 @@ ORG reverse_lift_or_hazard_delta_at_limits
 ; initialise_lifts_and_hazards_from_table unpacks, so each entity class carries
 ; its own limits and its own clamp.
 .reverse_lift_or_hazard_delta_at_limits_source
-    LDA #&01
-    STA shared_workspace_75
+    LDA #LIFT_HAZARD_LIMIT_CHECK_SET
+    STA lift_hazard_limit_check_active
     LDA moving_entity_position,Y
     AND #LIFT_HAZARD_EVEN_POSITION_MASK
     CMP lift_or_hazard_lower_position
@@ -3604,7 +3605,7 @@ CLEAR reverse_lift_or_hazard_delta_at_limits_source, reverse_lift_or_hazard_delt
 ORG advance_lift_or_hazard_vertical_position
 
 ; Runtime $2394-$23BE. Apply one signed vertical step to the Y-indexed lift or
-; moth-shaped hazard, then clear the check flag at $75.
+; moth-shaped hazard, then clear lift_hazard_limit_check_active.
 ; The state is copied into the shared scratch fields, stepped by
 ; apply_signed_vertical_step_to_pointer and copied back, exactly as
 ; advance_indexed_entity_vertical_position does for the other class and
@@ -3613,7 +3614,7 @@ ORG advance_lift_or_hazard_vertical_position
 ; $51/$52 for the display pointer.
 ; All three movers therefore share one helper, so every moving thing in the game
 ; falls and climbs by the same two display scanlines per unit.
-; The $75 it clears is the flag reverse_lift_or_hazard_delta_at_limits sets on
+; The flag it clears is the one reverse_lift_or_hazard_delta_at_limits sets on
 ; entry, so the clamp and the step bracket each other.
 .advance_lift_or_hazard_vertical_position_source
     LDA moving_entity_position,Y
@@ -3631,8 +3632,8 @@ ORG advance_lift_or_hazard_vertical_position
     STA moving_entity_display_pointer_low,Y
     LDA vertical_step_pointer_high
     STA moving_entity_display_pointer_high,Y
-    LDA #&00
-    STA shared_workspace_75
+    LDA #LIFT_HAZARD_LIMIT_CHECK_CLEAR
+    STA lift_hazard_limit_check_active
     RTS
 .advance_lift_or_hazard_vertical_position_source_end
 
@@ -5108,7 +5109,7 @@ ORG move_player_up_by_velocity
     LSR A
     CMP #&09
     BPL test_ceiling
-    LDA shared_workspace_75
+    LDA vertical_room_transition_cell_flag
     BNE apply_upward_step
     JSR capture_player_state_for_redraw
     JMP enter_room_above
@@ -5938,8 +5939,8 @@ ORG enter_room_below
 
 ; Runtime $2AFD-$2B23. The downward room transition, reached from the vertical
 ; mover when the halved vertical position is from $60 through $6B, beyond the
-; bottom of the room. As in enter_room_above, shifting the cell attribute at
-; $75 abandons the transition through a shared RTS when its low bit is set.
+; bottom of the room. As in enter_room_above, shifting
+; vertical_room_transition_cell_flag abandons the transition when its low bit is set.
 ; Otherwise the horizontal position is converted back into a display pointer,
 ; that pointer is advanced by $3C80, and the player is placed at vertical
 ; position zero, the top of the new room. The $1209 vector increments the
@@ -5947,7 +5948,7 @@ ORG enter_room_below
 ; redrawn. Landing on level 8 additionally tail-calls the indexed-pair
 ; initialiser, while every other level returns through the shared RTS at $2ACE.
 .enter_room_below_source
-    LSR shared_workspace_75
+    LSR vertical_room_transition_cell_flag
     BCS return_from_room_transition
     JSR set_player_pointer_from_horizontal_position
     CLC
@@ -5980,9 +5981,9 @@ ORG enter_room_above
 
 ; Runtime $2B37-$2B56. The upward room transition, reached from the vertical
 ; mover when the halved vertical position falls below 9, the top of the room.
-; The flag at $75 is shifted and a set carry abandons the transition through the
-; shared carry-clear exit. $75 is a cell attribute, not a room one: $1CFF clears
-; it and $1D1F sets it from a bit shifted out of $33 as each cell is decoded, so
+; vertical_room_transition_cell_flag is shifted and a set carry abandons the
+; transition through the shared carry-clear exit. It is a cell attribute, not a room one: the room decoder clears
+; it and then sets it from a shifted cell bit, so
 ; the ceiling is passable cell by cell.
 ; Otherwise $2B24 runs, rebuilding the display pointer as $35 times 8, the
 ; vertical position is set to $D0, and the pointer is advanced by $7D80. Those
@@ -5993,7 +5994,7 @@ ORG enter_room_above
 ; Leaving through the top and arriving near the bottom is what makes this the
 ; room above rather than a move within one room.
 .enter_room_above_source
-    LSR shared_workspace_75
+    LSR vertical_room_transition_cell_flag
     BCS return_carry_clear_2b35
     JSR set_player_pointer_from_horizontal_position
     LDA #PLAYER_BOTTOM_EDGE_VERTICAL_POSITION
@@ -9968,14 +9969,14 @@ ORG draw_and_initialise_room
     LDA player_display_pointer_high
     STA room_setup_player_display_pointer_high
     LDA #OSBYTE_FLUSH_BUFFER
-    LDX #DISPLAY_MARKER_SCAN_COUNT
+    LDX #OSBYTE_BUFFER_SOUND_CHANNEL_0
     JSR OSBYTE
-    LDA #&00
+    LDA #&00 ; clear renderer, jump/swim, and vertical-transition state together
     STA xor_graphic_repeat_source_scanlines
     STA player_jump_or_swim_requested
-    STA shared_workspace_75
+    STA vertical_room_transition_cell_flag
     LDA reference_pair_secondary_value
-    CMP #&08
+    CMP #CROSS_ROOM_GHOST_FIRST_LEVEL
     BPL finish_room_setup
     JSR enter_initialise_indexed_pair_from_record
 
