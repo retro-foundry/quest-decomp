@@ -6975,28 +6975,28 @@ ORG initialise_cross_room_robot_ghost_from_record
     DEX
     BPL preset_pair_flags
     LDA cross_room_robot_ghost_record_table,Y
-    AND #INDEXED_PAIR_SELECTOR_MASK
+    AND #CROSS_ROOM_ROBOT_GHOST_SELECTOR_MASK
     STA cross_room_robot_ghost_positive_delta_selector
     STA cross_room_robot_ghost_primary_field
     LDA cross_room_robot_ghost_record_table,Y
     LSR A
-    AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
+    AND #CROSS_ROOM_ROBOT_GHOST_THRESHOLD_OFFSET_MASK
     STA cross_room_robot_ghost_positive_delta_threshold
     STA cross_room_robot_ghost_value_field
     STA cross_room_robot_ghost_runtime_value_slot_0
     STA display_grid_column
     INY
     LDA cross_room_robot_ghost_record_table,Y
-    AND #INDEXED_PAIR_SELECTOR_MASK
+    AND #CROSS_ROOM_ROBOT_GHOST_SELECTOR_MASK
     STA cross_room_robot_ghost_negative_delta_selector
     STA cross_room_robot_ghost_secondary_delta_slot_0
     LDA cross_room_robot_ghost_record_table,Y
     LSR A
-    AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
+    AND #CROSS_ROOM_ROBOT_GHOST_THRESHOLD_OFFSET_MASK
     STA cross_room_robot_ghost_negative_delta_threshold
     INY
     LDA cross_room_robot_ghost_record_table,Y
-    AND #INDEXED_PAIR_POSITION_MASK
+    AND #CROSS_ROOM_ROBOT_GHOST_POSITION_MASK
     STA display_grid_row
     ASL A
     ASL A
@@ -7803,9 +7803,9 @@ CLEAR set_cross_room_robot_ghost_value_delta_at_thresholds_source, set_cross_roo
 
 ORG advance_cross_room_robot_ghost_value_and_display_pointer
 
-; Runtime $2F12-$2F8E. Add the X-indexed signed unit delta to its value, move
-; the paired display pointer by +8 or -8, wrap the value across indexed primary
-; fields, and reverse the delta at primary endpoints 0 and 7. The BPL/BMI
+; Add the X-selected signed unit delta to one robot/ghost position, move its
+; display pointer by one Mode 1 cell column, wrap across room-column fields,
+; and reverse the delta at ROOM_COLUMN_FIRST or ROOM_COLUMN_LAST. The BPL/BMI
 ; decisions deliberately consume the NMOS N flag directly.
 .advance_cross_room_robot_ghost_value_and_display_pointer_source
     LDA cross_room_robot_ghost_value_field,X
@@ -7818,14 +7818,14 @@ ORG advance_cross_room_robot_ghost_value_and_display_pointer
     BEQ advance_cross_room_robot_ghost_pointer_negative
 
     LDA cross_room_robot_ghost_value_field,X
-    CMP #INDEXED_PAIR_HORIZONTAL_WRAP_POSITION
+    CMP #CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_WRAP_POSITION
     BPL cross_room_robot_ghost_positive_wrap_entry
     CLC
     LDA cross_room_robot_ghost_display_pointer_low,X
     ADC #MODE1_CELL_COLUMN_BYTES
     STA cross_room_robot_ghost_display_pointer_low,X
     LDA cross_room_robot_ghost_display_pointer_high,X
-    ADC #&00
+    ADC #HI(MODE1_CELL_COLUMN_BYTES) ; propagate the low-byte addition's carry
     STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
@@ -7837,7 +7837,7 @@ ORG advance_cross_room_robot_ghost_value_and_display_pointer
     SBC #MODE1_CELL_COLUMN_BYTES
     STA cross_room_robot_ghost_display_pointer_low,X
     LDA cross_room_robot_ghost_display_pointer_high,X
-    SBC #&00
+    SBC #HI(MODE1_CELL_COLUMN_BYTES) ; propagate the low-byte subtraction's borrow
     STA cross_room_robot_ghost_display_pointer_high,X
     RTS
 
@@ -7846,7 +7846,7 @@ ORG advance_cross_room_robot_ghost_value_and_display_pointer
     CMP #ROOM_COLUMN_LAST
     BEQ reverse_cross_room_robot_ghost_delta_negative
     INC cross_room_robot_ghost_primary_field,X
-    LDA #&00
+    LDA #CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_FIRST_POSITION
     STA cross_room_robot_ghost_value_field,X
     SEC
     LDA cross_room_robot_ghost_display_pointer_low,X
@@ -7866,7 +7866,7 @@ ORG advance_cross_room_robot_ghost_value_and_display_pointer
     LDA cross_room_robot_ghost_primary_field,X
     BEQ reverse_cross_room_robot_ghost_delta_positive
     DEC cross_room_robot_ghost_primary_field,X
-    LDA #INDEXED_PAIR_HORIZONTAL_WRAP_POSITION-1
+    LDA #CROSS_ROOM_ROBOT_GHOST_HORIZONTAL_WRAP_POSITION-1
     STA cross_room_robot_ghost_value_field,X
     CLC
     LDA cross_room_robot_ghost_display_pointer_low,X
