@@ -66,6 +66,24 @@ foreach ($asciiPath in $asciiInputs) {
 # reconstructed 6502 instruction stream.
 $assemblySource = Join-Path $PSScriptRoot 'source_bbc\quest1.asm'
 $assemblyText = Get-Content -LiteralPath $assemblySource -Raw
+$assemblyLines = Get-Content -LiteralPath $assemblySource
+$activeDataOwner = $null
+$instructionPattern = '^\s*(?:ADC|AND|ASL|BCC|BCS|BEQ|BIT|BMI|BNE|BPL|BRK|BVC|BVS|CLC|CLD|CLI|CLV|CMP|CPX|CPY|DEC|DEX|DEY|EOR|INC|INX|INY|JMP|JSR|LDA|LDX|LDY|LSR|NOP|ORA|PHA|PHP|PLA|PLP|ROL|ROR|RTI|RTS|SBC|SEC|SED|SEI|STA|STX|STY|TAX|TAY|TSX|TXA|TXS|TYA)(?:\s|$)'
+for ($assemblyLineIndex = 0; $assemblyLineIndex -lt $assemblyLines.Count; $assemblyLineIndex++) {
+    $assemblyLine = $assemblyLines[$assemblyLineIndex]
+    if ($assemblyLine -match '^\s*ORG\s') {
+        $activeDataOwner = $null
+    }
+    elseif ($assemblyLine -match '^\s*\.([A-Za-z_][A-Za-z0-9_]*)\s*$') {
+        $activeDataOwner = $Matches[1]
+    }
+    elseif ($assemblyLine -match $instructionPattern) {
+        $activeDataOwner = $null
+    }
+    elseif ($assemblyLine -match '^\s*(?:EQUB|EQUW|EQUS)(?:\s|$)' -and $null -eq $activeDataOwner) {
+        throw "Unlabelled emitted data in quest1.asm at line $($assemblyLineIndex + 1): $($assemblyLine.Trim())"
+    }
+}
 $numericInstructionPattern = '(?im)^\s*(?:ADC|AND|ASL|BIT|CMP|CPX|CPY|DEC|EOR|INC|JMP|JSR|LDA|LDX|LDY|LSR|ORA|ROL|ROR|SBC|STA|STX|STY)\s+#?(?:&[0-9A-F]+|\$[0-9A-F]+|%[01]+|[0-9]+)(?:\s*,\s*[XY])?\s*(?:;.*)?$'
 $numericInstructions = [regex]::Matches($assemblyText, $numericInstructionPattern)
 if ($numericInstructions.Count -ne 0) {
