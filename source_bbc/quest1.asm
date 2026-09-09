@@ -5096,7 +5096,7 @@ ORG move_player_up_by_velocity
 .climb_one_step
     LDA player_vertical_position
     LSR A
-    CMP #&09
+    CMP #PLAYER_TOP_TRANSITION_HALF_POSITION
     BPL test_ceiling
     LDA vertical_room_transition_cell_flag
     BNE apply_upward_step
@@ -5120,7 +5120,7 @@ ORG move_player_up_by_velocity
     RTS
 
 .stop_climb
-    LDA #&00
+    LDA #PLAYER_VERTICAL_VELOCITY_STOPPED
     STA player_vertical_velocity
     RTS
 
@@ -5152,7 +5152,7 @@ ORG scan_four_display_bytes_for_markers
 ; returns carry set. A completed clear scan returns carry clear.
 .scan_four_display_bytes_for_markers_source
     LDX #DISPLAY_MARKER_SCAN_COUNT
-    LDY #&00
+    LDY #DISPLAY_MARKER_SCAN_STATE_CLEAR
     STY display_grid_column
     STY display_marker_deferred_damage_flag
     STY water_environment_flag
@@ -5174,7 +5174,7 @@ ORG scan_four_display_bytes_for_markers
     JSR apply_player_damage_and_redraw_energy
 
 .return_occupied_display_byte
-    LDA #&01
+    LDA #DISPLAY_COLUMN_OCCUPIED
     STA display_grid_column
     SEC
     RTS
@@ -5198,7 +5198,7 @@ ORG scan_four_display_bytes_for_markers
     RTS
 
 .mark_0a_or_05_display_byte
-    LDA #&01
+    LDA #DISPLAY_MARKER_DEFERRED_DAMAGE_PENDING
     STA display_marker_deferred_damage_flag
     JMP advance_display_scan_offset
 .scan_four_display_bytes_for_markers_source_end
@@ -5213,17 +5213,17 @@ CLEAR scan_four_display_bytes_for_markers_source, scan_four_display_bytes_for_ma
 
 ORG check_player_relative_display_pattern_15
 
-; Align the player pointer low byte, add $0795 into the
-; display pointer, and test pattern selector $15. A carry-clear result returns
-; through the shared RTS at $2A34; carry set tail-transfers to $337B.
+; Align the player pointer low byte, add PLAYER_RELATIVE_PATTERN_POINTER_OFFSET,
+; and test GRAPHIC_COLUMN_JUNCTION. A carry-clear result returns through the
+; shared no-match exit; carry set tail-transfers to the pattern-match handler.
 .check_player_relative_display_pattern_15_source
     CLC
     LDA player_display_pointer_low
-    AND #&F0
-    ADC #&95
+    AND #PLAYER_BLOCKED_POINTER_LOW_MASK
+    ADC #LO(PLAYER_RELATIVE_PATTERN_POINTER_OFFSET)
     STA display_pointer_low
     LDA player_display_pointer_high
-    ADC #&07
+    ADC #HI(PLAYER_RELATIVE_PATTERN_POINTER_OFFSET)
     STA display_pointer_high
     LDA #GRAPHIC_COLUMN_JUNCTION
     JSR display_pattern_test
