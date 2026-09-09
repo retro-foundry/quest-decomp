@@ -273,6 +273,7 @@ GRAPHIC_XOR_TRANSFORM_ENABLED   = &01 ; behavioral: apply GRAPHIC_XOR_TRANSFORM_
 GRAPHIC_BYTE_XOR_MASK           = &90 ; behavioral: Mode 1 pixel transform used for XOR-selected graphic records
 GRAPHIC_RECORD_BYTE_COUNT       = &10 ; structural: every graphic record contains sixteen bytes
 GRAPHIC_RECORD_INDEX_SHIFT      = &04 ; dataflow: four shifts multiply a selector by sixteen bytes
+GRAPHIC_RECORD_BYTES            = &10 ; structural: one Mode 1 tile or status graphic occupies sixteen bytes
 GRAPHIC_RECORD_FIRST_BYTE_INDEX = &00 ; dataflow: first byte index for forward copying
 GRAPHIC_RECORD_FIRST_HALF_LAST_INDEX = &07 ; dataflow: reverse copying begins at the end of the first eight-byte half
 GRAPHIC_RECORD_SECOND_HALF_LAST_INDEX = &0F ; dataflow: reverse copying begins at the end of the second eight-byte half
