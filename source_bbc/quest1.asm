@@ -224,8 +224,9 @@
 ;          the mutable $0900 table. restore_item_and_goal_records copies the
 ;          whole range before room setup begins.
 ;
-;   $0A00  room_enemy_record_table, twenty six-byte records, the room enemies
-;          class. Every record resolves to a real room, and the set contains
+;   $0A00  room_enemy_record_table, twenty six-byte records for room-local
+;          enemies. Every record resolves to one specific room; this updater
+;          has no room-column transition path. The set contains
 ;          every room the account calls out for an enemy. So this is the table
 ;          the creatures come from.
 ;
@@ -2667,7 +2668,8 @@ ORG initialise_room_enemy_from_table
 ; the limits by both delta clamps, the pointers by collision probes, the moving
 ; entity positions by the pair loader, and the species/slot fields by drawing.
 ;
-; This is the enemy table. The chain is: this routine writes the active species,
+; This is the room-local enemy table, not the cross-room robot/ghost table. The
+; chain is: this routine writes the active species,
 ; last slot, position and display pointer; draw_room_enemy_with_xor_graphic reads them;
 ; and suppressing that renderer was tested in play and made the enemy robots
 ; disappear while leaving the lifts alone. Every one of the twenty records
@@ -2678,7 +2680,7 @@ ORG initialise_room_enemy_from_table
 ; graphic pairs and their rooms are
 ;   bat                       B5 D0 A1 G2 E3 D6
 ;   small bouncing robot      C3 F1 C1 B3 B6 E2 A2 C7
-;   moth/hazard               C5 E5 F4 E4 H7 D7
+;   moth                      C5 E5 F4 E4 H7 D7
 ; See analysis/room_map.md for the rooms alongside what the account says of
 ; them. These are decoded graphic identities; the shared state machine means a
 ; visual identity alone must not be used to infer movement or collision rules.
