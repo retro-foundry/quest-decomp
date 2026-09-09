@@ -2059,7 +2059,7 @@ ORG dispatch_game_tick_updates
 
 .after_secondary_lift_hazard_update
     LDA timed_effect_selector
-    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_0C
+    CMP #TIMED_EFFECT_REPLACE_SAVED_CELL_WITH_BLANK_STATE_MOTIF
     BNE after_blank_state_cell_effect
     JSR replace_saved_cell_then_play_sound
 
@@ -6901,7 +6901,7 @@ ORG draw_curved_bowl_or_edge_pattern_row
 ; column, alternates in the last, and blanks elsewhere. The shared edge-pattern
 ; handlers select blanks, alternating tiles, or GRAPHIC_EDGE_PATTERN_A/B.
 .draw_curved_bowl_or_edge_pattern_row_source
-    CMP #CELL_12_PATTERN_COLUMN
+    CMP #CURVED_BOWL_PATTERN_COLUMN
     BNE select_record_08_edge_last_column
     JMP draw_eight_curved_bowl_tiles
 
@@ -8668,7 +8668,7 @@ ORG restore_item_and_goal_records
     STA item_and_goal_record_table,X
     DEX
     BPL copy_next_initial_item_goal_byte
-    LDA #RESTORED_ROOM_B0_CELL_VALUE
+    LDA #RESTORED_ROOM_B0_BLANK_AFTER_PREFIX_CELL
     JMP stamp_map_bytes_and_store
 .restore_item_and_goal_records_source_end
 
