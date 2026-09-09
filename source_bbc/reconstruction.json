@@ -909,7 +909,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "$122A/$122C/$122E/$1230 are the four indexed selector-delta slots written during indexed-XOR setup",
-        "$1231-$123D are read and written as interleaved indexed entity fields by the $35xx-$37xx update cluster",
+        "$1231-$123D are read and written as interleaved room enemy fields by the $35xx-$37xx update cluster",
         "$1242-$1244 are the proved timed-effect selector and saved display pointer; room initialisation zeroes related selectors at $1239/$1245",
         "the original initial image is 34 zero bytes and the entire span is mutable runtime state"
       ]
@@ -2261,7 +2261,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all ninety-three instructions: 16 entries driving 263 record tests against a table of 20, with 5 matches unpacked",
         "the times-six index and the four INY-separated reads past the match confirm a six-byte record stride",
-        "every destination it writes is a field an already-reconstructed routine reads: $1235 and $1236 by reverse_indexed_123a_delta_at_limits, $1237 and $1238 by reverse_indexed_123b_delta_at_limits, $47/$48 by the column probes, $68 by load_cross_room_robot_ghost_output_from_y_tables, and active_enemy_species/active_enemy_last_slot_index by draw_room_enemy_with_xor_graphic",
+        "every destination it writes is a field an already-reconstructed routine reads: $1235 and $1236 by clamp_room_enemy_horizontal_delta_at_limits, $1237 and $1238 by reverse_room_enemy_vertical_delta_at_limits, $47/$48 by the column probes, $68 by load_room_enemy_collision_coordinates, and active_enemy_species/active_enemy_last_slot_index by draw_room_enemy_with_xor_graphic",
         "the shift-by-three scaling matches the eight-byte character cell the grid conversion uses, so the limits are in the same units as the positions"
       ]
     },
@@ -3245,7 +3245,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all fifty-two instructions: 4,073 entries at $2BAA against 84 at $2B9E, narrowing to 14 that pass all four comparisons",
         "the four comparisons reject 145, 3,897 and 9 candidates in turn, so the box is tested horizontally before vertically",
-        "the +1/-1 and +2/-2 values it writes are the same pairs reverse_indexed_123a_delta_at_limits and reverse_indexed_123b_delta_at_limits drive"
+        "the +1/-1 and +2/-2 values it writes are the same pairs clamp_room_enemy_horizontal_delta_at_limits and reverse_room_enemy_vertical_delta_at_limits drive"
       ]
     },
     {
@@ -4032,11 +4032,11 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all seventeen instructions 51 times, taking the two-row configuration on 10 of them and the $0A row count on 26",
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv and the committed edges prove callers 0x356a and 0x35b8",
-        "three of its four callees are already source-owned: configure_two_row_repeated_xor_graphic, load_display_pointer_from_cross_room_robot_ghost and select_graphic_then_xor_draw"
+        "three of its four callees are already source-owned: configure_two_row_repeated_xor_graphic, load_room_enemy_display_pointer and select_graphic_then_xor_draw"
       ]
     },
     {
-     "name": "load_display_pointer_from_cross_room_robot_ghost",
+     "name": "load_room_enemy_display_pointer",
      "runtime_start": 13656,
      "runtime_end_exclusive": 13667,
      "loaded_start": 19800,
@@ -4058,12 +4058,12 @@
       "meaning_level": "port-contract",
       "evidence": [
         "the committed runtime traces execute 36 of 37 instructions across all three type dispatches, both old-image paths, both range outcomes, movement, player interaction, drawing, iteration, and the shared tail return",
-        "analysis/runtime_trace/indexed_entity_player_overlap/executed_pcs.csv records a bounded two-byte overlap checkpoint that executes the formerly missing $3584 jump and the pursuit-delta copy path once",
+        "analysis/runtime_trace/room_enemy_player_overlap/executed_pcs.csv records a bounded two-byte overlap checkpoint that executes the formerly missing $3584 jump and the pursuit-delta copy path once",
         "the focused call enters from $2243 and returns to $2246 after 9,972 cycles with exact authority/rebuild registers, PC sequence, complete memory effect, display effect, and video-hardware effect"
       ]
     },
     {
-      "name": "reflect_indexed_entity_at_obstacles",
+      "name": "reflect_room_enemy_at_obstacles",
       "runtime_start": 13762,
       "runtime_end_exclusive": 13818,
       "loaded_start": 19906,
@@ -4072,12 +4072,12 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all twenty-two instructions: 235 entries, with the four blocked cases taken 19, 8, 13 and 26 times",
-        "the delta values the four cases write are the signed pairs $01/$FF and $02/$FE, already source-owned as set_indexed_123a_delta and set_indexed_123b_delta",
-        "six of its callees are source-owned, including both probes that reach the display through load_display_pointer_then_scan_markers and scan_markers_below_indexed_entry"
+        "the delta values the four cases write are the signed pairs $01/$FF and $02/$FE, already source-owned as the room-enemy horizontal and vertical delta setters",
+        "six of its callees are source-owned, including both probes that reach the display through load_room_enemy_display_pointer_then_scan_markers and scan_markers_below_room_enemy"
       ]
     },
     {
-      "name": "advance_indexed_entity_with_collision_checks",
+      "name": "advance_room_enemy_with_collision_checks",
       "runtime_start": 13818,
       "runtime_end_exclusive": 13870,
       "loaded_start": 19962,
@@ -4086,13 +4086,13 @@
       "meaning_level": "port-contract",
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv records 3,752 entries and covers nineteen instructions across both vertical probes, vertical movement, both horizontal probes, clear paths, and twenty behind-collision reversals",
-        "analysis/runtime_trace/indexed_entity_ahead_collision/executed_pcs.csv executes the previously missing $361D ahead-collision reversal once",
+        "analysis/runtime_trace/room_enemy_ahead_collision/executed_pcs.csv executes the previously missing $361D ahead-collision reversal once",
         "the focused ahead-collision call returns to $3579 after 1,114 cycles with exact authority/rebuild registers, PC sequence, complete memory effect, display effect and video-hardware effect",
         "all probe, reversal, and movement callees are already source-owned"
       ]
     },
     {
-      "name": "scan_column_behind_indexed_entry",
+      "name": "scan_column_behind_room_enemy",
       "runtime_start": 13870,
       "runtime_end_exclusive": 13886,
       "loaded_start": 20014,
@@ -4101,11 +4101,11 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all seven instructions 1,118 times, against 1,036 for the forward probe it precedes",
-        "reflect_indexed_entity_at_obstacles calls this at $35C2 and the forward probe at $35CD, with the carry from here selecting which of the two runs"
+        "reflect_room_enemy_at_obstacles calls this at $35C2 and the forward probe at $35CD, with the carry from here selecting which of the two runs"
       ]
     },
     {
-      "name": "scan_column_ahead_of_indexed_entry",
+      "name": "scan_column_ahead_of_room_enemy",
       "runtime_start": 13886,
       "runtime_end_exclusive": 13902,
       "loaded_start": 20030,
@@ -4115,11 +4115,11 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all seven instructions 1,036 times",
         "the $20 offset is two sixteen-byte records, the stride copy_16_byte_graphic_to_display advances per tile",
-        "reflect_indexed_entity_at_obstacles calls this at $35CD as the opposed member of its first probe pair"
+        "reflect_room_enemy_at_obstacles calls this at $35CD as the opposed member of its first probe pair"
       ]
     },
     {
-      "name": "load_display_pointer_then_scan_markers",
+      "name": "load_room_enemy_display_pointer_then_scan_markers",
       "runtime_start": 13902,
       "runtime_end_exclusive": 13913,
       "loaded_start": 20046,
@@ -4128,11 +4128,11 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_exploration_30s/executed_pcs.csv executes all seven instructions 15 times",
-        "both callees are source-owned: load_display_pointer_from_cross_room_robot_ghost directly, and adjust_display_pointer_then_scan_markers through the game_entry_jump_table vector at 0x220f"
+        "both callees are source-owned: load_room_enemy_display_pointer directly, and adjust_display_pointer_then_scan_markers through the game_entry_jump_table vector at 0x220f"
       ]
     },
     {
-      "name": "scan_markers_below_indexed_entry",
+      "name": "scan_markers_below_room_enemy",
       "runtime_start": 13913,
       "runtime_end_exclusive": 13951,
       "loaded_start": 20057,
@@ -4145,7 +4145,7 @@
       ]
     },
     {
-     "name": "load_cross_room_robot_ghost_output_from_y_tables",
+     "name": "load_room_enemy_collision_coordinates",
      "runtime_start": 13951,
      "runtime_end_exclusive": 13963,
      "loaded_start": 20095,
@@ -4159,7 +4159,7 @@
       ]
     },
     {
-      "name": "scan_column_below_indexed_entry",
+      "name": "scan_column_below_room_enemy",
       "runtime_start": 13963,
       "runtime_end_exclusive": 13985,
       "loaded_start": 20107,
@@ -4172,7 +4172,7 @@
       ]
     },
     {
-      "name": "reverse_indexed_123a_delta_at_limits",
+      "name": "clamp_room_enemy_horizontal_delta_at_limits",
       "runtime_start": 13985,
       "runtime_end_exclusive": 14010,
       "loaded_start": 20129,
@@ -4186,7 +4186,7 @@
       ]
     },
     {
-      "name": "advance_indexed_entity_horizontal_position",
+      "name": "advance_room_enemy_horizontal_position",
       "runtime_start": 14010,
       "runtime_end_exclusive": 14061,
       "loaded_start": 20154,
@@ -4196,11 +4196,11 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all twenty-two instructions 2,022 times, splitting almost evenly at 997 rightward against 1,025 leftward",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves the sole caller 0x35a8, adjacent to the 0x35a2 and 0x35a5 that drive the two delta clamps",
-        "the delta at $123A is the field reverse_indexed_123a_delta_at_limits and reflect_indexed_entity_at_obstacles both write, so their reversals reach the display here"
+        "the delta at $123A is the field clamp_room_enemy_horizontal_delta_at_limits and reflect_room_enemy_at_obstacles both write, so their reversals reach the display here"
       ]
     },
     {
-      "name": "reverse_indexed_123b_delta_at_limits",
+      "name": "reverse_room_enemy_vertical_delta_at_limits",
       "runtime_start": 14061,
       "runtime_end_exclusive": 14088,
       "loaded_start": 20205,
@@ -4210,11 +4210,11 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all twelve instructions 4,071 times, with 48 reversals at each limit against 4,014 pass-throughs",
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv proves the caller 0x35a5, adjacent to 0x35a2 which drives the $123A clamp",
-        "the +2 and -2 values match the second delta pair reflect_indexed_entity_at_obstacles drives, and $123B is the field advance_cross_room_robot_ghost_value_and_display_pointer consumes"
+        "the +2 and -2 values match the second delta pair reflect_room_enemy_at_obstacles drives, and $123B is the field advance_cross_room_robot_ghost_value_and_display_pointer consumes"
       ]
     },
     {
-      "name": "advance_indexed_entity_vertical_position",
+      "name": "advance_room_enemy_vertical_position",
       "runtime_start": 14088,
       "runtime_end_exclusive": 14127,
       "loaded_start": 20232,

@@ -1727,7 +1727,7 @@ ORG draw_room_enemy_with_xor_graphic
     LDX #&0A
 
 .load_pointer_then_draw_entity
-    JSR load_display_pointer_from_cross_room_robot_ghost
+    JSR load_room_enemy_display_pointer
     JMP select_graphic_then_xor_draw
 .draw_room_enemy_with_xor_graphic_source_end
 
@@ -1754,10 +1754,10 @@ ORG apply_signed_vertical_step_to_pointer
 ; All four paths are covered: 2,038 within-cell against 679 row-crossing
 ; upwards, and 1,673 against 568 downwards.
 .apply_signed_vertical_step_to_pointer_source
-    LDA cross_room_robot_ghost_output_half_offset
+    LDA candidate_half_vertical_position
     CLC
     ADC vertical_step_delta
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     LDA vertical_step_delta
     BMI step_pointer_upwards
     LDA vertical_step_pointer_low
@@ -1958,14 +1958,14 @@ ORG test_player_in_range_and_set_direction
 ; candidate and, if so, report which way the player lies.
 ; The ordinary entry presets the named horizontal, above and below extents;
 ; test_range_with_supplied_box is the entry for callers supplying their own.
-; Four comparisons follow, the horizontal pair against cross_room_robot_ghost_output_value
-; and the vertical pair against cross_room_robot_ghost_output_half_offset. Each failure
+; Four comparisons follow, the horizontal pair against candidate_horizontal_position
+; and the vertical pair against candidate_half_vertical_position. Each failure
 ; leaves through the shared no-overlap return with carry clear.
 ; Only if all four pass does it compute the direction: the sign of the
 ; horizontal difference sets opposite signed horizontal steps, and the sign of
 ; the vertical difference selects a signed double-unit step. Carry set means
 ; both in range and direction reported.
-; Those are the same signed unit and double-unit deltas the indexed entity
+; Those are the same signed unit and double-unit deltas the room enemy
 ; setters write, so what this produces is a step toward the player rather than a
 ; plain yes or no.
 .test_player_in_range_and_set_direction_source
@@ -1980,9 +1980,9 @@ ORG test_player_in_range_and_set_direction
     CLC
     LDA player_horizontal_position
     ADC candidate_range_horizontal_extent
-    CMP cross_room_robot_ghost_output_value
+    CMP candidate_horizontal_position
     BMI return_carry_clear_2b9c
-    LDA cross_room_robot_ghost_output_value
+    LDA candidate_horizontal_position
     ADC candidate_range_horizontal_extent
     CMP player_horizontal_position
     BMI return_carry_clear_2b9c
@@ -1992,17 +1992,17 @@ ORG test_player_in_range_and_set_direction
     LSR A
     SEC
     SBC candidate_range_above_extent
-    CMP cross_room_robot_ghost_output_half_offset
+    CMP candidate_half_vertical_position
     BPL return_carry_clear_2b9c
     LDA player_vertical_position
     LSR A
     ADC candidate_range_below_extent
-    CMP cross_room_robot_ghost_output_half_offset
+    CMP candidate_half_vertical_position
     BMI return_carry_clear_2b9c
 
 .set_direction_toward_player
     SEC
-    LDA cross_room_robot_ghost_output_value
+    LDA candidate_horizontal_position
     SBC player_horizontal_position
     BPL set_direction_leftward
     LDA #ENTITY_HORIZONTAL_STEP_POSITIVE
@@ -2023,7 +2023,7 @@ ORG test_player_in_range_and_set_direction
     ADC #PLAYER_VERTICAL_CENTRE_BIAS
     SEC
     LSR A
-    SBC cross_room_robot_ghost_output_half_offset
+    SBC candidate_half_vertical_position
     BPL set_vertical_direction_downward
     LDA #ENTITY_VERTICAL_STEP_NEGATIVE
 
@@ -2084,24 +2084,24 @@ ORG draw_fixed_pair_tile_run
     RTS
 
 
-ORG load_display_pointer_from_cross_room_robot_ghost
+ORG load_room_enemy_display_pointer
 
 ; Runtime $3558-$3562. Load the display pointer from the Y-indexed little-endian pair at room_enemy_display_pointer_low/high. The high byte is read first, so the two loads are not interchangeable with respect to Y. X and A are not preserved.
-.load_display_pointer_from_cross_room_robot_ghost_source
+.load_room_enemy_display_pointer_source
     LDA room_enemy_display_pointer_high,Y
     STA display_pointer_high
     LDA room_enemy_display_pointer_low,Y
     STA display_pointer_low
     RTS
-.load_display_pointer_from_cross_room_robot_ghost_source_end
+.load_room_enemy_display_pointer_source_end
 
-ASSERT load_display_pointer_from_cross_room_robot_ghost_source = load_display_pointer_from_cross_room_robot_ghost
-ASSERT load_display_pointer_from_cross_room_robot_ghost_source_end = &3563
-COPYBLOCK load_display_pointer_from_cross_room_robot_ghost_source, load_display_pointer_from_cross_room_robot_ghost_source_end, &4D58
+ASSERT load_room_enemy_display_pointer_source = load_room_enemy_display_pointer
+ASSERT load_room_enemy_display_pointer_source_end = &3563
+COPYBLOCK load_room_enemy_display_pointer_source, load_room_enemy_display_pointer_source_end, &4D58
 
 ; Runtime $3558-$3562 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4D58-$4D62.
-CLEAR load_display_pointer_from_cross_room_robot_ghost_source, load_display_pointer_from_cross_room_robot_ghost_source_end
+CLEAR load_room_enemy_display_pointer_source, load_room_enemy_display_pointer_source_end
 
 
 ORG advance_secondary_reference_and_pointer
@@ -2145,56 +2145,56 @@ ORG update_and_draw_room_enemies
 .update_and_draw_room_enemies_source
     LDY active_enemy_last_slot_index
 
-.update_next_indexed_entity
+.update_next_room_enemy
     LDA indexed_xor_erase_previous_graphic
-    BEQ dispatch_indexed_entity_behavior
+    BEQ dispatch_room_enemy_behavior
     JSR draw_room_enemy_with_xor_graphic
 
-.dispatch_indexed_entity_behavior
+.dispatch_room_enemy_behavior
     LDA active_enemy_species
     BEQ prepare_bat_player_range_test
     CMP #ENEMY_SPECIES_MOTH
-    BNE update_obstacle_reflecting_indexed_entity
-    JSR advance_indexed_entity_with_collision_checks
-    JSR reverse_indexed_123b_delta_at_limits
-    JSR reverse_indexed_123a_delta_at_limits
-    JSR prepare_cross_room_robot_ghost_graphic_fields
-    BCC apply_indexed_entity_to_player_and_draw
+    BNE update_obstacle_reflecting_room_enemy
+    JSR advance_room_enemy_with_collision_checks
+    JSR reverse_room_enemy_vertical_delta_at_limits
+    JSR clamp_room_enemy_horizontal_delta_at_limits
+    JSR prepare_room_enemy_collision_coordinates
+    BCC apply_room_enemy_to_player_and_draw
     JMP apply_player_direction_if_in_range
 
-.update_obstacle_reflecting_indexed_entity
-    JSR reflect_indexed_entity_at_obstacles
+.update_obstacle_reflecting_room_enemy
+    JSR reflect_room_enemy_at_obstacles
     JMP apply_player_direction_if_in_range
 
 .prepare_bat_player_range_test
-    JSR load_cross_room_robot_ghost_output_from_y_tables
+    JSR load_room_enemy_collision_coordinates
     JSR enter_test_player_in_range_and_set_direction
 
 .apply_player_direction_if_in_range
-    BCC clamp_indexed_entity_horizontal_delta
+    BCC clamp_room_enemy_horizontal_delta
     LDA candidate_horizontal_step
-    STA secondary_entity_runtime_block,Y
+    STA room_enemy_horizontal_delta,Y
     LDA candidate_vertical_step
     STA enemy_vertical_delta,Y
-    JMP move_indexed_entity_on_both_axes
+    JMP move_room_enemy_on_both_axes
 
-.clamp_indexed_entity_horizontal_delta
-    JSR reverse_indexed_123a_delta_at_limits
+.clamp_room_enemy_horizontal_delta
+    JSR clamp_room_enemy_horizontal_delta_at_limits
 
-.move_indexed_entity_on_both_axes
-    JSR reverse_indexed_123b_delta_at_limits
-    JSR advance_indexed_entity_horizontal_position
-    JSR advance_indexed_entity_vertical_position
+.move_room_enemy_on_both_axes
+    JSR reverse_room_enemy_vertical_delta_at_limits
+    JSR advance_room_enemy_horizontal_position
+    JSR advance_room_enemy_vertical_position
 
-.apply_indexed_entity_to_player_and_draw
-    JSR load_cross_room_robot_ghost_output_from_y_tables
+.apply_room_enemy_to_player_and_draw
+    JSR load_room_enemy_collision_coordinates
     LDA #ROOM_ENEMY_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
     JSR draw_room_enemy_with_xor_graphic
     DEY
     DEY
-    BPL update_next_indexed_entity
+    BPL update_next_room_enemy
     JMP clear_xor_graphic_repeat_and_return
 .update_and_draw_room_enemies_source_end
 
@@ -2722,7 +2722,7 @@ ORG initialise_room_enemy_from_table
     ASL A
     ASL A
     STA enemy_vertical_lower_limit
-    STA primary_entity_runtime_block
+    STA room_enemy_vertical_position
     INY
     LDA room_enemy_record_table,Y
     STA enemy_horizontal_lower_limit
@@ -3565,8 +3565,8 @@ ORG reverse_lift_or_hazard_delta_at_limits
 ; against the two limits at $1246 and $1247: matching the first stores +2 into
 ; the delta at $18, matching the second stores -2, and matching neither leaves
 ; the delta alone.
-; This is the third clamp of the same shape. reverse_indexed_123a_delta_at_limits
-; drives +1 and -1 against $1235 and $1236, reverse_indexed_123b_delta_at_limits
+; This is the third clamp of the same shape. clamp_room_enemy_horizontal_delta_at_limits
+; drives +1 and -1 against $1235 and $1236, reverse_room_enemy_vertical_delta_at_limits
 ; drives +2 and -2 against $1237 and $1238 by equality, and this one drives +2
 ; and -2 against $1246 and $1247. Those last two limits are the pair
 ; initialise_lifts_and_hazards_from_table unpacks, so each entity class carries
@@ -3609,7 +3609,7 @@ ORG advance_lift_or_hazard_vertical_position
 ; moth-shaped hazard, then clear lift_hazard_limit_check_active.
 ; The state is copied into the shared scratch fields, stepped by
 ; apply_signed_vertical_step_to_pointer and copied back, exactly as
-; advance_indexed_entity_vertical_position does for the other class and
+; advance_room_enemy_vertical_position does for the other class and
 ; advance_player_vertical_position_and_display_pointer does for the player. Only
 ; the source fields differ: $19 for the position, $18 for the signed step and
 ; $51/$52 for the display pointer.
@@ -3619,7 +3619,7 @@ ORG advance_lift_or_hazard_vertical_position
 ; entry, so the clamp and the step bracket each other.
 .advance_lift_or_hazard_vertical_position_source
     LDA moving_entity_position,Y
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     LDA moving_entity_delta,Y
     STA vertical_step_delta
     LDA moving_entity_display_pointer_low,Y
@@ -3627,7 +3627,7 @@ ORG advance_lift_or_hazard_vertical_position
     LDA moving_entity_display_pointer_high,Y
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA cross_room_robot_ghost_output_half_offset
+    LDA candidate_half_vertical_position
     STA moving_entity_position,Y
     LDA vertical_step_pointer_low
     STA moving_entity_display_pointer_low,Y
@@ -3956,11 +3956,11 @@ ORG update_lift_or_hazard_by_class
     BNE push_player_with_entity
     LDA moving_entity_position,Y
     LSR A
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     SEC
     LDA lift_or_hazard_horizontal_extent
     SBC lift_hazard_scaled_slot_offset
-    STA cross_room_robot_ghost_output_value
+    STA candidate_horizontal_position
     JSR check_player_candidate_bounds_overlap
     JMP step_entity
 
@@ -4656,13 +4656,13 @@ ORG advance_player_vertical_position_and_display_pointer
 ; wrapper itself is straight-line and preserves X/Y around the nested call.
 .advance_player_vertical_position_and_display_pointer_source
     LDA player_vertical_position
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     LDA player_display_pointer_low
     STA vertical_step_pointer_low
     LDA player_display_pointer_high
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA cross_room_robot_ghost_output_half_offset
+    LDA candidate_half_vertical_position
     STA player_vertical_position
     LDA vertical_step_pointer_low
     STA player_display_pointer_low
@@ -5270,7 +5270,7 @@ ORG indexed_xor_graphic_state_block
     EQUB &00                         ; $122F indexed-XOR workspace byte 6
     EQUB &00                         ; $1230 selector delta slot 3
     SKIP 9                          ; $1231-$1239 primary entity fields/dispatcher
-    SKIP 8                          ; $123A-$1241 secondary indexed entity fields
+    SKIP 8                          ; $123A-$1241 secondary room enemy fields
     EQUB &00                         ; $1242 timed effect selector
     EQUB &00, &00                    ; $1243/$1244 saved effect display pointer
     SKIP 6                          ; $1245-$124A room effect/entity state
@@ -5455,32 +5455,32 @@ ORG check_player_candidate_bounds_overlap
     LDA #&17
     STA xor_graphic_character_rows_remaining
     CLC
-    LDA cross_room_robot_ghost_output_half_offset
+    LDA candidate_half_vertical_position
     ADC #&06
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
 
 .candidate_bounds_mode_ready
     CLC
     LDA player_horizontal_position
     ADC #&03
-    CMP cross_room_robot_ghost_output_value
+    CMP candidate_horizontal_position
     BMI return_carry_clear_2b35
 
     CLC
-    LDA cross_room_robot_ghost_output_value
+    LDA candidate_horizontal_position
     ADC #&03
     CMP player_horizontal_position
     BMI return_carry_clear_2b35
 
     LDA player_vertical_position
     LSR A
-    CMP cross_room_robot_ghost_output_half_offset
+    CMP candidate_half_vertical_position
     BPL return_carry_clear_2b35
 
     LDA player_vertical_position
     LSR A
     ADC xor_graphic_character_rows_remaining
-    CMP cross_room_robot_ghost_output_half_offset
+    CMP candidate_half_vertical_position
     BMI return_carry_clear_2b35
 .check_player_candidate_bounds_overlap_source_end
 
@@ -7273,12 +7273,12 @@ ORG handle_matching_cross_room_robot_ghost
     JSR test_cross_room_robot_ghost_matches_reference
     BCC return_carry_clear_2e7a
     LDA cross_room_robot_ghost_value_field,X
-    STA cross_room_robot_ghost_output_value
+    STA candidate_horizontal_position
     LDA cross_room_robot_ghost_offset_field,X
     CLC
     ADC #&08
     LSR A
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     JMP check_player_candidate_bounds_overlap
 .handle_matching_cross_room_robot_ghost_source_end
 
@@ -7476,7 +7476,7 @@ ORG advance_cross_room_robot_ghost_offset_and_display_pointer
 
 .move_cross_room_robot_ghost_vertical_step
     LDA cross_room_robot_ghost_offset_field,X
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     LDA cross_room_robot_ghost_offset_delta_field,X
     STA vertical_step_delta
     LDA cross_room_robot_ghost_display_pointer_low,X
@@ -7484,7 +7484,7 @@ ORG advance_cross_room_robot_ghost_offset_and_display_pointer
     LDA cross_room_robot_ghost_display_pointer_high,X
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA cross_room_robot_ghost_output_half_offset
+    LDA candidate_half_vertical_position
     STA cross_room_robot_ghost_offset_field,X
     LDA vertical_step_pointer_low
     STA cross_room_robot_ghost_display_pointer_low,X
@@ -8104,19 +8104,19 @@ CLEAR ghost_countdown_steering_update_source, ghost_countdown_steering_update_so
 ORG handle_matching_ghost
 
 ; Runtime $3035-$304E. A mismatch returns through the preceding $3034 RTS. A
-; match copies the indexed horizontal value to cross_room_robot_ghost_output_value,
+; match copies the indexed horizontal value to candidate_horizontal_position,
 ; converts the even vertical offset to the collision coordinate, selects the
 ; ghost's tall overlap extent, and tail-enters the player/candidate guard.
 .handle_matching_ghost_source
     JSR test_cross_room_robot_ghost_matches_reference
     BCC ghost_reference_mismatch_return
     LDA cross_room_robot_ghost_value_field,X
-    STA cross_room_robot_ghost_output_value
+    STA candidate_horizontal_position
     LDA cross_room_robot_ghost_offset_field,X
     LSR A
     CLC
     ADC #CROSS_ROOM_GHOST_OVERLAP_VERTICAL_BIAS
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     LDA #CROSS_ROOM_GHOST_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JMP check_player_candidate_bounds_overlap
@@ -9675,11 +9675,11 @@ ORG update_and_draw_room_moving_objects
     SEC
     LDA indexed_xor_graphic_selector_state,Y
     SBC #&01
-    STA cross_room_robot_ghost_output_value
+    STA candidate_horizontal_position
     LDA indexed_xor_graphic_state
     ASL A
     ASL A
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     JSR enter_test_player_in_range_and_set_direction
     BCC advance_indexed_xor_graphic
 
@@ -9704,11 +9704,11 @@ ORG update_and_draw_room_moving_objects
     LDA current_room_cell
     BNE indexed_xor_next_instance
     LDA indexed_xor_graphic_selector_state,Y
-    STA cross_room_robot_ghost_output_value
+    STA candidate_horizontal_position
     LDA indexed_xor_graphic_state
     ASL A
     ASL A
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     LDA #&12
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
@@ -10145,9 +10145,9 @@ COPYBLOCK advance_76_77_pointer_by_40_source, advance_76_77_pointer_by_40_source
 CLEAR advance_76_77_pointer_by_40_source, advance_76_77_pointer_by_40_source_end
 
 
-ORG reflect_indexed_entity_at_obstacles
+ORG reflect_room_enemy_at_obstacles
 
-; Runtime $35C2-$35F9. Probe around the Y-indexed entity and reverse its movement
+; Runtime $35C2-$35F9. Probe around the Y-selected room enemy and reverse its movement
 ; deltas wherever it is blocked, then set up its graphic and dispatch.
 ; The four probes come in two opposed pairs. The first pair drives the delta at
 ; $123A to +1 or -1, the second drives the adjacent delta at $123B to +2 or -2,
@@ -10158,30 +10158,30 @@ ORG reflect_indexed_entity_at_obstacles
 ; graphic-selection bytes to $05, $01 and $10, and tail-jumps through the $2215
 ; vector. That tail runs 3,987 times against 235 entries here, so it is also
 ; reached directly by other callers.
-.reflect_indexed_entity_at_obstacles_source
-    JSR scan_column_behind_indexed_entry
+.reflect_room_enemy_at_obstacles_source
+    JSR scan_column_behind_room_enemy
     BCC probe_opposite_horizontal
-    JSR set_indexed_123a_delta_positive
+    JSR set_room_enemy_horizontal_delta_positive
     JMP probe_first_vertical
 
 .probe_opposite_horizontal
-    JSR scan_column_ahead_of_indexed_entry
+    JSR scan_column_ahead_of_room_enemy
     BCC probe_first_vertical
-    JSR set_indexed_123a_delta_negative
+    JSR set_room_enemy_horizontal_delta_negative
 
 .probe_first_vertical
-    JSR load_display_pointer_then_scan_markers
+    JSR load_room_enemy_display_pointer_then_scan_markers
     BCC probe_opposite_vertical
-    JSR set_indexed_123b_delta_positive
-    JMP prepare_cross_room_robot_ghost_graphic_fields
+    JSR set_room_enemy_vertical_delta_positive
+    JMP prepare_room_enemy_collision_coordinates
 
 .probe_opposite_vertical
-    JSR scan_markers_below_indexed_entry
-    BCC prepare_cross_room_robot_ghost_graphic_fields
-    JSR set_indexed_123b_delta_negative
+    JSR scan_markers_below_room_enemy
+    BCC prepare_room_enemy_collision_coordinates
+    JSR set_room_enemy_vertical_delta_negative
 
-.prepare_cross_room_robot_ghost_graphic_fields
-    JSR load_cross_room_robot_ghost_output_from_y_tables
+.prepare_room_enemy_collision_coordinates
+    JSR load_room_enemy_collision_coordinates
     LDA #OBSTACLE_REFLECTION_HORIZONTAL_RANGE
     STA candidate_range_horizontal_extent
     LDA #OBSTACLE_REFLECTION_ABOVE_RANGE
@@ -10189,15 +10189,15 @@ ORG reflect_indexed_entity_at_obstacles
     LDA #OBSTACLE_REFLECTION_BELOW_RANGE
     STA candidate_range_below_extent
     JMP enter_test_range_with_supplied_box
-.reflect_indexed_entity_at_obstacles_source_end
+.reflect_room_enemy_at_obstacles_source_end
 
-ASSERT reflect_indexed_entity_at_obstacles_source = reflect_indexed_entity_at_obstacles
-ASSERT reflect_indexed_entity_at_obstacles_source_end = &35FA
-COPYBLOCK reflect_indexed_entity_at_obstacles_source, reflect_indexed_entity_at_obstacles_source_end, &4DC2
+ASSERT reflect_room_enemy_at_obstacles_source = reflect_room_enemy_at_obstacles
+ASSERT reflect_room_enemy_at_obstacles_source_end = &35FA
+COPYBLOCK reflect_room_enemy_at_obstacles_source, reflect_room_enemy_at_obstacles_source_end, &4DC2
 
 ; Runtime $35C2-$35F9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4DC2-$4DF9.
-CLEAR reflect_indexed_entity_at_obstacles_source, reflect_indexed_entity_at_obstacles_source_end
+CLEAR reflect_room_enemy_at_obstacles_source, reflect_room_enemy_at_obstacles_source_end
 
 
 ORG draw_matching_records_from_table
@@ -10262,50 +10262,50 @@ COPYBLOCK draw_matching_records_from_table_source, draw_matching_records_from_ta
 CLEAR draw_matching_records_from_table_source, draw_matching_records_from_table_source_end
 
 
-ORG advance_indexed_entity_with_collision_checks
+ORG advance_room_enemy_with_collision_checks
 
-; Runtime $35FA-$362D. Probe the Y-indexed entity along its vertical direction
+; Runtime $35FA-$362D. Probe the Y-selected room enemy along its vertical direction
 ; and tail-transfer to the vertical mover when clear. When blocked, probe along
 ; its signed horizontal direction, reverse that direction if the next column is
 ; also blocked, and tail-transfer to the horizontal mover.
-.advance_indexed_entity_with_collision_checks_source
+.advance_room_enemy_with_collision_checks_source
     LDA enemy_vertical_delta,Y
     CMP #&02
-    BNE probe_indexed_entity_vertical_path
-    JSR scan_markers_below_indexed_entry
-    BCS handle_blocked_indexed_entity_vertical_path
-    JMP advance_indexed_entity_vertical_position
+    BNE probe_room_enemy_vertical_path
+    JSR scan_markers_below_room_enemy
+    BCS handle_blocked_room_enemy_vertical_path
+    JMP advance_room_enemy_vertical_position
 
-.probe_indexed_entity_vertical_path
-    JSR load_display_pointer_then_scan_markers
-    BCS handle_blocked_indexed_entity_vertical_path
-    JMP advance_indexed_entity_vertical_position
+.probe_room_enemy_vertical_path
+    JSR load_room_enemy_display_pointer_then_scan_markers
+    BCS handle_blocked_room_enemy_vertical_path
+    JMP advance_room_enemy_vertical_position
 
-.handle_blocked_indexed_entity_vertical_path
-    LDA secondary_entity_runtime_block,Y
+.handle_blocked_room_enemy_vertical_path
+    LDA room_enemy_horizontal_delta,Y
     CMP #&01
-    BNE probe_behind_indexed_entity
-    JSR scan_column_ahead_of_indexed_entry
-    BCC advance_indexed_entity_horizontally
-    JSR set_indexed_123a_delta_negative
+    BNE probe_behind_room_enemy
+    JSR scan_column_ahead_of_room_enemy
+    BCC advance_room_enemy_horizontally
+    JSR set_room_enemy_horizontal_delta_negative
 
-.advance_indexed_entity_horizontally
-    JMP advance_indexed_entity_horizontal_position
+.advance_room_enemy_horizontally
+    JMP advance_room_enemy_horizontal_position
 
-.probe_behind_indexed_entity
-    JSR scan_column_behind_indexed_entry
-    BCC advance_indexed_entity_horizontally
-    JSR set_indexed_123a_delta_positive
-    JMP advance_indexed_entity_horizontally
-.advance_indexed_entity_with_collision_checks_source_end
+.probe_behind_room_enemy
+    JSR scan_column_behind_room_enemy
+    BCC advance_room_enemy_horizontally
+    JSR set_room_enemy_horizontal_delta_positive
+    JMP advance_room_enemy_horizontally
+.advance_room_enemy_with_collision_checks_source_end
 
-ASSERT advance_indexed_entity_with_collision_checks_source = advance_indexed_entity_with_collision_checks
-ASSERT advance_indexed_entity_with_collision_checks_source_end = &362E
-COPYBLOCK advance_indexed_entity_with_collision_checks_source, advance_indexed_entity_with_collision_checks_source_end, &4DFA
+ASSERT advance_room_enemy_with_collision_checks_source = advance_room_enemy_with_collision_checks
+ASSERT advance_room_enemy_with_collision_checks_source_end = &362E
+COPYBLOCK advance_room_enemy_with_collision_checks_source, advance_room_enemy_with_collision_checks_source_end, &4DFA
 
 ; Runtime $35FA-$362D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4DFA-$4E2D.
-CLEAR advance_indexed_entity_with_collision_checks_source, advance_indexed_entity_with_collision_checks_source_end
+CLEAR advance_room_enemy_with_collision_checks_source, advance_room_enemy_with_collision_checks_source_end
 
 
 ORG set_display_pointer_from_grid_position
@@ -10374,59 +10374,59 @@ COPYBLOCK set_display_pointer_from_grid_position_source, set_display_pointer_fro
 CLEAR set_display_pointer_from_grid_position_source, set_display_pointer_from_grid_position_source_end
 
 
-ORG scan_column_behind_indexed_entry
+ORG scan_column_behind_room_enemy
 
 ; Runtime $362E-$363D. Place the display pointer 8 bytes before the Y-indexed
 ; entry pointer, one Mode 1 character cell back, then tail-jump into
-; scan_column_below_indexed_entry.
+; scan_column_below_room_enemy.
 ; It is the opposed member of the probe pair with
-; scan_column_ahead_of_indexed_entry, which offsets forward by $20 into the same
-; tail. reflect_indexed_entity_at_obstacles tries this one first and only falls
+; scan_column_ahead_of_room_enemy, which offsets forward by $20 into the same
+; tail. reflect_room_enemy_at_obstacles tries this one first and only falls
 ; through to the other when this reports clear.
-.scan_column_behind_indexed_entry_source
+.scan_column_behind_room_enemy_source
     LDA room_enemy_display_pointer_low,Y
     SEC
     SBC #&08
     STA display_pointer_low
     LDA room_enemy_display_pointer_high,Y
     SBC #&00
-    JMP scan_column_below_indexed_entry
-.scan_column_behind_indexed_entry_source_end
+    JMP scan_column_below_room_enemy
+.scan_column_behind_room_enemy_source_end
 
-ASSERT scan_column_behind_indexed_entry_source = scan_column_behind_indexed_entry
-ASSERT scan_column_behind_indexed_entry_source_end = &363E
-COPYBLOCK scan_column_behind_indexed_entry_source, scan_column_behind_indexed_entry_source_end, &4E2E
+ASSERT scan_column_behind_room_enemy_source = scan_column_behind_room_enemy
+ASSERT scan_column_behind_room_enemy_source_end = &363E
+COPYBLOCK scan_column_behind_room_enemy_source, scan_column_behind_room_enemy_source_end, &4E2E
 
 ; Runtime $362E-$363D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E2E-$4E3D.
-CLEAR scan_column_behind_indexed_entry_source, scan_column_behind_indexed_entry_source_end
+CLEAR scan_column_behind_room_enemy_source, scan_column_behind_room_enemy_source_end
 
 
-ORG scan_column_ahead_of_indexed_entry
+ORG scan_column_ahead_of_room_enemy
 
-; Runtime $363E-$364D. Place the display pointer $20 past the Y-indexed entry
+; Runtime $363E-$364D. Place the display pointer $20 past the Y-room enemy
 ; pointer at $47/$48, two Mode 1 character cells ahead, then tail-jump into
-; scan_column_below_indexed_entry to scan eight rows there.
+; scan_column_below_room_enemy to scan eight rows there.
 ; Sharing that tail is what makes this a probe variant rather than a routine of
 ; its own: the caller gets the same carry-set-when-blocked answer, measured two
 ; cells further on.
-.scan_column_ahead_of_indexed_entry_source
+.scan_column_ahead_of_room_enemy_source
     LDA room_enemy_display_pointer_low,Y
     CLC
     ADC #&20
     STA display_pointer_low
     LDA room_enemy_display_pointer_high,Y
     ADC #&00
-    JMP scan_column_below_indexed_entry
-.scan_column_ahead_of_indexed_entry_source_end
+    JMP scan_column_below_room_enemy
+.scan_column_ahead_of_room_enemy_source_end
 
-ASSERT scan_column_ahead_of_indexed_entry_source = scan_column_ahead_of_indexed_entry
-ASSERT scan_column_ahead_of_indexed_entry_source_end = &364E
-COPYBLOCK scan_column_ahead_of_indexed_entry_source, scan_column_ahead_of_indexed_entry_source_end, &4E3E
+ASSERT scan_column_ahead_of_room_enemy_source = scan_column_ahead_of_room_enemy
+ASSERT scan_column_ahead_of_room_enemy_source_end = &364E
+COPYBLOCK scan_column_ahead_of_room_enemy_source, scan_column_ahead_of_room_enemy_source_end, &4E3E
 
 ; Runtime $363E-$364D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E3E-$4E4D.
-CLEAR scan_column_ahead_of_indexed_entry_source, scan_column_ahead_of_indexed_entry_source_end
+CLEAR scan_column_ahead_of_room_enemy_source, scan_column_ahead_of_room_enemy_source_end
 
 
 ORG draw_item_graphic_pair
@@ -10460,42 +10460,42 @@ COPYBLOCK draw_item_graphic_pair_source, draw_item_graphic_pair_source_end, &362
 CLEAR draw_item_graphic_pair_source, draw_item_graphic_pair_source_end
 
 
-ORG load_display_pointer_then_scan_markers
+ORG load_room_enemy_display_pointer_then_scan_markers
 
-; Runtime $364E-$3658. Load the display pointer for the Y-indexed entry, then
+; Runtime $364E-$3658. Load the display pointer for the Y-room enemy, then
 ; run the marker scan through the $220F jump-table vector, preserving Y across
 ; the call by saving it on the stack. The scan itself does not preserve Y, so
 ; the save is what lets the caller keep iterating over entries.
-.load_display_pointer_then_scan_markers_source
-    JSR load_display_pointer_from_cross_room_robot_ghost
+.load_room_enemy_display_pointer_then_scan_markers_source
+    JSR load_room_enemy_display_pointer
     TYA
     PHA
     JSR enter_adjust_display_pointer_then_scan_markers
     PLA
     TAY
     RTS
-.load_display_pointer_then_scan_markers_source_end
+.load_room_enemy_display_pointer_then_scan_markers_source_end
 
-ASSERT load_display_pointer_then_scan_markers_source = load_display_pointer_then_scan_markers
-ASSERT load_display_pointer_then_scan_markers_source_end = &3659
-COPYBLOCK load_display_pointer_then_scan_markers_source, load_display_pointer_then_scan_markers_source_end, &4E4E
+ASSERT load_room_enemy_display_pointer_then_scan_markers_source = load_room_enemy_display_pointer_then_scan_markers
+ASSERT load_room_enemy_display_pointer_then_scan_markers_source_end = &3659
+COPYBLOCK load_room_enemy_display_pointer_then_scan_markers_source, load_room_enemy_display_pointer_then_scan_markers_source_end, &4E4E
 
 ; Runtime $364E-$3658 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E4E-$4E58.
-CLEAR load_display_pointer_then_scan_markers_source, load_display_pointer_then_scan_markers_source_end
+CLEAR load_room_enemy_display_pointer_then_scan_markers_source, load_room_enemy_display_pointer_then_scan_markers_source_end
 
 
-ORG scan_markers_below_indexed_entry
+ORG scan_markers_below_room_enemy
 
 ; Runtime $3659-$367E. Place the display pointer one or two Mode 1 character rows
-; below the Y-indexed entry pointer at $47/$48, then run the four-byte marker
+; below the Y-room enemy pointer at $47/$48, then run the four-byte marker
 ; scan through its jump-table vector, preserving Y across the call.
 ; A character row is $0280 bytes. When the repeated-scanline flag at $6C is
 ; clear the pointer is offset by one row; when it is set the low byte is left
 ; untouched and only $05 is added to the high byte, which is two rows. The
 ; scan itself does not preserve Y, so the save is what lets the caller keep
 ; iterating over entries.
-.scan_markers_below_indexed_entry_source
+.scan_markers_below_room_enemy_source
     LDA room_enemy_display_pointer_low,Y
     LDX xor_graphic_repeat_source_scanlines
     BNE offset_two_character_rows
@@ -10520,55 +10520,57 @@ ORG scan_markers_below_indexed_entry
     LDA room_enemy_display_pointer_high,Y
     ADC #&05
     JMP store_pointer_then_scan
-.scan_markers_below_indexed_entry_source_end
+.scan_markers_below_room_enemy_source_end
 
-ASSERT scan_markers_below_indexed_entry_source = scan_markers_below_indexed_entry
-ASSERT scan_markers_below_indexed_entry_source_end = &367F
-COPYBLOCK scan_markers_below_indexed_entry_source, scan_markers_below_indexed_entry_source_end, &4E59
+ASSERT scan_markers_below_room_enemy_source = scan_markers_below_room_enemy
+ASSERT scan_markers_below_room_enemy_source_end = &367F
+COPYBLOCK scan_markers_below_room_enemy_source, scan_markers_below_room_enemy_source_end, &4E59
 
 ; Runtime $3659-$367E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E59-$4E7E.
-CLEAR scan_markers_below_indexed_entry_source, scan_markers_below_indexed_entry_source_end
+CLEAR scan_markers_below_room_enemy_source, scan_markers_below_room_enemy_source_end
 
 
-ORG load_cross_room_robot_ghost_output_from_y_tables
+ORG load_room_enemy_collision_coordinates
 
-; Runtime $367F-$368A. The Y-indexed counterpart of the field load inside handle_matching_cross_room_robot_ghost: it copies one field to $11 and halves an adjacent field into $3C. The sources are the zero-page table at $68 and the relocated table at $1231 rather than $222F/$2230, and no $08 bias is added before the shift.
-.load_cross_room_robot_ghost_output_from_y_tables_source
+; Runtime $367F-$368A. Load the selected room enemy's horizontal position and
+; half-resolution vertical position into the shared candidate coordinates used
+; by player-overlap and pursuit tests.
+.load_room_enemy_collision_coordinates_source
     LDA moving_entity_horizontal_position,Y
-    STA cross_room_robot_ghost_output_value
-    LDA primary_entity_runtime_block,Y
+    STA candidate_horizontal_position
+    LDA room_enemy_vertical_position,Y
     LSR A
-    STA cross_room_robot_ghost_output_half_offset
+    STA candidate_half_vertical_position
     RTS
-.load_cross_room_robot_ghost_output_from_y_tables_source_end
+.load_room_enemy_collision_coordinates_source_end
 
-ASSERT load_cross_room_robot_ghost_output_from_y_tables_source = load_cross_room_robot_ghost_output_from_y_tables
-ASSERT load_cross_room_robot_ghost_output_from_y_tables_source_end = &368B
-COPYBLOCK load_cross_room_robot_ghost_output_from_y_tables_source, load_cross_room_robot_ghost_output_from_y_tables_source_end, &4E7F
+ASSERT load_room_enemy_collision_coordinates_source = load_room_enemy_collision_coordinates
+ASSERT load_room_enemy_collision_coordinates_source_end = &368B
+COPYBLOCK load_room_enemy_collision_coordinates_source, load_room_enemy_collision_coordinates_source_end, &4E7F
 
 ; Runtime $367F-$368A overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E7F-$4E8A.
-CLEAR load_cross_room_robot_ghost_output_from_y_tables_source, load_cross_room_robot_ghost_output_from_y_tables_source_end
+CLEAR load_room_enemy_collision_coordinates_source, load_room_enemy_collision_coordinates_source_end
 
 
-ORG scan_column_below_indexed_entry
+ORG scan_column_below_room_enemy
 
-; Runtime $368B-$36A0. Scan a column of eight character rows for the Y-indexed
-; entry and report whether it is blocked. A is the display pointer high byte on
+; Runtime $368B-$36A0. Scan a column of eight character rows for the selected
+; room enemy and report whether it is blocked. A is the display pointer high byte on
 ; entry, the low byte having already been set by the caller.
 ; Y is preserved across the scan, which does not preserve it. A blocking byte
 ; calls $334C with A = 4 and returns carry set; a clear column returns carry
 ; clear.
-.scan_column_below_indexed_entry_source
+.scan_column_below_room_enemy_source
     STA display_pointer_high
-    LDA #&08
+    LDA #ROOM_ENEMY_OBSTACLE_SCAN_ROWS
     STA xor_graphic_character_rows_remaining
     TYA
     PHA
     JSR enter_scan_display_column_for_blocking_byte
     BCC restore_y_and_return
-    LDA #&04
+    LDA #ROOM_ENEMY_BLOCKED_SOUND_PITCH
     JSR submit_sound_block_with_pitch
     SEC
 
@@ -10576,62 +10578,64 @@ ORG scan_column_below_indexed_entry
     PLA
     TAY
     RTS
-.scan_column_below_indexed_entry_source_end
+.scan_column_below_room_enemy_source_end
 
-ASSERT scan_column_below_indexed_entry_source = scan_column_below_indexed_entry
-ASSERT scan_column_below_indexed_entry_source_end = &36A1
-COPYBLOCK scan_column_below_indexed_entry_source, scan_column_below_indexed_entry_source_end, &4E8B
+ASSERT scan_column_below_room_enemy_source = scan_column_below_room_enemy
+ASSERT scan_column_below_room_enemy_source_end = &36A1
+COPYBLOCK scan_column_below_room_enemy_source, scan_column_below_room_enemy_source_end, &4E8B
 
 ; Runtime $368B-$36A0 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4E8B-$4EA0.
-CLEAR scan_column_below_indexed_entry_source, scan_column_below_indexed_entry_source_end
+CLEAR scan_column_below_room_enemy_source, scan_column_below_room_enemy_source_end
 
 
-ORG reverse_indexed_123a_delta_at_limits
+ORG clamp_room_enemy_horizontal_delta_at_limits
 
-; Runtime $36A1-$36B9. Keep the Y-indexed entity inside a range by reversing its
-; movement delta at either limit. The entity value at $68 is compared against
-; the lower limit at $1236 and the upper limit at $1235: below the lower it sets
-; the delta at $123A to +1, at or above the upper it sets it to -1, and between
+; Runtime $36A1-$36B9. Keep the Y-selected room enemy inside a range by reversing its
+; movement delta at either limit. moving_entity_horizontal_position is compared
+; against enemy_horizontal_lower_limit and enemy_horizontal_upper_limit: below
+; the lower limit it selects a positive step, at or above the upper it selects
+; a negative step, and between
 ; them it returns leaving the delta alone.
 ; The two setters share one store, the second reaching it by jumping into the
 ; first, which is why they form a single block. This is the range counterpart of
-; reflect_indexed_entity_at_obstacles: one turns an entity back at a wall, this
+; reflect_room_enemy_at_obstacles: one turns an entity back at a wall, this
 ; one turns it back at the end of its patrol.
-.reverse_indexed_123a_delta_at_limits_source
+.clamp_room_enemy_horizontal_delta_at_limits_source
     LDA moving_entity_horizontal_position,Y
     CMP enemy_horizontal_lower_limit
-    BMI set_indexed_123a_delta_positive
+    BMI set_room_enemy_horizontal_delta_positive
     CMP enemy_horizontal_upper_limit
-    BPL set_indexed_123a_delta_negative
+    BPL set_room_enemy_horizontal_delta_negative
     RTS
 
-.set_indexed_123a_delta_positive
-    LDA #&01
+.set_room_enemy_horizontal_delta_positive
+    LDA #ENTITY_HORIZONTAL_STEP_POSITIVE
 
-.store_indexed_123a_delta
-    STA secondary_entity_runtime_block,Y
+.store_room_enemy_horizontal_delta
+    STA room_enemy_horizontal_delta,Y
     RTS
 
-.set_indexed_123a_delta_negative
-    LDA #&FF
-    JMP store_indexed_123a_delta
-.reverse_indexed_123a_delta_at_limits_source_end
+.set_room_enemy_horizontal_delta_negative
+    LDA #ENTITY_HORIZONTAL_STEP_NEGATIVE
+    JMP store_room_enemy_horizontal_delta
+.clamp_room_enemy_horizontal_delta_at_limits_source_end
 
-ASSERT reverse_indexed_123a_delta_at_limits_source = reverse_indexed_123a_delta_at_limits
-ASSERT reverse_indexed_123a_delta_at_limits_source_end = &36BA
-COPYBLOCK reverse_indexed_123a_delta_at_limits_source, reverse_indexed_123a_delta_at_limits_source_end, &4EA1
+ASSERT clamp_room_enemy_horizontal_delta_at_limits_source = clamp_room_enemy_horizontal_delta_at_limits
+ASSERT clamp_room_enemy_horizontal_delta_at_limits_source_end = &36BA
+COPYBLOCK clamp_room_enemy_horizontal_delta_at_limits_source, clamp_room_enemy_horizontal_delta_at_limits_source_end, &4EA1
 
 ; Runtime $36A1-$36B9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4EA1-$4EB9.
-CLEAR reverse_indexed_123a_delta_at_limits_source, reverse_indexed_123a_delta_at_limits_source_end
+CLEAR clamp_room_enemy_horizontal_delta_at_limits_source, clamp_room_enemy_horizontal_delta_at_limits_source_end
 
 
-ORG advance_indexed_entity_horizontal_position
+ORG advance_room_enemy_horizontal_position
 
-; Runtime $36BA-$36EC. Move the Y-indexed entity horizontally by its signed delta
+; Runtime $36BA-$36EC. Move the Y-selected room enemy horizontally by its signed delta
 ; and carry its display pointer with it.
-; The position at $68 gains the delta at $123A, which the two clamps drive to +1
+; moving_entity_horizontal_position gains room_enemy_horizontal_delta, which
+; the two clamps drive to +1
 ; or -1. The sign of that delta then chooses the pointer adjustment: 8 bytes
 ; forward for a positive step, 8 back for a negative one, with the high byte
 ; carried or borrowed.
@@ -10639,13 +10643,13 @@ ORG advance_indexed_entity_horizontal_position
 ; steps use, so an entity and the player cross the screen in identical units.
 ; The two directions are separate exits rather than a shared tail, which is why
 ; the routine is longer than the arithmetic needs.
-.advance_indexed_entity_horizontal_position_source
+.advance_room_enemy_horizontal_position_source
     LDA moving_entity_horizontal_position,Y
     CLC
-    ADC secondary_entity_runtime_block,Y
+    ADC room_enemy_horizontal_delta,Y
     STA moving_entity_horizontal_position,Y
-    LDA secondary_entity_runtime_block,Y
-    BMI step_entity_left
+    LDA room_enemy_horizontal_delta,Y
+    BMI step_room_enemy_left
     CLC
     LDA room_enemy_display_pointer_low,Y
     ADC #MODE1_CELL_COLUMN_BYTES
@@ -10655,7 +10659,7 @@ ORG advance_indexed_entity_horizontal_position
     STA room_enemy_display_pointer_high,Y
     RTS
 
-.step_entity_left
+.step_room_enemy_left
     SEC
     LDA room_enemy_display_pointer_low,Y
     SBC #MODE1_CELL_COLUMN_BYTES
@@ -10664,75 +10668,76 @@ ORG advance_indexed_entity_horizontal_position
     SBC #&00
     STA room_enemy_display_pointer_high,Y
     RTS
-.advance_indexed_entity_horizontal_position_source_end
+.advance_room_enemy_horizontal_position_source_end
 
-ASSERT advance_indexed_entity_horizontal_position_source = advance_indexed_entity_horizontal_position
-ASSERT advance_indexed_entity_horizontal_position_source_end = &36ED
-COPYBLOCK advance_indexed_entity_horizontal_position_source, advance_indexed_entity_horizontal_position_source_end, &4EBA
+ASSERT advance_room_enemy_horizontal_position_source = advance_room_enemy_horizontal_position
+ASSERT advance_room_enemy_horizontal_position_source_end = &36ED
+COPYBLOCK advance_room_enemy_horizontal_position_source, advance_room_enemy_horizontal_position_source_end, &4EBA
 
 ; Runtime $36BA-$36EC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4EBA-$4EEC.
-CLEAR advance_indexed_entity_horizontal_position_source, advance_indexed_entity_horizontal_position_source_end
+CLEAR advance_room_enemy_horizontal_position_source, advance_room_enemy_horizontal_position_source_end
 
 
-ORG reverse_indexed_123b_delta_at_limits
+ORG reverse_room_enemy_vertical_delta_at_limits
 
-; Runtime $36ED-$3707. Keep the Y-indexed entity inside its second range by
-; reversing the delta at $123B. The value at $1231 is masked to $FE, dropping
-; its low bit, and tested for equality against the limits at $1237 and $1238:
+; Runtime $36ED-$3707. Keep the Y-selected room enemy inside its second range by
+; reversing enemy_vertical_delta. room_enemy_vertical_position is masked to
+; ENEMY_EVEN_VERTICAL_POSITION_MASK, dropping its low bit, and tested for
+; equality against the vertical patrol limits:
 ; the first sets the delta to +2, the second to -2, and neither leaves it alone.
 ; Unlike the $123A clamp this tests equality rather than ordering, which is why
 ; the masked value has to land exactly on a limit. The two setters share one
 ; store, the second jumping into the first, and both entries are also called
-; directly by reflect_indexed_entity_at_obstacles, so they are named for what
+; directly by reflect_room_enemy_at_obstacles, so they are named for what
 ; they do rather than for either caller reason.
-.reverse_indexed_123b_delta_at_limits_source
-    LDA primary_entity_runtime_block,Y
+.reverse_room_enemy_vertical_delta_at_limits_source
+    LDA room_enemy_vertical_position,Y
     AND #ENEMY_EVEN_VERTICAL_POSITION_MASK
     CMP enemy_vertical_lower_limit
-    BEQ set_indexed_123b_delta_positive
+    BEQ set_room_enemy_vertical_delta_positive
     CMP enemy_vertical_upper_limit
-    BEQ set_indexed_123b_delta_negative
+    BEQ set_room_enemy_vertical_delta_negative
     RTS
 
-.set_indexed_123b_delta_positive
-    LDA #&02
+.set_room_enemy_vertical_delta_positive
+    LDA #ENTITY_VERTICAL_STEP_POSITIVE
 
-.store_indexed_123b_delta
+.store_room_enemy_vertical_delta
     STA enemy_vertical_delta,Y
     RTS
 
-.set_indexed_123b_delta_negative
-    LDA #&FE
-    JMP store_indexed_123b_delta
-.reverse_indexed_123b_delta_at_limits_source_end
+.set_room_enemy_vertical_delta_negative
+    LDA #ENTITY_VERTICAL_STEP_NEGATIVE
+    JMP store_room_enemy_vertical_delta
+.reverse_room_enemy_vertical_delta_at_limits_source_end
 
-ASSERT reverse_indexed_123b_delta_at_limits_source = reverse_indexed_123b_delta_at_limits
-ASSERT reverse_indexed_123b_delta_at_limits_source_end = &3708
-COPYBLOCK reverse_indexed_123b_delta_at_limits_source, reverse_indexed_123b_delta_at_limits_source_end, &4EED
+ASSERT reverse_room_enemy_vertical_delta_at_limits_source = reverse_room_enemy_vertical_delta_at_limits
+ASSERT reverse_room_enemy_vertical_delta_at_limits_source_end = &3708
+COPYBLOCK reverse_room_enemy_vertical_delta_at_limits_source, reverse_room_enemy_vertical_delta_at_limits_source_end, &4EED
 
 ; Runtime $36ED-$3707 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4EED-$4F07.
-CLEAR reverse_indexed_123b_delta_at_limits_source, reverse_indexed_123b_delta_at_limits_source_end
+CLEAR reverse_room_enemy_vertical_delta_at_limits_source, reverse_room_enemy_vertical_delta_at_limits_source_end
 
 
-ORG advance_indexed_entity_vertical_position
+ORG advance_room_enemy_vertical_position
 
-; Runtime $3708-$372E. Apply one signed vertical step to the Y-indexed entity.
+; Runtime $3708-$372E. Apply one signed vertical step to the Y-selected room enemy.
 ; The entity state is copied into the scratch fields the shared step helper
-; works on: the position from $1231, the signed step from $123B and the display
-; pointer from $47/$48. apply_signed_vertical_step_to_pointer then moves both
+; works on: room_enemy_vertical_position, enemy_vertical_delta and the room
+; enemy display pointer. apply_signed_vertical_step_to_pointer then moves both
 ; two display scanlines per unit, and the results are copied straight back.
 ; This is the same shape as
 ; advance_player_vertical_position_and_display_pointer, which does exactly this
 ; for the player using $2C and $38/$39. The two share the helper, so an entity
 ; and the player fall and climb through identical arithmetic.
-; The step it reads is the field reverse_indexed_123b_delta_at_limits and
-; reflect_indexed_entity_at_obstacles drive, so the direction reversals those
+; The step it reads is the field reverse_room_enemy_vertical_delta_at_limits and
+; reflect_room_enemy_at_obstacles drive, so the direction reversals those
 ; apply reach the display here.
-.advance_indexed_entity_vertical_position_source
-    LDA primary_entity_runtime_block,Y
-    STA cross_room_robot_ghost_output_half_offset
+.advance_room_enemy_vertical_position_source
+    LDA room_enemy_vertical_position,Y
+    STA candidate_half_vertical_position
     LDA enemy_vertical_delta,Y
     STA vertical_step_delta
     LDA room_enemy_display_pointer_low,Y
@@ -10740,22 +10745,22 @@ ORG advance_indexed_entity_vertical_position
     LDA room_enemy_display_pointer_high,Y
     STA vertical_step_pointer_high
     JSR apply_signed_vertical_step_to_pointer
-    LDA cross_room_robot_ghost_output_half_offset
-    STA primary_entity_runtime_block,Y
+    LDA candidate_half_vertical_position
+    STA room_enemy_vertical_position,Y
     LDA vertical_step_pointer_low
     STA room_enemy_display_pointer_low,Y
     LDA vertical_step_pointer_high
     STA room_enemy_display_pointer_high,Y
     RTS
-.advance_indexed_entity_vertical_position_source_end
+.advance_room_enemy_vertical_position_source_end
 
-ASSERT advance_indexed_entity_vertical_position_source = advance_indexed_entity_vertical_position
-ASSERT advance_indexed_entity_vertical_position_source_end = &372F
-COPYBLOCK advance_indexed_entity_vertical_position_source, advance_indexed_entity_vertical_position_source_end, &4F08
+ASSERT advance_room_enemy_vertical_position_source = advance_room_enemy_vertical_position
+ASSERT advance_room_enemy_vertical_position_source_end = &372F
+COPYBLOCK advance_room_enemy_vertical_position_source, advance_room_enemy_vertical_position_source_end, &4F08
 
 ; Runtime $3708-$372E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4F08-$4F2E.
-CLEAR advance_indexed_entity_vertical_position_source, advance_indexed_entity_vertical_position_source_end
+CLEAR advance_room_enemy_vertical_position_source, advance_room_enemy_vertical_position_source_end
 
 
 ORG show_golden_dragon_ending

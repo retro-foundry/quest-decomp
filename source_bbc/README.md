@@ -102,7 +102,7 @@ routines highlighted in detail below include:
 - runtime `$3563-$35C1`, loaded `$4D63-$4DC1`,
   `update_and_draw_room_enemies`; and
 - runtime `$35FA-$362D`, loaded `$4DFA-$4E2D`,
-  `advance_indexed_entity_with_collision_checks`.
+  `advance_room_enemy_with_collision_checks`.
 
 The display routines' boundaries, callers, fixed palette values,
 pointer/selector rules, byte order, destination advance, and register effects
@@ -368,7 +368,7 @@ checkpoint supplies a blocked vertical route and blocked positive-direction
 horizontal route, executes the missing reversal at `$361D`, and matches the
 authority exactly for PCs, registers, complete memory, display, and video
 hardware. See
-`analysis/reconstruction/advance_indexed_entity_with_collision_checks_contract.md`.
+`analysis/reconstruction/advance_room_enemy_with_collision_checks_contract.md`.
 
 The enclosing room-enemy update loop walks backward over even-numbered slots
 and selects bat, small-robot, and moth movement/range behaviors through
@@ -378,7 +378,7 @@ coordinate checkpoint makes the first moth overlap the player after
 its natural vertical step, covering `$3584` and the pursuit-delta copy path.
 The complete two-entity call, including XOR redraw and player interaction,
 matches the authority exactly. See
-`analysis/reconstruction/update_and_draw_indexed_entities_contract.md` (the
+`analysis/reconstruction/update_and_draw_room_enemies_contract.md` (the
 filename retains the earlier structural name for stable evidence links).
 
 `memory_map.inc` is the shared, human-maintained map of names promoted from
