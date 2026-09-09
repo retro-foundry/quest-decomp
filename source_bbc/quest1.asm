@@ -1418,9 +1418,9 @@ ORG process_player_cell_interactions
 .consume_pattern_16_required_item
     JSR consume_matching_item_from_slots
     BCC test_pattern_1a_interaction
-    LDA #&11
+    LDA #ROOM_CELL_FOUR_TILE_HALF_ROW
     JSR start_saved_display_block_shift_effect
-    LDA #&00
+    LDA #ROOM_MOVING_OBJECT_PUZZLE_STATE_CLEAR
     STA room_moving_object_puzzle_state
 
 .test_pattern_1a_interaction
@@ -1436,7 +1436,7 @@ ORG process_player_cell_interactions
     LDA #ITEM_CODE_BOTTLE
     JSR consume_matching_item_from_slots
     BCC player_cell_interactions_rts
-    LDA #&3C
+    LDA #ROOM_CELL_TRANSITION_3C
     JSR start_saved_display_block_shift_effect
 
 .player_cell_interactions_rts
@@ -1809,8 +1809,9 @@ ORG print_item_slot_label
 
 ; Position the VDU cursor at row Y, column X, then print
 ; six bytes from the item-label table. Zero selects offset zero; other ordinary
-; codes select 3*(code-$26). Code $3E with nonzero $A0 takes the explicit
-; offset-$18 path, which is byte-output-equivalent but preserves original flow.
+; codes use the named item-code bias. The bottle code with an active special-item
+; flag takes the explicit special-label path, which is byte-output-equivalent
+; but preserves original flow.
 .print_item_slot_label_source
     PHA
     LDA #VDU_TEXT_AT
@@ -1824,7 +1825,7 @@ ORG print_item_slot_label
     CMP #ITEM_CODE_BOTTLE
     BNE print_item_slot_label_ordinary_code
     LDX special_item_3e_activation_flag
-    CPX #&00
+    CPX #SPECIAL_ITEM_INACTIVE
     BEQ print_item_slot_label_ordinary_code
     LDY #SPECIAL_ITEM_LABEL_OFFSET
     JMP print_item_slot_label_emit
@@ -2046,21 +2047,21 @@ CLEAR test_player_in_range_and_set_direction_source, test_player_in_range_and_se
 ORG draw_fixed_pair_tile_run
 
 ; The third run painter, alongside the blank and the
-; configurable alternating run. It writes the fixed pair $01 and $02 into the
+; configurable alternating run. It writes GRAPHIC_ROUNDED_PATTERN_A/B into the
 ; working tile pair and then alternates between them for X tiles, entering
 ; through the mirror-flag selector so each tile can be drawn reversed.
-; Bit 0 of $F8 decides which of the pair is drawn first: when clear the run
+; Bit 0 of tile_pair_source_selector decides which of the pair is drawn first: when clear the run
 ; starts on the second index, which is why the loop is entered at its midpoint.
-; $13D4 presets a run of eight; callers wanting another length enter at $13D6.
+; The first entry presets a complete room-cell run; callers wanting another length enter set_fixed_tile_pair.
 ; A run that empties on the first half leaves through the alternating painter
-; shared RTS at $13A2 rather than the one at $13F7.
+; shared alternating-run return rather than the local return.
 .draw_fixed_pair_tile_run_source
-    LDX #&08
+    LDX #ROOM_CELL_TILE_COUNT
 
 .set_fixed_tile_pair
-    LDA #&01
+    LDA #GRAPHIC_ROUNDED_PATTERN_A
     STA active_tile_pair_first
-    LDA #&02
+    LDA #GRAPHIC_ROUNDED_PATTERN_B
     STA active_tile_pair_second
 .draw_selected_fixed_pair_run
     LDA tile_pair_source_selector
