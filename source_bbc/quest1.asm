@@ -1181,7 +1181,7 @@ ORG evntv_read_interval_timer
     PHA
     LDX #LO(interval_timer_block)
     LDY #HI(interval_timer_block)
-    LDA #&04
+    LDA #OSWORD_READ_INTERVAL_TIMER
     JSR OSWORD
     STA shared_workspace_6d
     PLA
@@ -1815,7 +1815,7 @@ ORG print_item_slot_label
 ; offset-$18 path, which is byte-output-equivalent but preserves original flow.
 .print_item_slot_label_source
     PHA
-    LDA #&1F
+    LDA #VDU_TEXT_AT
     JSR OSWRCH
     TYA
     JSR OSWRCH
@@ -2571,7 +2571,7 @@ ORG advance_bcd_counter_and_print
 
     LDA bcd_counter_high
     JSR print_packed_bcd_byte
-    LDA #&09
+    LDA #VDU_HORIZONTAL_TAB
     JSR OSWRCH
     LDA bcd_counter_low
     JMP print_packed_bcd_byte
@@ -2995,7 +2995,7 @@ ORG run_terminal_interaction
 
 .wait_for_terminal_space_release
     LDX #&9D
-    LDA #&81
+    LDA #OSBYTE_INKEY
     LDY #&FF
     JSR OSBYTE
     BCC wait_for_terminal_space_release
@@ -3313,7 +3313,7 @@ ORG osbyte_81_inkey
 ; directly to the original caller.
 .osbyte_81_inkey_source
     LDY #&FF
-    LDA #&81
+    LDA #OSBYTE_INKEY
     JMP OSBYTE
 .osbyte_81_inkey_source_end
 
@@ -4445,7 +4445,7 @@ ORG wait_vsync_then_call_display_helpers
 ; that immediately after the vsync wait is what keeps the redraw off the
 ; visible raster.
 .wait_vsync_then_call_display_helpers_source
-    LDA #&13
+    LDA #OSBYTE_WAIT_VSYNC
     JSR OSBYTE
     JSR xor_draw_player_two_parts
     JSR capture_player_state_for_redraw
@@ -4964,7 +4964,7 @@ ORG poll_controls_and_apply_gameplay_actions
     DEY
     BPL control_poll_next_chord_key
     STY reincarnation_cheat_flag
-    LDA #&07
+    LDA #VDU_BELL
     JSR OSWRCH
 
 .control_skip_redraw
@@ -9481,7 +9481,7 @@ ORG submit_sound_block_with_pitch
     PHA
     LDX #&A0
     LDY #&32
-    LDA #&07
+    LDA #OSWORD_SOUND
     JSR OSWORD
     PLA
     TAY
@@ -9519,7 +9519,7 @@ ORG draw_character_row_as_tiles
     STA character_definition_block
     LDX #&EF
     LDY #&7F
-    LDA #&0A
+    LDA #OSWORD_DEFINE_CHARACTER
     JSR OSWORD
     LDX shared_workspace_09
     INX
@@ -9989,7 +9989,7 @@ ORG draw_and_initialise_room
     STA shared_workspace_2f
     LDA player_display_pointer_high
     STA shared_workspace_30
-    LDA #&15
+    LDA #OSBYTE_FLUSH_BUFFER
     LDX #&04
     JSR OSBYTE
     LDA #&00
@@ -11741,10 +11741,10 @@ ORG &8100
     STA EVNTV
     LDA #&0B
     STA EVNTV+1
-    LDA #&C8
+    LDA #OSBYTE_SET_ESCAPE_BREAK_EFFECT
     LDX #&02
     JSR OSBYTE
-    LDA #&0E
+    LDA #OSBYTE_ENABLE_EVENT
     LDX #&05
     JSR OSBYTE
     LDA IRQ1V
@@ -11802,7 +11802,7 @@ ORG &8100
     JMP copy_loaded_low_block_to_runtime
 
 .set_vdu_window_then_continue_loader_source
-    LDA #&1C
+    LDA #VDU_DEFINE_TEXT_WINDOW
     JSR OSWRCH
     LDA #&00
     JSR OSWRCH
@@ -11917,7 +11917,7 @@ CLEAR irq_relocation_trailing_zero_source, irq_relocation_trailing_zero_source_e
 ; A=$E1/X=0 and A=$8C, then transfers control to the loader at $5980.
 ORG &8000
 .dfs_execution_entry_stub_source
-    LDA #&E1
+    LDA #OSBYTE_READ_KEYBOARD_STATUS
     LDX #&00
     JSR OSBYTE
     LDA #&8C

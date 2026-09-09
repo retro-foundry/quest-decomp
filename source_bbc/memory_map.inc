@@ -138,6 +138,19 @@ indexed_pair_display_pointer_high = &009A ; dataflow: high byte paired with X-in
 ; ---------------------------------------------------------------------------
 ; Evidence-backed relocated Quest data/configuration
 ; ---------------------------------------------------------------------------
+OSWORD_READ_INTERVAL_TIMER      = &04 ; MOS API: read the five-byte interval timer block
+OSWORD_SOUND                    = &07 ; MOS API: submit an eight-byte sound parameter block
+OSWORD_DEFINE_CHARACTER        = &0A ; MOS API: define a character from an eight-byte bitmap
+OSBYTE_INKEY                    = &81 ; MOS API: test a key or time-limited keyboard condition
+OSBYTE_WAIT_VSYNC               = &13 ; MOS API: wait for the next vertical sync
+OSBYTE_FLUSH_BUFFER             = &15 ; MOS API: flush the buffer selected in X
+OSBYTE_ENABLE_EVENT             = &0E ; MOS API: enable the event selected in X
+OSBYTE_SET_ESCAPE_BREAK_EFFECT  = &C8 ; MOS API: configure Escape/Break behavior from X
+OSBYTE_READ_KEYBOARD_STATUS     = &E1 ; MOS API used by the DFS entry stub before relocation
+VDU_BELL                        = &07 ; VDU control code: sound the system bell
+VDU_HORIZONTAL_TAB             = &09 ; VDU control code: move one text column right
+VDU_TEXT_AT                     = &1F ; VDU control code followed by text column and row
+VDU_DEFINE_TEXT_WINDOW          = &1C ; VDU control code followed by left, bottom, right, top
 ENEMY_SPECIES_BAT               = &00 ; behavioral: descriptor-table pair $0480/$04A0
 ENEMY_SPECIES_SMALL_ROBOT       = &01 ; behavioral: descriptor-table pair $0640/$0660
 ENEMY_SPECIES_MOTH              = &02 ; behavioral: descriptor-table pair $04C0/$04E0
