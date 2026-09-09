@@ -6618,7 +6618,7 @@ ORG draw_graphic_selector_sequence
 
 ASSERT draw_graphic_selector_sequence_source = draw_graphic_selector_sequence
 ASSERT draw_graphic_selector_sequence_source_end = &158F
-COPYBLOCK draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_source_end, &2D7E
+COPYBLOCK draw_graphic_selector_sequence_source, draw_graphic_selector_sequence_source_end, draw_graphic_selector_sequence+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $157E-$158E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2D7E-$2D8E.
@@ -6641,7 +6641,7 @@ ORG replace_saved_cell_with_outer_only_state_motif_then_play_sound
 
 ASSERT replace_saved_cell_with_outer_only_state_motif_then_play_sound_source = replace_saved_cell_with_outer_only_state_motif_then_play_sound
 ASSERT replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end = replace_saved_cell_then_play_sound
-COPYBLOCK replace_saved_cell_with_outer_only_state_motif_then_play_sound_source, replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end, &4598
+COPYBLOCK replace_saved_cell_with_outer_only_state_motif_then_play_sound_source, replace_saved_cell_with_outer_only_state_motif_then_play_sound_source_end, replace_saved_cell_with_outer_only_state_motif_then_play_sound+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2D98-$2DA2 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4598-$45A2.
@@ -6682,7 +6682,7 @@ ORG replace_saved_cell_then_play_sound
 
 ASSERT replace_saved_cell_then_play_sound_source = replace_saved_cell_then_play_sound
 ASSERT replace_saved_cell_then_play_sound_source_end = &2DD4
-COPYBLOCK replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_sound_source_end, &45A3
+COPYBLOCK replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_sound_source_end, replace_saved_cell_then_play_sound+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2DA3-$2DD3 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $45A3-$45D3.
@@ -6719,7 +6719,7 @@ ORG draw_progress_crossed_diagonal_blank_pairs
 
 ASSERT draw_progress_crossed_diagonal_blank_pairs_source = draw_progress_crossed_diagonal_blank_pairs
 ASSERT draw_progress_crossed_diagonal_blank_pairs_source_end = &15B1
-COPYBLOCK draw_progress_crossed_diagonal_blank_pairs_source, draw_progress_crossed_diagonal_blank_pairs_source_end, &2D8F
+COPYBLOCK draw_progress_crossed_diagonal_blank_pairs_source, draw_progress_crossed_diagonal_blank_pairs_source_end, draw_progress_crossed_diagonal_blank_pairs+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $158F-$15B0 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2D8F-$2DB0.
@@ -6815,7 +6815,7 @@ ORG initialise_cross_room_robot_ghost_from_record
 
 ASSERT initialise_cross_room_robot_ghost_from_record_source = initialise_cross_room_robot_ghost_from_record
 ASSERT initialise_cross_room_robot_ghost_from_record_source_end = &2E44
-COPYBLOCK initialise_cross_room_robot_ghost_from_record_source, initialise_cross_room_robot_ghost_from_record_source_end, &45D4
+COPYBLOCK initialise_cross_room_robot_ghost_from_record_source, initialise_cross_room_robot_ghost_from_record_source_end, initialise_cross_room_robot_ghost_from_record+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2DD4-$2E43 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $45D4-$4643.
@@ -6888,7 +6888,7 @@ ORG draw_narrow_bar_fixture_row
 
 ASSERT draw_narrow_bar_fixture_row_source = draw_narrow_bar_fixture_row
 ASSERT draw_narrow_bar_fixture_row_source_end = &1639
-COPYBLOCK draw_narrow_bar_fixture_row_source, draw_narrow_bar_fixture_row_source_end, &2DDF
+COPYBLOCK draw_narrow_bar_fixture_row_source, draw_narrow_bar_fixture_row_source_end, draw_narrow_bar_fixture_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $15DF-$1638 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2DDF-$2E38.
@@ -6937,7 +6937,7 @@ ASSERT draw_curved_bowl_or_edge_pattern_row_source = draw_curved_bowl_or_edge_pa
 ASSERT draw_column_gated_edge_pair_row_source = draw_column_gated_edge_pair_row
 ASSERT draw_fixed_edge_pair_or_alternating_pattern_row_source = draw_fixed_edge_pair_or_alternating_pattern_row
 ASSERT draw_curved_bowl_or_edge_pattern_row_source_end = &15DF
-COPYBLOCK draw_curved_bowl_or_edge_pattern_row_source, draw_curved_bowl_or_edge_pattern_row_source_end, &2DB1
+COPYBLOCK draw_curved_bowl_or_edge_pattern_row_source, draw_curved_bowl_or_edge_pattern_row_source_end, draw_curved_bowl_or_edge_pattern_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $15B1-$15DE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2DB1-$2DDE.
@@ -6991,7 +6991,7 @@ ORG update_and_draw_two_cross_room_robot_ghosts
 
 ASSERT update_and_draw_two_cross_room_robot_ghosts_source = update_and_draw_two_cross_room_robot_ghosts
 ASSERT update_and_draw_two_cross_room_robot_ghosts_source_end = handle_matching_cross_room_robot_ghost
-COPYBLOCK update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cross_room_robot_ghosts_source_end, &4644
+COPYBLOCK update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cross_room_robot_ghosts_source_end, update_and_draw_two_cross_room_robot_ghosts+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Release the runtime range after copying it into the loaded transport image.
 CLEAR update_and_draw_two_cross_room_robot_ghosts_source, update_and_draw_two_cross_room_robot_ghosts_source_end
@@ -7018,7 +7018,7 @@ ORG draw_last_column_special_pair_row
 
 ASSERT draw_last_column_special_pair_row_source = draw_last_column_special_pair_row
 ASSERT draw_last_column_special_pair_row_source_end = &1650
-COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end, &2E39
+COPYBLOCK draw_last_column_special_pair_row_source, draw_last_column_special_pair_row_source_end, draw_last_column_special_pair_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1639-$164F overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2E39-$2E4F.
@@ -7053,7 +7053,7 @@ ORG draw_state_selected_narrow_bar_center_row
 .draw_state_selected_narrow_bar_center_row_source_end
 ASSERT draw_state_selected_narrow_bar_center_row_source = draw_state_selected_narrow_bar_center_row
 ASSERT draw_state_selected_narrow_bar_center_row_source_end = draw_room_flag_then_fixed_pair_row
-COPYBLOCK draw_state_selected_narrow_bar_center_row_source, draw_state_selected_narrow_bar_center_row_source_end, &2E50
+COPYBLOCK draw_state_selected_narrow_bar_center_row_source, draw_state_selected_narrow_bar_center_row_source_end, draw_state_selected_narrow_bar_center_row+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_state_selected_narrow_bar_center_row_source, draw_state_selected_narrow_bar_center_row_source_end
 
 
@@ -7079,7 +7079,7 @@ ORG handle_matching_cross_room_robot_ghost
 
 ASSERT handle_matching_cross_room_robot_ghost_source = handle_matching_cross_room_robot_ghost
 ASSERT handle_matching_cross_room_robot_ghost_source_end = &2E92
-COPYBLOCK handle_matching_cross_room_robot_ghost_source, handle_matching_cross_room_robot_ghost_source_end, &467C
+COPYBLOCK handle_matching_cross_room_robot_ghost_source, handle_matching_cross_room_robot_ghost_source_end, handle_matching_cross_room_robot_ghost+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2E7C-$2E91 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $467C-$4691.
@@ -7104,7 +7104,7 @@ ORG draw_room_flag_then_fixed_pair_row
 
 ASSERT draw_room_flag_then_fixed_pair_row_source = draw_room_flag_then_fixed_pair_row
 ASSERT draw_room_flag_then_fixed_pair_row_source_end = &1685
-COPYBLOCK draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_pair_row_source_end, &2E76
+COPYBLOCK draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_pair_row_source_end, draw_room_flag_then_fixed_pair_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1676-$1684 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2E76-$2E84.
@@ -7141,7 +7141,7 @@ ASSERT P% = restore_cross_room_robot_ghost_x_and_return
 
 ASSERT draw_directional_ghost_if_reference_matches_source = draw_directional_ghost_if_reference_matches
 ASSERT draw_directional_ghost_if_reference_matches_source_end = draw_cross_room_robot_ghost_if_reference_matches
-COPYBLOCK draw_directional_ghost_if_reference_matches_source, draw_directional_ghost_if_reference_matches_source_end, &4692
+COPYBLOCK draw_directional_ghost_if_reference_matches_source, draw_directional_ghost_if_reference_matches_source_end, draw_directional_ghost_if_reference_matches+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2E92-$2EA9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4692-$46A9.
@@ -7197,7 +7197,7 @@ ORG draw_cross_room_robot_ghost_if_reference_matches
 
 ASSERT draw_cross_room_robot_ghost_if_reference_matches_source = draw_cross_room_robot_ghost_if_reference_matches
 ASSERT draw_cross_room_robot_ghost_if_reference_matches_source_end = test_cross_room_robot_ghost_matches_reference
-COPYBLOCK draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_robot_ghost_if_reference_matches_source_end, &46AA
+COPYBLOCK draw_cross_room_robot_ghost_if_reference_matches_source, draw_cross_room_robot_ghost_if_reference_matches_source_end, draw_cross_room_robot_ghost_if_reference_matches+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2EAA-$2EDC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $46AA-$46DC.
@@ -7338,7 +7338,7 @@ ORG advance_cross_room_robot_ghost_offset_and_display_pointer
 ASSERT advance_cross_room_robot_ghost_offset_and_display_pointer_source = advance_cross_room_robot_ghost_offset_and_display_pointer
 ASSERT draw_then_decrement_ghost_source = draw_then_decrement_ghost
 ASSERT advance_cross_room_robot_ghost_offset_and_display_pointer_source_end = ghost_countdown_steering_update
-COPYBLOCK advance_cross_room_robot_ghost_offset_and_display_pointer_source, advance_cross_room_robot_ghost_offset_and_display_pointer_source_end, &478F
+COPYBLOCK advance_cross_room_robot_ghost_offset_and_display_pointer_source, advance_cross_room_robot_ghost_offset_and_display_pointer_source_end, advance_cross_room_robot_ghost_offset_and_display_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR advance_cross_room_robot_ghost_offset_and_display_pointer_source, advance_cross_room_robot_ghost_offset_and_display_pointer_source_end
 
 
@@ -7511,7 +7511,7 @@ ORG draw_table_selected_left_half_row
 
 ASSERT draw_table_selected_left_half_row_source = draw_table_selected_left_half_row
 ASSERT draw_table_selected_left_half_row_source_end = left_half_four_tile_graphic_sequences
-COPYBLOCK draw_table_selected_left_half_row_source, draw_table_selected_left_half_row_source_end, &2E85
+COPYBLOCK draw_table_selected_left_half_row_source, draw_table_selected_left_half_row_source_end, draw_table_selected_left_half_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1685-$16B1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2E85-$2EB1.
@@ -7528,7 +7528,7 @@ ORG left_half_four_tile_graphic_sequences
 .left_half_four_tile_graphic_sequences_source_end
 ASSERT left_half_four_tile_graphic_sequences_source = left_half_four_tile_graphic_sequences
 ASSERT left_half_four_tile_graphic_sequences_source_end = draw_narrow_bar_beam_pattern_row
-COPYBLOCK left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_sequences_source_end, &2EB2
+COPYBLOCK left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_sequences_source_end, left_half_four_tile_graphic_sequences+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR left_half_four_tile_graphic_sequences_source, left_half_four_tile_graphic_sequences_source_end
 
 
@@ -7554,7 +7554,7 @@ ORG test_cross_room_robot_ghost_matches_reference
 
 ASSERT test_cross_room_robot_ghost_matches_reference_source = test_cross_room_robot_ghost_matches_reference
 ASSERT test_cross_room_robot_ghost_matches_reference_source_end = &2EEE
-COPYBLOCK test_cross_room_robot_ghost_matches_reference_source, test_cross_room_robot_ghost_matches_reference_source_end, &46DD
+COPYBLOCK test_cross_room_robot_ghost_matches_reference_source, test_cross_room_robot_ghost_matches_reference_source_end, test_cross_room_robot_ghost_matches_reference+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2EDD-$2EED overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $46DD-$46ED.
@@ -7570,7 +7570,7 @@ ORG player_range_no_overlap_return
 
 ASSERT player_range_no_overlap_return_source = player_range_no_overlap_return
 ASSERT player_range_no_overlap_return_source_end = &2B9E
-COPYBLOCK player_range_no_overlap_return_source, player_range_no_overlap_return_source_end, &439C
+COPYBLOCK player_range_no_overlap_return_source, player_range_no_overlap_return_source_end, player_range_no_overlap_return+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2B9C-$2B9D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $439C-$439D.
@@ -7606,7 +7606,7 @@ ORG set_cross_room_robot_ghost_value_delta_at_thresholds
 
 ASSERT set_cross_room_robot_ghost_value_delta_at_thresholds_source = set_cross_room_robot_ghost_value_delta_at_thresholds
 ASSERT set_cross_room_robot_ghost_value_delta_at_thresholds_source_end = &2F12
-COPYBLOCK set_cross_room_robot_ghost_value_delta_at_thresholds_source, set_cross_room_robot_ghost_value_delta_at_thresholds_source_end, &46EE
+COPYBLOCK set_cross_room_robot_ghost_value_delta_at_thresholds_source, set_cross_room_robot_ghost_value_delta_at_thresholds_source_end, set_cross_room_robot_ghost_value_delta_at_thresholds+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2EEE-$2F11 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $46EE-$4711.
@@ -7696,7 +7696,7 @@ ORG advance_cross_room_robot_ghost_value_and_display_pointer
 
 ASSERT advance_cross_room_robot_ghost_value_and_display_pointer_source = advance_cross_room_robot_ghost_value_and_display_pointer
 ASSERT advance_cross_room_robot_ghost_value_and_display_pointer_source_end = &2F8F
-COPYBLOCK advance_cross_room_robot_ghost_value_and_display_pointer_source, advance_cross_room_robot_ghost_value_and_display_pointer_source_end, &4712
+COPYBLOCK advance_cross_room_robot_ghost_value_and_display_pointer_source, advance_cross_room_robot_ghost_value_and_display_pointer_source_end, advance_cross_room_robot_ghost_value_and_display_pointer+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2F12-$2F8E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4712-$478E.
@@ -7704,9 +7704,9 @@ CLEAR advance_cross_room_robot_ghost_value_and_display_pointer_source, advance_c
 
 ; Copy these earlier-assembled room-cell blocks only after the cross-room robot/ghost
 ; routines that occupy the same runtime addresses as their loaded images.
-COPYBLOCK draw_narrow_bar_beam_pattern_row_source, draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end, &2EC2
+COPYBLOCK draw_narrow_bar_beam_pattern_row_source, draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end, draw_narrow_bar_beam_pattern_row+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_narrow_bar_beam_pattern_row_source, draw_left_half_sequence_twice_or_narrow_bar_beam_pattern_source_end
-COPYBLOCK draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_password_source_end, &2EEA
+COPYBLOCK draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_password_source_end, draw_room_sign_or_collect_password+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_password_source_end
 
 ORG test_display_pointer_in_xor_draw_window
@@ -7737,7 +7737,7 @@ ORG test_display_pointer_in_xor_draw_window
 
 ASSERT test_display_pointer_in_xor_draw_window_source = test_display_pointer_in_xor_draw_window
 ASSERT test_display_pointer_in_xor_draw_window_source_end = &32BF
-COPYBLOCK test_display_pointer_in_xor_draw_window_source, test_display_pointer_in_xor_draw_window_source_end, &4AA7
+COPYBLOCK test_display_pointer_in_xor_draw_window_source, test_display_pointer_in_xor_draw_window_source_end, test_display_pointer_in_xor_draw_window+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $32A7-$32BE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4AA7-$4ABE.
@@ -7763,7 +7763,7 @@ ASSERT enter_submit_osword_07_sound_block_source = enter_submit_osword_07_sound_
 ASSERT initial_bcd_counter_low = bcd_counter_low
 ASSERT initial_bcd_counter_high = bcd_counter_high
 ASSERT enter_submit_osword_07_sound_block_source_end = &32C5
-COPYBLOCK enter_submit_osword_07_sound_block_source, enter_submit_osword_07_sound_block_source_end, &4AC0
+COPYBLOCK enter_submit_osword_07_sound_block_source, enter_submit_osword_07_sound_block_source_end, enter_submit_osword_07_sound_block+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $32C0-$32C4 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4AC0-$4AC4.
