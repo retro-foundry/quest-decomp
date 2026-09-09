@@ -229,15 +229,17 @@
 ;          every room the account calls out for an enemy. So this is the table
 ;          the creatures come from.
 ;
-;   $0A78  indexed_pair_record_table, ten three-byte records indexed by $8F
-;          alone. This one is per level, not per room, and
+;   $0A78  indexed_pair_record_table, ten three-byte roaming-enemy records
+;          indexed by $8F alone. This one is per level, not per room, and
 ;          advance_indexed_pair_value_and_display_pointer carries its objects
 ;          across room boundaries: at horizontal $4D the column increments and
 ;          the position resets to zero, at a negative position the column
 ;          decrements and the position becomes $4C, and the deltas reverse at
-;          columns 0 and 7. This proves that the pair can transition between
-;          room columns; it does not prove that the objects are enemies or
-;          identify their graphics.
+;          columns 0 and 7. The ordinary update path selects pointer offsets
+;          $10/$12, which are the two small-bouncing-robot frames at $0B6F;
+;          levels 8 and 9 use the alternate path and offsets $14/$16, the ghost
+;          frames at $0B73. Thus only robots and ghosts use this cross-room
+;          subsystem.
 ;
 ;   $0A96  lift_and_hazard_room_record_table, twenty five-byte records selecting
 ;          either the vertical-lift graphic or the damaging moth-shaped frames.
@@ -1100,10 +1102,10 @@ ORG draw_record_row_pairs
     JSR enter_copy_16_byte_graphic_to_display
     CLC
     LDA display_pointer_low
-    ADC #&60
+    ADC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA display_pointer_low
     LDA display_pointer_high
-    ADC #&02
+    ADC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA display_pointer_high
     DEX
     BNE draw_next_record_row
@@ -1142,17 +1144,17 @@ ORG remove_last_icon_and_stamp_room_cell
     ASL A
     ASL A
     CLC
-    ADC #&F0
+    ADC #LO(status_icon_row_base)
     STA display_pointer_low
     LDA #&00
-    ADC #&3C
+    ADC #HI(status_icon_row_base)
     STA display_pointer_high
     JSR draw_record_three_from_alternate_bank
     LDA saved_effect_display_pointer_low
     STA display_pointer_low
     LDA saved_effect_display_pointer_high
     STA display_pointer_high
-    LDA #&0D
+    LDA #ROOM_CELL_COLUMN_PATTERNS
     JSR store_byte_through_saved_pointer
 .remove_last_icon_and_stamp_room_cell_source_end
 
@@ -1554,10 +1556,10 @@ ORG display_pattern_test
     DEX
     BNE shift_pattern_index_to_record_offset
     CLC
-    LDA #&05
+    LDA #LO(graphic_pattern_sample_base)
     ADC shared_workspace_31
     STA graphic_source_pointer_low
-    LDA #&0E
+    LDA #HI(graphic_pattern_sample_base)
     ADC shared_workspace_32
     STA graphic_source_pointer_high
     LDY #&00
@@ -4478,9 +4480,9 @@ ORG redraw_energy_bar_segment
     LDA shared_workspace_3b
     AND #&F8
     CLC
-    ADC #&71
+    ADC #LO(energy_bar_partial_cell_base)
     STA display_pointer_low
-    LDA #&40
+    LDA #HI(energy_bar_partial_cell_base)
     ADC #&00
     STA display_pointer_high
     LDA shared_workspace_3b
@@ -5976,7 +5978,7 @@ ORG enter_room_below
     JSR enter_advance_secondary_reference_and_pointer
     JSR xor_draw_player_two_parts
     LDA reference_pair_secondary_value
-    CMP #&08
+    CMP #ROAMING_GHOST_FIRST_LEVEL
     BNE return_from_room_transition
     JMP initialise_indexed_pair_from_record
 .enter_room_below_source_end
@@ -6971,19 +6973,16 @@ ORG initialise_indexed_pair_from_record
 ; display_action_jump_table call leaves behind, so the record selects the
 ; position indirectly rather than carrying it.
 ;
-; This class is per level, not per room: the record index is the secondary
+; This enemy class is per level, not per room: the record index is the secondary
 ; reference times three, so there are ten records for ten levels, and one record
 ; initialises two objects. advance_indexed_pair_value_and_display_pointer then
 ; carries them across room boundaries - at horizontal $4D the column increments
 ; and the position resets to zero, below zero the column decrements and the
-; position becomes $4C, and the deltas reverse at columns 0 and 7. This proves
-; cross-column movement, but not that these objects are enemies or horizontal
-; platforms. Their visual and gameplay identity remains unresolved.
-;
-; That also explains a failed experiment. Suppressing this class's renderer,
-; draw_indexed_pair_if_reference_matches, appeared to leave the horizontal
-; platforms untouched. Because the indexed pair can move between columns, a
-; single room and a single moment cannot identify the rendered objects.
+; position becomes $4C, and the deltas reverse at columns 0 and 7. Levels 0-7
+; take the ordinary update path, whose selectors $10/$12 address the small
+; bouncing robot pointers at $0B6F/$0B71. Levels 8-9 take the alternate path,
+; whose selectors $14/$16 address the ghost pointers at $0B73/$0B75. The pair
+; is therefore two cross-room robots or ghosts, not a platform class.
 .initialise_indexed_pair_from_record_source
     LDA reference_pair_secondary_value
     ASL A
@@ -7183,7 +7182,7 @@ ORG update_and_draw_two_indexed_pairs
     LDX #&00
 .indexed_pair_update_loop
     LDA reference_pair_secondary_value
-    CMP #&08
+    CMP #ROAMING_GHOST_FIRST_LEVEL
     BMI process_indexed_pair_update
     JMP alternate_indexed_pair_countdown_update
 
@@ -7333,8 +7332,8 @@ CLEAR draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_pair_
 ORG draw_directional_indexed_pair_if_matching
 
 ; Runtime $2E92-$2EA9. Preserve the indexed-pair selector twice for the shared
-; drawing tail, choose graphic offset $14 for a non-negative value delta or $16
-; for a negative one, and configure three character rows before entering the
+; drawing tail, choose ghost graphic-pointer offset $14 for a non-negative
+; value delta or $16 for a negative one, and configure three character rows before entering the
 ; common predicate-and-XOR path at $2EBC. The alternate updater at $3009 calls
 ; this before and after changing each active pair, forming an erase/redraw pair.
 ; $2EA7-$2EA9 is the shared mismatch exit: one saved selector is restored there
@@ -7344,10 +7343,10 @@ ORG draw_directional_indexed_pair_if_matching
     PHA
     PHA
     LDA indexed_pair_value_delta_field,X
-    LDX #&14
+    LDX #ROAMING_GHOST_FRAME_0_OFFSET
     CMP #&00
     BPL directional_indexed_pair_selector_ready
-    LDX #&16
+    LDX #ROAMING_GHOST_FRAME_3_OFFSET
 
 .directional_indexed_pair_selector_ready
     STX shared_workspace_31
@@ -7370,8 +7369,8 @@ CLEAR draw_directional_indexed_pair_if_matching_source, draw_directional_indexed
 
 ORG draw_indexed_pair_if_reference_matches
 
-; Runtime $2EAA-$2EDC. Select graphic table offset $10/$12 from bit 1 of the
-; indexed value, configure two renderer rows, and draw only when the indexed
+; Runtime $2EAA-$2EDC. Select small-bouncing-robot graphic-pointer offset
+; $10/$12 from bit 1 of the indexed value, configure two renderer rows, and draw only when the indexed
 ; pair matches the reference fields. A mismatch branches to the original
 ; shared PLA/TAX/RTS exit at $2EA7. The $74-controlled state clear is retained
 ; exactly, although committed traces exercise only $74 = 0.
@@ -7382,9 +7381,9 @@ ORG draw_indexed_pair_if_reference_matches
     TXA
     PHA
     PHA
-    LDX #&10
+    LDX #ROAMING_ROBOT_FRAME_0_OFFSET
     BCC indexed_pair_draw_selector_ready
-    LDX #&12
+    LDX #ROAMING_ROBOT_FRAME_1_OFFSET
 
 .indexed_pair_draw_selector_ready
     STX shared_workspace_31
@@ -10085,11 +10084,11 @@ ORG set_room_data_pointer
     LDA shared_workspace_73
     ADC #&00
     STA shared_workspace_33
-    LDA #&D0
+    LDA #LO(room_cell_map)
     CLC
     ADC shared_workspace_32
     STA room_data_pointer_low
-    LDA #&37
+    LDA #HI(room_cell_map)
     ADC shared_workspace_33
     STA room_data_pointer_high
     RTS
@@ -11063,17 +11062,16 @@ ASSERT lift_and_hazard_graphic_descriptor_source_end = &0B6F
 COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end, &246B
 CLEAR lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end
 
-ORG unused_graphic_frame_pointer_words
-; Runtime $0B6F-$0B76: small-bouncing-robot frame 0/1 and ghost-frame 0/3
-; pointers. No known
-; runtime selector reaches these four words: the adjacent player renderer's
-; minimum selector X=$18 starts at runtime $0B77. Their graphic identities are
-; nevertheless established by decoding the complete sprite bank.
-.unused_graphic_frame_pointer_words_source
+ORG roaming_enemy_graphic_frame_pointer_table
+; Runtime $0B6F-$0B76: the cross-room enemy graphic-pointer table. The ordinary
+; per-level pair updater selects offsets $10/$12 from the common table base
+; $0B5F, reaching the small-bouncing-robot frames here. The alternate updater
+; used on levels 8 and 9 selects offsets $14/$16, reaching the ghost frames.
+.roaming_enemy_graphic_frame_pointer_table_source
     EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
     EQUW runtime_ghost_frame_0, runtime_ghost_frame_3
-.unused_graphic_frame_pointer_words_source_end
-ASSERT unused_graphic_frame_pointer_words_source = unused_graphic_frame_pointer_words
+.roaming_enemy_graphic_frame_pointer_table_source_end
+ASSERT roaming_enemy_graphic_frame_pointer_table_source = roaming_enemy_graphic_frame_pointer_table
 
 ; Runtime $0B77-$0B82: six player-part pointers. xor_draw_player_two_parts
 ; indexes $0500/$0560 with X=$18/$1A and draws two character rows, so the XOR
@@ -11086,8 +11084,8 @@ ASSERT unused_graphic_frame_pointer_words_source = unused_graphic_frame_pointer_
 .player_graphic_frame_pointer_table_source_end
 ASSERT player_graphic_frame_pointer_table_source = player_graphic_frame_pointer_table
 ASSERT player_graphic_frame_pointer_table_source_end = &0B83
-COPYBLOCK unused_graphic_frame_pointer_words_source, player_graphic_frame_pointer_table_source_end, &246F
-CLEAR unused_graphic_frame_pointer_words_source, player_graphic_frame_pointer_table_source_end
+COPYBLOCK roaming_enemy_graphic_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end, &246F
+CLEAR roaming_enemy_graphic_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end
 
 ORG interval_timer_block
 ; Runtime 0B9B-0B9F: five-byte MOS interval timer value, replaced by OSWORD $04.
