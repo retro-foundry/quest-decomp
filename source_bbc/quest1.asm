@@ -5668,21 +5668,21 @@ ORG draw_room_row_cells
 ; Draw one row of room cells.
 ; room_graphics_column is copied into tile_pair_source_selector, which
 ; is what makes alternating tiles line up across a row. Five cells are then read
-; through the room data pointer, Y counting 0 to 4, and each is drawn by the
+; through the room data pointer, starting at the first cell, and each is drawn by the
 ; cell dispatcher.
-; Each cell byte is kept whole in $1225 for the dispatcher to examine, and its
+; Each cell byte is kept whole in current_room_cell for the dispatcher to examine, and its
 ; low six bits become room_cell_type_index for record/character dispatch. The tile pair
-; selector is restored from $F8 after every cell, because the dispatcher may
+; selector is restored from tile_pair_source_selector after every cell, because the dispatcher may
 ; have advanced it.
 ; draw_and_initialise_room calls this once per cell position as it walks a room,
 ; 697 times across 29 rooms.
 .draw_room_row_cells_source
     LDA room_graphics_column
     STA tile_pair_source_selector
-    LDY #&00
+    LDY #DISPLAY_POINTER_FIRST_BYTE_OFFSET
 
 .draw_next_cell
-    LDA #&00
+    LDA #ROOM_CELL_MIRROR_DISABLED
     STA room_cell_mirror_state
     LDA (room_data_pointer_low),Y
     STA current_room_cell
@@ -5711,23 +5711,23 @@ CLEAR draw_room_row_cells_source, draw_room_row_cells_source_end
 ORG enter_room_to_the_right
 
 ; The right-edge transition, entered when
-; move_player_right_with_collision finds the horizontal position already at $4C.
-; The player is placed at zero, the left edge, and the display pointer moved
-; back by $0260. The reference at $90 is then incremented through the $1211
-; vector before the player is redrawn by tail jump.
+; move_player_right_with_collision finds the player at the named right edge.
+; The player is placed at the left edge, and the display pointer moved back by
+; MODE1_ROW_AFTER_TWO_GRAPHICS. The primary room reference is then incremented
+; through its entry vector before the player is redrawn by tail jump.
 ; This is the exact mirror of enter_room_to_the_left: SEC/SBC against CLC/ADC,
-; position zero against $4C, and the incrementing vector against the
+; the two edge positions, and the incrementing vector against the
 ; decrementing one, which is the pair the display_action_jump_table five-byte
 ; entries exist to provide.
 .enter_room_to_the_right_source
-    LDA #&00
+    LDA #PLAYER_LEFT_EDGE_POSITION
     STA player_horizontal_position
     SEC
     LDA player_display_pointer_low
-    SBC #&60
+    SBC #LO(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA player_display_pointer_low
     LDA player_display_pointer_high
-    SBC #&02
+    SBC #HI(MODE1_ROW_AFTER_TWO_GRAPHICS)
     STA player_display_pointer_high
     JSR increment_reference_then_draw_and_initialise_room
     JMP xor_draw_player_two_parts
@@ -5780,12 +5780,12 @@ ORG dispatch_room_cell
 ; Decide what one room cell byte draws.
 ; Bit 7 sends the cell to the character renderer, so a set high bit means the
 ; cell is text and its low six bits are a character index. Otherwise the low six
-; bits are doubled and used to index the vector table at $12D2, whose entry is
+; bits are doubled and used to index room_cell_draw_dispatch_table, whose entry is
 ; pushed onto the stack and reached by the return, which is how one byte selects
 ; among many tile drawers without a jump table lookup in line.
 ; Bit 6 then decides the direction: when set, room_graphics_column is
 ; mirrored by subtracting it from ROOM_COLUMN_LAST and the XOR display-pointer
-; low byte is set to $FF, which makes the cell draw in reverse. The column is
+; low byte is set to ROOM_CELL_MIRROR_ENABLED, which makes the cell draw in reverse. The column is
 ; returned in A.
 .dispatch_room_cell_source
     LDA current_room_cell
@@ -5810,7 +5810,7 @@ ORG dispatch_room_cell
     SEC
     SBC room_graphics_column
     STA room_graphics_column
-    LDA #&FF
+    LDA #ROOM_CELL_MIRROR_ENABLED
     STA room_cell_mirror_state
 
 .return_column_counter
@@ -5891,7 +5891,7 @@ ORG dispatch_room_cell
 .draw_pillar_base_row_in_last_column_source
     CMP #ROOM_COLUMN_LAST
     BNE draw_eight_blank_tiles
-    LDX #&08
+    LDX #ROOM_CELL_TILE_COUNT
 .draw_next_pillar_base_tile
     LDA #GRAPHIC_PILLAR_BASE
     JSR apply_mirror_flag_then_copy_graphic
@@ -5902,7 +5902,7 @@ ORG dispatch_room_cell
 
 ASSERT dispatch_room_cell_source = dispatch_room_cell
 ASSERT room_cell_draw_dispatch_table_source = room_cell_draw_dispatch_table
-ASSERT room_cell_draw_dispatch_table_source_end-room_cell_draw_dispatch_table_source = 64*2
+ASSERT room_cell_draw_dispatch_table_source_end-room_cell_draw_dispatch_table_source = ROOM_CELL_TYPE_COUNT*ROOM_CELL_DISPATCH_ENTRY_BYTES
 ASSERT room_cell_draw_dispatch_table_source_end = draw_pillar_base_row_in_last_column
 ASSERT draw_pillar_base_row_in_last_column_source = draw_pillar_base_row_in_last_column
 ASSERT dispatch_room_cell_source_end = tile_run_shared_rts
@@ -6035,15 +6035,15 @@ ORG set_player_pointer_from_horizontal_position
 .set_player_pointer_from_horizontal_position_source
     LDA player_horizontal_position
     STA player_display_pointer_low
-    LDA #&00
+    LDA #PLAYER_LEFT_EDGE_POSITION
     STA player_display_pointer_high
-    LDX #&03
+    LDX #PLAYER_POSITION_TO_DISPLAY_SHIFT_COUNT
 
-.set_player_pointer_from_horizontal_position_branch_1
+.shift_player_position_into_display_pointer
     ASL player_display_pointer_low
     ROL player_display_pointer_high
     DEX
-    BNE set_player_pointer_from_horizontal_position_branch_1
+    BNE shift_player_position_into_display_pointer
     CLC
     RTS
 .set_player_pointer_from_horizontal_position_source_end
@@ -6059,19 +6059,18 @@ CLEAR set_player_pointer_from_horizontal_position_source, set_player_pointer_fro
 
 ORG draw_eight_alternating_tiles
 
-; The $1371 entry supplies a count of eight, then $1373
-; draws a run of X tiles alternating between two graphic
-; indices. Bit 0 of $F8 selects which stored pair is copied into the working
-; pair at $7FF9/$7FFA: clear takes $7FFC/$7FFD, set takes $7FFE/$7FFF. Each
-; tile then selects the second index when bits 0-4 of the display pointer low
-; byte equal $10 and the first index otherwise. The blitter advances that
+; The first entry supplies a complete room-cell count, then the general entry
+; draws X tiles alternating between two graphic indices. Bit 0 of
+; tile_pair_source_selector selects which stored pair is copied into the active
+; pair. Each tile selects the second index at the named display-pointer phase
+; and the first index otherwise. The blitter advances that
 ; pointer by 16 per tile, so the two indices alternate on consecutive tiles;
 ; the initial-render trace splits 162 first-index against 156 second-index
-; draws across 318 tiles. X = 0 shares the $1361 RTS with the blank run.
+; draws across 318 tiles. An empty run shares the blank-run return.
 .draw_alternating_tile_run_source
-    LDX #&08
+    LDX #ROOM_CELL_TILE_COUNT
 .draw_alternating_tile_run_entry_source
-    CPX #&00
+    CPX #TILE_RUN_EMPTY_COUNT
     BEQ draw_blank_tile_run_source
     LDA tile_pair_source_selector
     ROR A
@@ -6083,8 +6082,8 @@ ORG draw_eight_alternating_tiles
 
 .draw_next_alternating_tile
     LDA display_pointer_low
-    AND #&1F
-    CMP #&10
+    AND #ALTERNATING_TILE_POINTER_PHASE_MASK
+    CMP #ALTERNATING_TILE_SECOND_PHASE
     BEQ draw_second_tile_of_pair
     LDA active_tile_pair_first
     JSR copy_16_byte_graphic_to_display
@@ -6107,24 +6106,24 @@ ORG draw_eight_alternating_tiles
     JMP draw_next_alternating_tile
 
 .draw_right_edge_tile_pair_source
-    LDX #&06
+    LDX #ROOM_EDGE_PAIR_BLANK_TILES
     JSR draw_blank_tile_run
-    LDX #&02
+    LDX #ROOM_EDGE_PAIR_GRAPHIC_TILES
     JMP draw_alternating_tile_run
 
 .draw_left_edge_tile_pair_source
-    LDX #&02
+    LDX #ROOM_EDGE_PAIR_GRAPHIC_TILES
     JSR draw_alternating_tile_run
-    LDX #&06
+    LDX #ROOM_EDGE_PAIR_BLANK_TILES
     JMP draw_blank_tile_run
 
 .draw_left_edge_or_full_last_column_source
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BNE draw_left_edge_tile_pair_source
     JMP draw_eight_alternating_tiles
 
 .draw_right_edge_or_full_last_column_source
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BNE draw_right_edge_tile_pair_source
     JMP draw_eight_alternating_tiles
 .draw_alternating_tile_run_source_end
