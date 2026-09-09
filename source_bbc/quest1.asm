@@ -7973,10 +7973,10 @@ CLEAR enter_submit_osword_07_sound_block_source, enter_submit_osword_07_sound_bl
 
 ORG select_graphic_then_xor_draw
 
-; X indexes a run-time little-endian pointer table whose
-; low byte starts at $0B5F and high byte is the following entry. A contains
+; X indexes active_room_moving_object_pointer_table as interleaved little-endian
+; pointers. A contains
 ; the display-pointer low byte needed by the fall-through XOR renderer. The
-; push/pop preserves A while $7A/$7B receive the selected graphic pointer;
+; push/pop preserves A while graphic_source_pointer_low/high receive the selected pointer;
 ; X, Y, and the entry stack depth are unchanged at the fall-through boundary.
 .select_graphic_then_xor_draw_source
     PHA
@@ -7997,7 +7997,7 @@ CLEAR select_graphic_then_xor_draw_source, select_graphic_then_xor_draw_source_e
 
 ORG play_descending_flash_sequence
 
-; Flash the background twenty-one times, sweeping X from $14
+; Flash the background twenty-one times, sweeping X from the named starting value
 ; down to zero and preserving it across each call.
 ; flash_background_colour_with_sound takes X as both the physical colour and the
 ; sound pitch, so a single descending sweep drives colour and note together: the
@@ -8005,16 +8005,16 @@ ORG play_descending_flash_sequence
 ; waits for vertical sync, which is what paces the sequence to one flash per
 ; frame.
 .play_descending_flash_sequence_source
-    LDX #&14
+    LDX #DESCENDING_FLASH_START_COLOUR_AND_PITCH
 
-.play_descending_flash_sequence_branch_1
+.flash_next_descending_colour_and_pitch
     TXA
     PHA
     JSR flash_background_colour_with_sound
     PLA
     TAX
     DEX
-    BPL play_descending_flash_sequence_branch_1
+    BPL flash_next_descending_colour_and_pitch
     RTS
 .play_descending_flash_sequence_source_end
 
@@ -8031,7 +8031,8 @@ ORG flash_background_colour_with_sound
 
 ; Flash the background by redefining logical colour 0, with
 ; a sound, then wait for the next frame.
-; VDU 19 takes five parameters. The first three, 19, 0 and X, are written before
+; VDU_DEFINE_LOGICAL_COLOUR takes five parameters. The control code, logical
+; background colour and X physical colour are written before
 ; the sound is submitted with the same X as its pitch; the remaining three zeros
 ; follow it. So the palette change and the sound are issued together, and the
 ; closing OSBYTE $13 waits for vertical sync so the new colour is visible for at
@@ -8039,19 +8040,19 @@ ORG flash_background_colour_with_sound
 ; X is therefore both the physical colour and the pitch, which is why a louder
 ; flash and a higher note arrive together.
 .flash_background_colour_with_sound_source
-    LDA #&13
+    LDA #VDU_DEFINE_LOGICAL_COLOUR
     JSR OSWRCH
-    LDA #&00
+    LDA #VDU_LOGICAL_BACKGROUND_COLOUR
     JSR OSWRCH
     TXA
     JSR OSWRCH
     TXA
     JSR submit_sound_block_with_pitch
-    LDA #&00
+    LDA #VDU_PALETTE_UNUSED_PARAMETER
     JSR OSWRCH
     JSR OSWRCH
     JSR OSWRCH
-    LDA #&13
+    LDA #OSBYTE_WAIT_VSYNC
     JMP OSBYTE
 .flash_background_colour_with_sound_source_end
 
@@ -8066,9 +8067,9 @@ CLEAR flash_background_colour_with_sound_source, flash_background_colour_with_so
 
 ORG ghost_countdown_steering_update
 
-; Process indexed entries X=$00/$02 for high-secondary
-; rooms. Countdown values zero or two take the original preceding erase/step
-; block at $3003; other values decrement here. On expiry, optionally erase the
+; Process both indexed cross-room ghost entries for the final two levels.
+; Countdown values zero or CROSS_ROOM_GHOST_REDRAW_COUNTDOWN take the shared
+; erase/step block; other values decrement here. On expiry, optionally erase the
 ; directional graphic, steer the pair relative to the player, toggle the first
 ; pair when both pair positions meet, test the tall overlap, and redraw.
 .ghost_countdown_steering_update_source
