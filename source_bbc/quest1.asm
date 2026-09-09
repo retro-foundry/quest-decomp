@@ -1830,7 +1830,7 @@ ORG print_item_slot_label
     LDX special_item_3e_activation_flag
     CPX #&00
     BEQ print_item_slot_label_ordinary_code
-    LDY #&18
+    LDY #SPECIAL_ITEM_LABEL_OFFSET
     JMP print_item_slot_label_emit
 
 .print_item_slot_label_ordinary_code
@@ -5603,7 +5603,7 @@ ORG test_marker_below_player
     LDA (display_pointer_low),Y
     CMP #&FF
     BEQ test_marker_below_player_source
-    LDY #&18
+    LDY #PLAYER_COLLISION_SPAN_BYTES
     LDA (display_pointer_low),Y
     CMP #&FF
     BEQ test_marker_below_player_source
@@ -5632,22 +5632,22 @@ ORG xor_draw_player_two_parts
 ; frame. The second part is tail-called, so the XOR renderer returns to this
 ; routine caller.
 .xor_draw_player_two_parts_source
-    LDX #&18
+    LDX #PLAYER_UPPER_RIGHT_POINTER_OFFSET
     LDA shared_workspace_05
     BPL draw_first_player_part
-    LDX #&1A
+    LDX #PLAYER_UPPER_LEFT_POINTER_OFFSET
 
 .draw_first_player_part
-    LDA #&02
+    LDA #PLAYER_UPPER_BODY_CHARACTER_ROWS
     STA xor_graphic_character_rows_remaining
     LDA player_display_pointer_snapshot_high
     STA display_pointer_high
     LDA player_display_pointer_snapshot_low
     JSR select_graphic_then_xor_draw
-    LDX #&1E
+    LDX #PLAYER_LOWER_STEP_RIGHT_POINTER_OFFSET
     LDA shared_workspace_05
     BPL select_second_part_frame
-    LDX #&22
+    LDX #PLAYER_LOWER_STEP_LEFT_POINTER_OFFSET
 
 .select_second_part_frame
     LDA shared_workspace_14
@@ -5659,7 +5659,7 @@ ORG xor_draw_player_two_parts
     DEX
 
 .draw_second_player_part
-    LDA #&01
+    LDA #PLAYER_LOWER_BODY_CHARACTER_ROWS
     STA xor_graphic_character_rows_remaining
     LDA display_pointer_low
     JMP select_graphic_then_xor_draw
@@ -11082,10 +11082,25 @@ ASSERT roaming_enemy_graphic_frame_pointer_table_source = roaming_enemy_graphic_
 ; renderer advances by $20 and consumes $0520/$0580 as the corresponding middle
 ; record. X=$1C/$1E/$20/$22 selects one of the four single-row lower records.
 .player_graphic_frame_pointer_table_source
-    EQUW runtime_player_upper_facing_right_frame, runtime_player_upper_facing_left_frame
-    EQUW runtime_player_lower_standing_frame, runtime_player_lower_step_right_frame
-    EQUW runtime_player_lower_wide_stride_frame, runtime_player_lower_step_left_frame
+.player_upper_right_graphic_pointer
+    EQUW runtime_player_upper_facing_right_frame
+.player_upper_left_graphic_pointer
+    EQUW runtime_player_upper_facing_left_frame
+.player_lower_standing_graphic_pointer
+    EQUW runtime_player_lower_standing_frame
+.player_lower_step_right_graphic_pointer
+    EQUW runtime_player_lower_step_right_frame
+.player_lower_wide_graphic_pointer
+    EQUW runtime_player_lower_wide_stride_frame
+.player_lower_step_left_graphic_pointer
+    EQUW runtime_player_lower_step_left_frame
 .player_graphic_frame_pointer_table_source_end
+ASSERT player_upper_right_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_UPPER_RIGHT_POINTER_OFFSET
+ASSERT player_upper_left_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_UPPER_LEFT_POINTER_OFFSET
+ASSERT player_lower_standing_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_LOWER_STANDING_POINTER_OFFSET
+ASSERT player_lower_step_right_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_LOWER_STEP_RIGHT_POINTER_OFFSET
+ASSERT player_lower_wide_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_LOWER_WIDE_POINTER_OFFSET
+ASSERT player_lower_step_left_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_LOWER_STEP_LEFT_POINTER_OFFSET
 ASSERT player_graphic_frame_pointer_table_source = player_graphic_frame_pointer_table
 ASSERT player_graphic_frame_pointer_table_source_end = &0B83
 COPYBLOCK roaming_enemy_graphic_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end, &246F
