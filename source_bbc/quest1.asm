@@ -229,7 +229,7 @@
 ;          every room the account calls out for an enemy. So this is the table
 ;          the creatures come from.
 ;
-;   $0A78  indexed_pair_record_table, ten three-byte roaming-enemy records
+;   $0A78  cross_room_robot_ghost_record_table, ten three-byte records
 ;          indexed by $8F alone. This one is per level, not per room, and
 ;          advance_indexed_pair_value_and_display_pointer carries its objects
 ;          across room boundaries: at horizontal $4D the column increments and
@@ -5964,7 +5964,7 @@ ORG enter_room_below
     JSR enter_advance_secondary_reference_and_pointer
     JSR xor_draw_player_two_parts
     LDA reference_pair_secondary_value
-    CMP #ROAMING_GHOST_FIRST_LEVEL
+    CMP #CROSS_ROOM_GHOST_FIRST_LEVEL
     BNE return_from_room_transition
     JMP initialise_indexed_pair_from_record
 .enter_room_below_source_end
@@ -6942,54 +6942,50 @@ CLEAR draw_repeated_87_blank_pairs_by_state_source, draw_repeated_87_blank_pairs
 ORG initialise_indexed_pair_from_record
 
 ; Runtime $2DD4-$2E43. Initialise an indexed pair from its packed record.
-; The record index is the secondary reference at $8F multiplied by three, so the
-; table at $0A78 holds three-byte records. The first byte carries two fields:
+; reference_pair_secondary_value selects one CROSS_ROOM_ROBOT_GHOST_RECORD_BYTES
+; record from cross_room_robot_ghost_record_table. The first byte carries two fields:
 ; its low three bits become the primary field, and the byte shifted right and
 ; masked to $FC becomes the value field. The second byte is unpacked the same
 ; way into the negative-delta selector and threshold. The third byte, masked to
 ; six bits, is multiplied by eight and biased down by eight to become the offset
 ; field.
-; Almost every unpacked value is written twice, to $222B and $222D, $222F and
-; $2231, $2230 and $2232, $99/$9A and $9B/$9C, $8A and $8C. That is what makes
-; this a pair: one record initialises two parallel entities, which
+; Almost every unpacked value is written to both interleaved field sets. That is
+; what makes this a pair: one record initialises two parallel entities, which
 ; update_and_draw_two_indexed_pairs then advances together. The deltas are
-; preset to +1 and -1 and the four bytes at $80 to $83 to 1 before any of the
-; record is read.
+; preset to opposite signed horizontal steps and all countdown/state bytes are
+; initialised before the record is read.
 ; The display pointer copied into both field sets is whatever the
 ; display_action_jump_table call leaves behind, so the record selects the
 ; position indirectly rather than carrying it.
 ;
-; This enemy class is per level, not per room: the record index is the secondary
-; reference times three, so there are ten records for ten levels, and one record
+; This robot/ghost class is per level, not per room: the record index is the secondary
+; reference times the record width, so there is one record per level, and each
 ; initialises two objects. advance_indexed_pair_value_and_display_pointer then
-; carries them across room boundaries - at horizontal $4D the column increments
-; and the position resets to zero, below zero the column decrements and the
-; position becomes $4C, and the deltas reverse at columns 0 and 7. Levels 0-7
-; take the ordinary update path, whose selectors $10/$12 address the small
-; bouncing robot pointers at $0B6F/$0B71. Levels 8-9 take the alternate path,
-; whose selectors $14/$16 address the ghost pointers at $0B73/$0B75. The pair
-; is therefore two cross-room robots or ghosts, not a platform class.
+; carries them across room boundaries and reverses them at the outer room
+; columns. Levels before CROSS_ROOM_GHOST_FIRST_LEVEL use the small bouncing
+; robot frames; the final two levels use the ghost frames. The pair is therefore
+; two cross-room robots or ghosts, not a platform class.
 .initialise_indexed_pair_from_record_source
     LDA reference_pair_secondary_value
     ASL A
     ADC reference_pair_secondary_value
     TAY
-    LDA #&01
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
     STA indexed_pair_value_delta_field
-    LDA #&FF
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
     STA indexed_pair_secondary_delta_slot_1
-    LDA #&01
-    LDX #&03
+    LDA #CROSS_ROOM_ROBOT_GHOST_INITIAL_COUNTDOWN
+    LDX #CROSS_ROOM_ROBOT_GHOST_COUNTDOWN_LAST_INDEX
 
 .preset_pair_flags
-    STA cross_room_enemy_redraw_countdown,X
+    STA cross_room_robot_ghost_redraw_countdown,X
     DEX
     BPL preset_pair_flags
-    LDA indexed_pair_record_table,Y
+    LDA cross_room_robot_ghost_record_table,Y
     AND #INDEXED_PAIR_SELECTOR_MASK
     STA indexed_pair_positive_delta_selector
     STA indexed_pair_primary_field
-    LDA indexed_pair_record_table,Y
+    LDA cross_room_robot_ghost_record_table,Y
     LSR A
     AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
     STA indexed_pair_positive_delta_threshold
@@ -6997,23 +6993,23 @@ ORG initialise_indexed_pair_from_record
     STA indexed_pair_runtime_value_slot_0
     STA display_grid_column
     INY
-    LDA indexed_pair_record_table,Y
+    LDA cross_room_robot_ghost_record_table,Y
     AND #INDEXED_PAIR_SELECTOR_MASK
     STA indexed_pair_negative_delta_selector
     STA indexed_pair_secondary_delta_slot_0
-    LDA indexed_pair_record_table,Y
+    LDA cross_room_robot_ghost_record_table,Y
     LSR A
     AND #INDEXED_PAIR_THRESHOLD_OFFSET_MASK
     STA indexed_pair_negative_delta_threshold
     INY
-    LDA indexed_pair_record_table,Y
+    LDA cross_room_robot_ghost_record_table,Y
     AND #INDEXED_PAIR_POSITION_MASK
     STA display_grid_row
     ASL A
     ASL A
     ASL A
     SEC
-    SBC #&08
+    SBC #CROSS_ROOM_ROBOT_GHOST_VERTICAL_OFFSET_BIAS
     STA indexed_pair_offset_field
     STA indexed_pair_runtime_value_slot_1
     JSR display_action_jump_table
@@ -7158,30 +7154,30 @@ CLEAR draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_
 
 ORG update_and_draw_two_indexed_pairs
 
-; Runtime $2E44-$2E7B. Process the two cross-room enemy states. Robot levels use
+; Runtime $2E44-$2E7B. Process the two cross-room robot/ghost states. Robot levels use
 ; this loop; ghost levels tail-transfer to alternate_indexed_pair_countdown_update.
 ; Each robot iteration selects
 ; repeated-source drawing, optionally erases the current graphic and advances
 ; a countdown, conditionally updates pair state, then draws the resulting
 ; graphic. The final CLC/RTS is shared with the adjacent matching handler.
 .update_and_draw_two_indexed_pairs_source
-    LDX #ROAMING_ENEMY_PAIR_FIRST_INDEX
+    LDX #CROSS_ROOM_ROBOT_GHOST_PAIR_FIRST_INDEX
 .indexed_pair_update_loop
     LDA reference_pair_secondary_value
-    CMP #ROAMING_GHOST_FIRST_LEVEL
+    CMP #CROSS_ROOM_GHOST_FIRST_LEVEL
     BMI process_indexed_pair_update
     JMP alternate_indexed_pair_countdown_update
 
 .process_indexed_pair_update
-    LDA #&01
+    LDA #XOR_GRAPHIC_REPEAT_ENABLED
     STA xor_graphic_repeat_source_scanlines
     LDA indexed_xor_erase_previous_graphic
     BEQ update_indexed_pair_state
     JSR draw_indexed_pair_if_reference_matches
-    DEC cross_room_enemy_redraw_countdown,X
+    DEC cross_room_robot_ghost_redraw_countdown,X
     BNE draw_updated_indexed_pair
-    LDA #&01
-    STA cross_room_enemy_redraw_countdown,X
+    LDA #CROSS_ROOM_ROBOT_GHOST_INITIAL_COUNTDOWN
+    STA cross_room_robot_ghost_redraw_countdown,X
 
 .update_indexed_pair_state
     JSR set_indexed_pair_value_delta_at_thresholds
@@ -7193,7 +7189,7 @@ ORG update_and_draw_two_indexed_pairs
     JSR draw_indexed_pair_if_reference_matches
     INX
     INX
-    CPX #ROAMING_ENEMY_PAIR_END_INDEX
+    CPX #CROSS_ROOM_ROBOT_GHOST_PAIR_END_INDEX
     BNE indexed_pair_update_loop
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
@@ -7218,7 +7214,7 @@ ORG draw_last_column_special_pair_row
 
 .draw_last_column_pair_before_special_setup
     JSR draw_58_59_pair_or_edge_pattern_row
-    LDA #&02
+    LDA #CROSS_ROOM_ROBOT_CHARACTER_ROWS
     STA dynamic_object_vdu_vertical_step_high
     LDA #&84
     STA active_tile_pair_first
@@ -7329,10 +7325,10 @@ ORG draw_directional_indexed_pair_if_matching
     PHA
     PHA
     LDA indexed_pair_value_delta_field,X
-    LDX #ROAMING_GHOST_FRAME_0_OFFSET
+    LDX #CROSS_ROOM_GHOST_FRAME_0_OFFSET
     CMP #&00
     BPL directional_indexed_pair_selector_ready
-    LDX #ROAMING_GHOST_FRAME_3_OFFSET
+    LDX #CROSS_ROOM_GHOST_FRAME_3_OFFSET
 
 .directional_indexed_pair_selector_ready
     STX shared_workspace_31
@@ -7367,13 +7363,13 @@ ORG draw_indexed_pair_if_reference_matches
     TXA
     PHA
     PHA
-    LDX #ROAMING_ROBOT_FRAME_0_OFFSET
+    LDX #CROSS_ROOM_ROBOT_FRAME_0_OFFSET
     BCC indexed_pair_draw_selector_ready
-    LDX #ROAMING_ROBOT_FRAME_1_OFFSET
+    LDX #CROSS_ROOM_ROBOT_FRAME_1_OFFSET
 
 .indexed_pair_draw_selector_ready
     STX shared_workspace_31
-    LDA #&02
+    LDA #CROSS_ROOM_ROBOT_CHARACTER_ROWS
 
 .configure_indexed_pair_draw_rows
     STA xor_graphic_character_rows_remaining
@@ -7389,7 +7385,7 @@ ORG draw_indexed_pair_if_reference_matches
     LDA reset_indexed_pair_countdowns
     BEQ indexed_pair_draw_state_ready
     LDA #&00
-    STA cross_room_enemy_redraw_countdown,X
+    STA cross_room_robot_ghost_redraw_countdown,X
 
 .indexed_pair_draw_state_ready
     PLA
@@ -7462,16 +7458,16 @@ ORG advance_indexed_pair_offset_and_display_pointer
 ; reaching them reverses the delta instead of crossing the boundary.
 .advance_indexed_pair_offset_and_display_pointer_source
     LDA indexed_pair_offset_delta_field,X
-    CMP #ROAMING_GHOST_VERTICAL_STEP_DOWN
+    CMP #CROSS_ROOM_GHOST_VERTICAL_STEP_DOWN
     BNE indexed_pair_test_upper_offset
     LDA indexed_pair_offset_field,X
-    CMP #ROAMING_GHOST_BOTTOM_OFFSET
+    CMP #CROSS_ROOM_GHOST_BOTTOM_OFFSET
     BNE move_indexed_pair_vertical_step
     JMP wrap_indexed_pair_to_lower_offset
 
 .indexed_pair_test_upper_offset
     LDA indexed_pair_offset_field,X
-    CMP #ROAMING_GHOST_TOP_OFFSET
+    CMP #CROSS_ROOM_GHOST_TOP_OFFSET
     BNE move_indexed_pair_vertical_step
     JMP wrap_indexed_pair_to_upper_offset
 
@@ -7495,37 +7491,37 @@ ORG advance_indexed_pair_offset_and_display_pointer
 
 .wrap_indexed_pair_to_upper_offset
     LDA indexed_pair_secondary_field,X
-    CMP #ROAMING_GHOST_TOP_LEVEL
+    CMP #CROSS_ROOM_GHOST_TOP_LEVEL
     BEQ reverse_indexed_pair_offset_downward
     DEC indexed_pair_secondary_field,X
-    LDA #ROAMING_GHOST_BOTTOM_OFFSET
+    LDA #CROSS_ROOM_GHOST_BOTTOM_OFFSET
     STA indexed_pair_offset_field,X
     CLC
     LDA indexed_pair_display_pointer_high,X
-    ADC #ROAMING_GHOST_LEVEL_WRAP_PAGE_DELTA
+    ADC #CROSS_ROOM_GHOST_LEVEL_WRAP_PAGE_DELTA
     STA indexed_pair_display_pointer_high,X
     RTS
 
 .reverse_indexed_pair_offset_downward
-    LDA #ROAMING_GHOST_VERTICAL_STEP_DOWN
+    LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_DOWN
     STA indexed_pair_offset_delta_field,X
     RTS
 
 .wrap_indexed_pair_to_lower_offset
     LDA indexed_pair_secondary_field,X
-    CMP #ROAMING_GHOST_BOTTOM_LEVEL
+    CMP #CROSS_ROOM_GHOST_BOTTOM_LEVEL
     BEQ reverse_indexed_pair_offset_upward
     INC indexed_pair_secondary_field,X
-    LDA #ROAMING_GHOST_TOP_OFFSET
+    LDA #CROSS_ROOM_GHOST_TOP_OFFSET
     STA indexed_pair_offset_field,X
     SEC
     LDA indexed_pair_display_pointer_high,X
-    SBC #ROAMING_GHOST_LEVEL_WRAP_PAGE_DELTA
+    SBC #CROSS_ROOM_GHOST_LEVEL_WRAP_PAGE_DELTA
     STA indexed_pair_display_pointer_high,X
     RTS
 
 .reverse_indexed_pair_offset_upward
-    LDA #ROAMING_GHOST_VERTICAL_STEP_UP
+    LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_UP
     STA indexed_pair_offset_delta_field,X
     RTS
 
@@ -7783,7 +7779,7 @@ ORG set_indexed_pair_value_delta_at_thresholds
     LDA indexed_pair_value_field,X
     CMP indexed_pair_positive_delta_threshold
     BPL return_preserving_comparison_flags_2eeb
-    LDA #ROAMING_ENEMY_STEP_POSITIVE
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
 .store_indexed_pair_value_delta
     STA indexed_pair_value_delta_field,X
     RTS
@@ -7794,7 +7790,7 @@ ORG set_indexed_pair_value_delta_at_thresholds
     LDA indexed_pair_value_field,X
     CMP indexed_pair_negative_delta_threshold
     BMI return_preserving_comparison_flags_2eeb
-    LDA #ROAMING_ENEMY_STEP_NEGATIVE
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
     JMP store_indexed_pair_value_delta
 .set_indexed_pair_value_delta_at_thresholds_source_end
 
@@ -7819,7 +7815,7 @@ ORG advance_indexed_pair_value_and_display_pointer
     STA indexed_pair_value_field,X
 
     LDA indexed_pair_value_delta_field,X
-    CMP #ROAMING_ENEMY_STEP_NEGATIVE
+    CMP #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
     BEQ advance_indexed_pair_pointer_negative
 
     LDA indexed_pair_value_field,X
@@ -7863,7 +7859,7 @@ ORG advance_indexed_pair_value_and_display_pointer
     RTS
 
 .reverse_indexed_pair_delta_negative
-    LDA #ROAMING_ENEMY_STEP_NEGATIVE
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
     STA indexed_pair_value_delta_field,X
     RTS
 
@@ -7883,7 +7879,7 @@ ORG advance_indexed_pair_value_and_display_pointer
     RTS
 
 .reverse_indexed_pair_delta_positive
-    LDA #ROAMING_ENEMY_STEP_POSITIVE
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
     STA indexed_pair_value_delta_field,X
     RTS
 .advance_indexed_pair_value_and_display_pointer_source_end
@@ -8063,18 +8059,18 @@ ORG alternate_indexed_pair_countdown_update
 ; directional graphic, steer the pair relative to the player, toggle the first
 ; pair when both pair positions meet, test the tall overlap, and redraw.
 .alternate_indexed_pair_countdown_update_source
-    LDX #ROAMING_ENEMY_PAIR_FIRST_INDEX
+    LDX #CROSS_ROOM_ROBOT_GHOST_PAIR_FIRST_INDEX
 
 .alternate_indexed_pair_countdown_loop
-    LDA cross_room_enemy_redraw_countdown,X
+    LDA cross_room_robot_ghost_redraw_countdown,X
     BEQ draw_then_decrement_alternate_indexed_pair
-    CMP #ROAMING_GHOST_REDRAW_COUNTDOWN
+    CMP #CROSS_ROOM_GHOST_REDRAW_COUNTDOWN
     BEQ draw_then_decrement_alternate_indexed_pair
 .decrement_alternate_indexed_pair_countdown
-    DEC cross_room_enemy_redraw_countdown,X
+    DEC cross_room_robot_ghost_redraw_countdown,X
     BNE advance_alternate_indexed_pair_selector
-    LDA #ROAMING_GHOST_COUNTDOWN_RESET
-    STA cross_room_enemy_redraw_countdown,X
+    LDA #CROSS_ROOM_GHOST_COUNTDOWN_RESET
+    STA cross_room_robot_ghost_redraw_countdown,X
     LDA indexed_xor_erase_previous_graphic
     BEQ update_alternate_indexed_pair_state
     JSR draw_directional_indexed_pair_if_matching
@@ -8088,7 +8084,7 @@ ORG alternate_indexed_pair_countdown_update
 .advance_alternate_indexed_pair_selector
     INX
     INX
-    CPX #ROAMING_ENEMY_PAIR_END_INDEX
+    CPX #CROSS_ROOM_ROBOT_GHOST_PAIR_END_INDEX
     BNE alternate_indexed_pair_countdown_loop
     RTS
 .alternate_indexed_pair_countdown_update_source_end
@@ -8105,9 +8101,9 @@ CLEAR alternate_indexed_pair_countdown_update_source, alternate_indexed_pair_cou
 ORG handle_matching_alternate_indexed_pair
 
 ; Runtime $3035-$304E. A mismatch returns through the preceding $3034 RTS. A
-; match copies the indexed horizontal value to $11, converts the even vertical
-; offset to (offset / 2) + 12 in $3C, selects extent $17, and tail-enters the
-; sourced player/candidate overlap guard.
+; match copies the indexed horizontal value to indexed_pair_output_value,
+; converts the even vertical offset to the collision coordinate, selects the
+; ghost's tall overlap extent, and tail-enters the player/candidate guard.
 .handle_matching_alternate_indexed_pair_source
     JSR test_indexed_pair_matches_reference
     BCC alternate_indexed_pair_mismatch_return
@@ -8116,9 +8112,9 @@ ORG handle_matching_alternate_indexed_pair
     LDA indexed_pair_offset_field,X
     LSR A
     CLC
-    ADC #&0C
+    ADC #CROSS_ROOM_GHOST_OVERLAP_VERTICAL_BIAS
     STA indexed_pair_output_half_offset
-    LDA #&17
+    LDA #CROSS_ROOM_GHOST_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JMP check_player_candidate_bounds_overlap
 .handle_matching_alternate_indexed_pair_source_end
@@ -8135,8 +8131,8 @@ CLEAR handle_matching_alternate_indexed_pair_source, handle_matching_alternate_i
 ORG set_indexed_pair_deltas_from_player_position
 
 ; Runtime $304F-$3081, the first body range of Ghidra function $304F. Matching
-; secondary fields set vertical delta +/-2 from the player/pair half-offset
-; comparison. Matching primary fields set horizontal delta +/-1. Control then
+; secondary fields set the signed ghost vertical step from the player/pair
+; half-offset comparison. Matching primary fields set a signed horizontal step. Control then
 ; enters the separately sourced mode block at $3083/$3085/$3088. The external
 ; $307F entry tail-jumps to the sourced horizontal value/pointer step.
 .set_indexed_pair_deltas_from_player_position_source
@@ -8150,11 +8146,11 @@ ORG set_indexed_pair_deltas_from_player_position
     LSR A
     CMP shared_workspace_31
     BPL set_indexed_pair_vertical_delta_positive
-    LDA #&FE
+    LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_UP
     JMP store_indexed_pair_vertical_delta
 
 .set_indexed_pair_vertical_delta_positive
-    LDA #&02
+    LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_DOWN
 
 .store_indexed_pair_vertical_delta
     STA indexed_pair_offset_delta_field,X
@@ -8166,7 +8162,7 @@ ORG set_indexed_pair_deltas_from_player_position
     LDA player_horizontal_position
     CMP indexed_pair_value_field,X
     BMI apply_indexed_pair_player_axis_mode
-    LDA #&01
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_POSITIVE
     JMP store_indexed_pair_horizontal_delta
 
 .advance_indexed_pair_horizontal_position
@@ -8185,23 +8181,23 @@ CLEAR set_indexed_pair_deltas_from_player_position_source, set_indexed_pair_delt
 ORG apply_indexed_pair_player_axis_mode
 
 ; Runtime $3083-$30AB, the second body range of Ghidra function $304F. The
-; entry at $3083 supplies horizontal delta -1. Mode 2 advances vertically until
-; the pair reaches player Y, then clears the mode; any other mode advances
-; horizontally until player X is reached, then changes the mode to 2.
+; entry supplies the negative horizontal step. Vertical mode advances until the
+; ghost reaches player Y, then selects horizontal mode; horizontal mode advances
+; until player X is reached, then selects vertical mode.
 .apply_indexed_pair_player_axis_mode_source
-    LDA #&FF
+    LDA #CROSS_ROOM_ROBOT_GHOST_STEP_NEGATIVE
 
 .store_indexed_pair_horizontal_delta
     STA indexed_pair_value_delta_field,X
 
 .apply_indexed_pair_axis_mode
     LDA indexed_pair_mode_field,X
-    CMP #&02
+    CMP #CROSS_ROOM_GHOST_MODE_VERTICAL
     BEQ apply_indexed_pair_vertical_mode
     LDA player_horizontal_position
     CMP indexed_pair_value_field,X
     BNE advance_indexed_pair_horizontal_position
-    LDA #&02
+    LDA #CROSS_ROOM_GHOST_MODE_VERTICAL
     STA indexed_pair_mode_field,X
     RTS
 
@@ -8212,7 +8208,7 @@ ORG apply_indexed_pair_player_axis_mode
     LDA player_vertical_position
     CMP indexed_pair_offset_field,X
     BNE advance_indexed_pair_vertical_position
-    LDA #&00
+    LDA #CROSS_ROOM_GHOST_MODE_HORIZONTAL
     STA indexed_pair_mode_field,X
     RTS
 .apply_indexed_pair_player_axis_mode_source_end
@@ -8231,7 +8227,7 @@ ORG toggle_first_indexed_pair_mode_when_positions_match
 ; Runtime $30AC-$30CD. Compare the value and offset fields of indexed pair 0
 ; with pair 1 (the same arrays at index 2). A mismatch returns through the
 ; preceding shared RTS at $30AB. When both fields match, change the first pair's
-; mode from 2 to 0, or from any other value to 2. The alternate updater calls
+; mode between the named horizontal and vertical modes. The alternate updater calls
 ; this once after processing both entries, so it detects the two positions
 ; meeting and alternates the first entry's mode.
 .toggle_first_indexed_pair_mode_when_positions_match_source
@@ -8242,16 +8238,16 @@ ORG toggle_first_indexed_pair_mode_when_positions_match
     CMP indexed_pair_offset_field+2
     BNE indexed_pair_positions_differ_return
     LDA indexed_pair_mode_field
-    CMP #&02
+    CMP #CROSS_ROOM_GHOST_MODE_VERTICAL
     BNE set_first_indexed_pair_mode_two
-    LDA #&00
+    LDA #CROSS_ROOM_GHOST_MODE_HORIZONTAL
 
 .store_first_indexed_pair_mode
     STA indexed_pair_mode_field
     RTS
 
 .set_first_indexed_pair_mode_two
-    LDA #&02
+    LDA #CROSS_ROOM_GHOST_MODE_VERTICAL
     JMP store_first_indexed_pair_mode
 .toggle_first_indexed_pair_mode_when_positions_match_source_end
 
@@ -9865,8 +9861,8 @@ ORG draw_and_initialise_room
 ; $1F. Records, enemies, and lifts/hazards are initialised from their
 ; three tables, the keyboard buffers are reset, and the player position and
 ; display pointer are snapshotted into the named walk-target and room-setup
-; fields. Finally, levels below ROAMING_GHOST_FIRST_LEVEL initialise the
-; per-level roaming pair before the routine tail-jumps into the clock write.
+; fields. Finally, levels below CROSS_ROOM_GHOST_FIRST_LEVEL initialise the
+; per-level robot pair before the routine tail-jumps into the clock write.
 .draw_and_initialise_room_source
     LDA #&01
     STA alternate_palette_selector
@@ -11079,16 +11075,16 @@ ASSERT lift_and_hazard_graphic_descriptor_source_end = &0B6F
 COPYBLOCK lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end, &246B
 CLEAR lift_and_hazard_graphic_descriptor_source, lift_and_hazard_graphic_descriptor_source_end
 
-ORG roaming_enemy_graphic_frame_pointer_table
-; Runtime $0B6F-$0B76: the cross-room enemy graphic-pointer table. The ordinary
+ORG cross_room_robot_ghost_frame_pointer_table
+; Runtime $0B6F-$0B76: the cross-room robot/ghost graphic-pointer table. The ordinary
 ; per-level pair updater selects offsets $10/$12 from the common table base
 ; $0B5F, reaching the small-bouncing-robot frames here. The alternate updater
 ; used on levels 8 and 9 selects offsets $14/$16, reaching the ghost frames.
-.roaming_enemy_graphic_frame_pointer_table_source
+.cross_room_robot_ghost_frame_pointer_table_source
     EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
     EQUW runtime_ghost_frame_0, runtime_ghost_frame_3
-.roaming_enemy_graphic_frame_pointer_table_source_end
-ASSERT roaming_enemy_graphic_frame_pointer_table_source = roaming_enemy_graphic_frame_pointer_table
+.cross_room_robot_ghost_frame_pointer_table_source_end
+ASSERT cross_room_robot_ghost_frame_pointer_table_source = cross_room_robot_ghost_frame_pointer_table
 
 ; Runtime $0B77-$0B82: six player-part pointers. xor_draw_player_two_parts
 ; indexes $0500/$0560 with X=$18/$1A and draws two character rows, so the XOR
@@ -11116,8 +11112,8 @@ ASSERT player_lower_wide_graphic_pointer = active_room_moving_object_pointer_tab
 ASSERT player_lower_step_left_graphic_pointer = active_room_moving_object_pointer_table + PLAYER_LOWER_STEP_LEFT_POINTER_OFFSET
 ASSERT player_graphic_frame_pointer_table_source = player_graphic_frame_pointer_table
 ASSERT player_graphic_frame_pointer_table_source_end = &0B83
-COPYBLOCK roaming_enemy_graphic_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end, &246F
-CLEAR roaming_enemy_graphic_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end
+COPYBLOCK cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end, &246F
+CLEAR cross_room_robot_ghost_frame_pointer_table_source, player_graphic_frame_pointer_table_source_end
 
 ORG interval_timer_block
 ; Runtime 0B9B-0B9F: five-byte MOS interval timer value, replaced by OSWORD $04.
@@ -11655,12 +11651,12 @@ ASSERT room_enemy_record_table_source_end = &0A78
 COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, &2300
 CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
 
-ORG indexed_pair_record_table
-; Runtime $0A78-$0A95: ten per-level cross-room enemy records, one per level.
+ORG cross_room_robot_ghost_record_table
+; Runtime $0A78-$0A95: ten per-level cross-room robot/ghost records, one per level.
 ; These are separate from the room-enemy table. Levels 0-7 select the small
 ; bouncing robot frames; levels 8-9 select the ghost frames. Only those two
 ; enemy classes use this cross-room subsystem.
-.indexed_pair_record_table_source
+.cross_room_robot_ghost_record_table_source
     EQUB &51, &8D, &0F
     EQUB &1D, &46, &07
     EQUB &8C, &76, &13
@@ -11671,11 +11667,12 @@ ORG indexed_pair_record_table
     EQUB &6A, &94, &0B
     EQUB &28, &3F, &19
     EQUB &60, &7F, &1C
-.indexed_pair_record_table_source_end
-ASSERT indexed_pair_record_table_source = indexed_pair_record_table
-ASSERT indexed_pair_record_table_source_end = &0A96
-COPYBLOCK indexed_pair_record_table_source, indexed_pair_record_table_source_end, &2378
-CLEAR indexed_pair_record_table_source, indexed_pair_record_table_source_end
+.cross_room_robot_ghost_record_table_source_end
+ASSERT cross_room_robot_ghost_record_table_source = cross_room_robot_ghost_record_table
+ASSERT cross_room_robot_ghost_record_table_source_end-cross_room_robot_ghost_record_table_source = CROSS_ROOM_ROBOT_GHOST_RECORD_COUNT*CROSS_ROOM_ROBOT_GHOST_RECORD_BYTES
+ASSERT cross_room_robot_ghost_record_table_source_end = &0A96
+COPYBLOCK cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_record_table_source_end, &2378
+CLEAR cross_room_robot_ghost_record_table_source, cross_room_robot_ghost_record_table_source_end
 
 ORG lift_and_hazard_room_record_table
 ; Runtime 0A96-0AF9: twenty lift/hazard room records. The second byte's high
