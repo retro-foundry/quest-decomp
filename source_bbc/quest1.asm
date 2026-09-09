@@ -1462,23 +1462,23 @@ ORG display_action_jump_table
 ; vectors: $121E, $121F, $1221, $1222, $1224 and $1225 are all read as data
 ; elsewhere in this source.
 .display_action_jump_table_source
-    JMP &1DF0
+    JMP set_display_pointer_from_grid_position
 
 .enter_retreat_secondary_reference_and_pointer
-    JMP &1CB5
+    JMP retreat_secondary_reference_and_pointer
 
-    JMP &1B98
+    JMP draw_and_initialise_room
 
 .enter_advance_secondary_reference_and_pointer
-    JMP &1CC7
+    JMP advance_secondary_reference_and_pointer
 
 .decrement_reference_then_draw_and_initialise_room
     DEC reference_pair_primary_value
-    JMP &1B98
+    JMP draw_and_initialise_room
 
 .increment_reference_then_draw_and_initialise_room
     INC reference_pair_primary_value
-    JMP &1B98
+    JMP draw_and_initialise_room
 .display_action_jump_table_source_end
 
 ASSERT display_action_jump_table_source = display_action_jump_table
@@ -1846,7 +1846,7 @@ ORG print_item_slot_label
     LDX #&06
 
 .print_item_slot_label_emit_loop
-    LDA &0B03,Y
+    LDA item_slot_label_table,Y
     JSR OSWRCH
     INY
     DEX
@@ -2122,7 +2122,7 @@ ORG advance_secondary_reference_and_pointer
     INC &71
 
 .advance_secondary_reference_and_pointer_branch_1
-    JMP &1B98
+    JMP draw_and_initialise_room
 .advance_secondary_reference_and_pointer_source_end
 
 ASSERT advance_secondary_reference_and_pointer_source = advance_secondary_reference_and_pointer
@@ -2173,7 +2173,7 @@ ORG update_and_draw_room_enemies
 .apply_player_direction_if_in_range
     BCC clamp_indexed_entity_horizontal_delta
     LDA &31
-    STA &123A,Y
+    STA secondary_entity_runtime_block,Y
     LDA &32
     STA &123B,Y
     JMP move_indexed_entity_on_both_axes
@@ -2272,7 +2272,7 @@ ORG dispatch_game_tick_updates
 ; signed byte is at least the target at $4F.
 .dispatch_game_tick_updates_source
     JSR update_and_draw_two_indexed_pairs
-    LDA &1239
+    LDA room_tick_update_selector
     BEQ dispatch_game_tick_updates_branch_1
     JSR update_and_draw_room_enemies
 
@@ -2320,7 +2320,7 @@ ORG dispatch_game_tick_updates
     LDA timed_effect_selector
     CMP #&14
     BNE dispatch_game_tick_updates_branch_9
-    JSR &2D98
+    JSR replace_saved_cell_with_14_then_play_sound
 
 .dispatch_game_tick_updates_branch_9
     LDA lift_and_hazard_active
@@ -2365,7 +2365,7 @@ ORG dispatch_game_tick_updates
     LDX #&26
     LDY #&22
     JSR OSWORD
-    LDA &2226
+    LDA indexed_pair_initial_state
     CMP &4F
     BMI dispatch_game_tick_updates_branch_15
     RTS
@@ -2716,7 +2716,7 @@ ORG initialise_room_enemy_from_table
     LDA &32
     STA active_enemy_species
     LDA #&01
-    STA &1239
+    STA room_tick_update_selector
     INY
     LDA room_enemy_record_table,Y
     STA &0A
@@ -2724,7 +2724,7 @@ ORG initialise_room_enemy_from_table
     ASL A
     ASL A
     STA &1237
-    STA &1231
+    STA primary_entity_runtime_block
     INY
     LDA room_enemy_record_table,Y
     STA &1236
@@ -2785,7 +2785,7 @@ ORG initialise_room_enemy_from_table
 
 .seed_entity_deltas
     TXA
-    STA &1239,X
+    STA room_tick_update_selector,X
     STA &123B,X
     INX
     CPX #&03
@@ -2973,7 +2973,7 @@ ORG run_terminal_interaction
     STX terminal_interaction_result
 
 .terminal_stream_next_byte
-    LDA &2196,X
+    LDA terminal_interaction_text_stream,X
     CMP #&FF
     BEQ terminal_stream_end
     CMP #&FE
@@ -3517,7 +3517,7 @@ ORG apply_moving_entity_to_player
     LDA &0052,Y
     STA display_pointer_high
     JSR adjust_display_pointer_then_scan_markers
-    JSR &235C
+    JSR test_lift_or_hazard_hit_player
     BNE restore_y_and_exit
     LDA #&01
     JSR &28AE
@@ -3532,7 +3532,7 @@ ORG apply_moving_entity_to_player
     ADC #&02
     STA display_pointer_high
     JSR scan_four_display_bytes_for_markers
-    JSR &235C
+    JSR test_lift_or_hazard_hit_player
     BNE restore_y_and_exit
     LDA #&01
     STA &88
@@ -4171,8 +4171,8 @@ ORG initialise_new_game
 ; addresses an icon as $3CF0 plus the count times sixteen, so this is where both
 ; the base and the starting count come from.
 .initialise_new_game_source
-    JSR &0780
-    JSR &3245
+    JSR place_initial_map_objects
+    JSR restore_item_and_goal_records
     JSR run_startup_room_sequence_until_space
     LDA #&01
     STA reference_pair_primary_value
@@ -4182,9 +4182,9 @@ ORG initialise_new_game
     STA &70
     STA &71
     LDA #&44
-    STA &32C3
+    STA bcd_counter_low
     LDA #&10
-    STA &32C4
+    STA bcd_counter_high
     LDA #&02
     STA graphic_source_base_pointer_offset
     LDY #&0C
@@ -4265,12 +4265,12 @@ ORG walk_player_toward_target_position
 ; reached independently by other callers.
 .walk_player_toward_target_position_source
     LDX #&09
-    JSR &314F
+    JSR flash_background_colour_with_sound
     LDA #&0F
-    STA &32A6
-    STA &32A4
+    STA sound_block_duration
+    STA sound_block_pitch
     LDA #&04
-    JSR &3333
+    JSR play_sound_with_amplitude
 
 .walk_one_step_toward_target
     LDA &2E
@@ -4296,7 +4296,7 @@ ORG walk_player_toward_target_position
     CMP &2D
     BNE step_horizontally_toward_target
     LDX #&00
-    JSR &314F
+    JSR flash_background_colour_with_sound
 
 .set_4b_on_arrival
     LDA #&0C
@@ -4447,7 +4447,7 @@ ORG wait_vsync_then_call_display_helpers
     LDA #&13
     JSR OSBYTE
     JSR xor_draw_player_two_parts
-    JSR &2ABA
+    JSR capture_player_state_for_redraw
     JMP xor_draw_player_two_parts
 .wait_vsync_then_call_display_helpers_source_end
 
@@ -4546,7 +4546,7 @@ ORG move_player_right_with_collision
     LDA player_horizontal_position
     CMP #&4C
     BNE scan_column_ahead_of_player
-    JMP &2ACF
+    JMP enter_room_to_the_right
 
 .scan_column_ahead_of_player
     CLC
@@ -4568,7 +4568,7 @@ ORG move_player_right_with_collision
     LDA player_display_pointer_high
     ADC #&02
     STA display_pointer_high
-    JMP &29B9
+    JMP process_player_cell_interactions
 
 .step_right_when_column_clear
     INC player_horizontal_position
@@ -4605,7 +4605,7 @@ ORG move_player_left_with_collision
 .move_player_left_with_collision_source
     LDA player_horizontal_position
     BNE scan_column_left_of_player
-    JMP &2AE6
+    JMP enter_room_to_the_left
 
 .scan_column_left_of_player
     SEC
@@ -4629,7 +4629,7 @@ ORG move_player_left_with_collision
     LDA player_display_pointer_high
     ADC #&02
     STA display_pointer_high
-    JMP &29B9
+    JMP process_player_cell_interactions
 
 .advance_player_one_cell_left
     DEC player_horizontal_position
@@ -4664,7 +4664,7 @@ ORG advance_player_vertical_position_and_display_pointer
     STA &3E
     LDA player_display_pointer_high
     STA &3F
-    JSR &34F1
+    JSR apply_signed_vertical_step_to_pointer
     LDA &3C
     STA player_vertical_position
     LDA &3E
@@ -4716,7 +4716,7 @@ ORG move_player_down_by_velocity
     CMP #&6C
     BPL test_ground
     JSR capture_player_state_for_redraw
-    JMP &2AFD
+    JMP enter_room_below
 
 .test_ground
     JSR prepare_player_relative_display_scan
@@ -4916,13 +4916,13 @@ ORG poll_controls_and_apply_gameplay_actions
     LDX #&CD
     JSR osbyte_81_inkey
     BCC control_poll_pick_up
-    JSR &2CE6
+    JSR drop_carried_item
 
 .control_poll_pick_up
     LDX #&C8
     JSR osbyte_81_inkey
     BCC control_poll_exit
-    JSR &2C0E
+    JSR pick_up_item_below_player
 
 .control_poll_exit
     LDX #&8F
@@ -5693,11 +5693,11 @@ ORG draw_room_row_cells
     LDA #&00
     STA indexed_xor_display_pointer_low
     LDA (room_data_pointer_low),Y
-    STA &1225
+    STA current_room_cell
     AND #&3F
     STA &31
     STY &03
-    JSR &12A8
+    JSR dispatch_room_cell
     LDA tile_pair_source_selector
     STA &09
     LDY &03
@@ -5796,7 +5796,7 @@ ORG dispatch_room_cell
 ; mirrored by subtracting it from 7 and $43 is set to $FF, which is what draws a
 ; cell reversed. The counter is returned in A.
 .dispatch_room_cell_source
-    LDA &1225
+    LDA current_room_cell
     ASL A
     BCC dispatch_through_vector_table
     JMP draw_character_row_as_tiles
@@ -5808,7 +5808,7 @@ ORG dispatch_room_cell
     PHA
     LDA room_cell_draw_dispatch_table,X
     PHA
-    LDA &1225
+    LDA current_room_cell
     ASL A
     ASL A
     BCC return_column_counter
@@ -6008,7 +6008,7 @@ ORG enter_room_above
 .enter_room_above_source
     LSR &75
     BCS return_carry_clear_2b35
-    JSR &2B24
+    JSR set_player_pointer_from_horizontal_position
     LDA #&D0
     STA player_vertical_position
     CLC
@@ -6224,7 +6224,7 @@ ORG pick_up_item_below_player
     TXA
     STA &63
     JSR consume_matching_item_from_slots
-    LDA &1225
+    LDA current_room_cell
     BEQ find_empty_item_slot
     CMP #&03
     BEQ find_empty_item_slot
@@ -6329,7 +6329,7 @@ ORG draw_two_item_slots
     STA graphic_source_pointer_low
     LDA #&00
     STA graphic_source_pointer_high
-    JSR &2BFE
+    JSR set_display_pointer_three_rows_below_player_cell
     LDA display_pointer_low
     SEC
     SBC #&05
@@ -6350,9 +6350,9 @@ ORG draw_two_item_slots
     LDA display_pointer_low
     JSR xor_graphic_into_display
     LDA #&05
-    STA &32A6
+    STA sound_block_duration
     LDA #&01
-    JSR &3333
+    JSR play_sound_with_amplitude
 
 .draw_item_slots
     TYA
@@ -6366,7 +6366,7 @@ ORG draw_two_item_slots
 .draw_next_item_slot
     LDA &0C,X
     LDX #&04
-    JSR &34BB
+    JSR print_item_slot_label
     LDA #&3E
     STA display_pointer_high
     LDX &03
@@ -6387,7 +6387,7 @@ ORG draw_two_item_slots
     BPL draw_next_item_slot
     PLA
     TAY
-    JMP &31EB
+    JMP draw_status_panel_divider
 
 .convert_item_code_to_index
     SEC
@@ -6398,7 +6398,7 @@ ORG draw_two_item_slots
 
 .draw_empty_slot
     LDX #&01
-    JSR &2496
+    JSR draw_record_row_pairs
     JMP move_to_next_slot_position
 .draw_two_item_slots_source_end
 
@@ -6802,8 +6802,8 @@ ORG consume_matching_item_from_slots
 .clear_slot_and_redraw
     LDA #&00
     STA &0C,X
-    JSR &2CA1
-    JSR &24D2
+    JSR redraw_carried_item_slots
+    JSR refill_energy_in_28_steps
     SEC
     RTS
 .consume_matching_item_from_slots_source_end
@@ -7266,7 +7266,7 @@ ORG draw_state_selected_13_center_row
     LDA #&13
     JSR copy_16_byte_graphic_to_display
     LDX #&02
-    JSR &1531
+    JSR draw_04_03_alternating_run
     LDA #&13
     JSR copy_16_byte_graphic_to_display
     LDX #&02
@@ -7604,7 +7604,7 @@ ORG draw_room_sign_or_collect_password
     ASL A
     ASL A
     STA inline_vdu_stream_pointer_low
-    LDA &1225
+    LDA current_room_cell
     CMP #&21
     BNE test_password_prompt_cell
     STA &4C
@@ -8322,7 +8322,7 @@ ORG submit_channel_one_sound_with_x_pitch
 .submit_channel_one_sound_with_x_pitch_source
     STX sound_block_pitch
     LDA #&11
-    JMP &32C0
+    JMP enter_submit_osword_07_sound_block
 .submit_channel_one_sound_with_x_pitch_source_end
 
 ASSERT submit_channel_one_sound_with_x_pitch_source = submit_channel_one_sound_with_x_pitch
@@ -8477,7 +8477,7 @@ ORG warp_to_room_3_4
     STA &70
     LDA #&01
     STA &71
-    JMP &1206
+    JMP enter_draw_and_initialise_room
 .warp_to_room_3_4_source_end
 
 ASSERT warp_to_room_3_4_source = warp_to_room_3_4
@@ -8738,7 +8738,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 .store_dynamic_room_object_class
     STA active_lift_or_hazard_class
     STX &34
-    JSR &1B58
+    JSR initialise_four_dynamic_room_object_slots
     LDX #&08
 
 .draw_next_dynamic_room_object_tile
@@ -9122,7 +9122,7 @@ ORG draw_table_selected_sequence_in_columns_five_to_seven
     STA &7E
     LDA #HI(cell_3b_graphic_sequence_table)
     STA &7F
-    JSR &1696
+    JSR draw_four_graphic_selectors_from_pointer
     LDX #&02
     JMP draw_blank_tile_run
 .draw_table_selected_sequence_in_columns_five_to_seven_source_end
@@ -9191,7 +9191,7 @@ ORG draw_cell_3c_transition_row_by_column
     DEC &09
     LDX #&04
     LDY #&02
-    JMP &157E
+    JMP draw_graphic_selector_sequence
 .draw_cell_3c_transition_row_by_column_source_end
 
 ASSERT draw_cell_3c_transition_row_by_column_source = draw_cell_3c_transition_row_by_column
@@ -9367,7 +9367,7 @@ ORG draw_table_selected_eight_tiles_in_columns_four_five
     STA &7F
     LDX #&08
     LDY #&03
-    JMP &157E
+    JMP draw_graphic_selector_sequence
 .draw_table_selected_eight_tiles_in_columns_four_five_source_end
 
 ASSERT draw_table_selected_eight_tiles_in_columns_four_five_source = draw_table_selected_eight_tiles_in_columns_four_five
@@ -9509,7 +9509,7 @@ ORG draw_character_row_as_tiles
 ; detail reach the display through the same tile pipeline as the room itself.
 ; Reached only by the tail JMP at $12AE.
 .draw_character_row_as_tiles_source
-    LDA &1225
+    LDA current_room_cell
     AND #&40
     CLC
     ADC &31
@@ -9833,7 +9833,7 @@ ORG draw_room_moving_object
     INX
 
 .indexed_xor_selector_ready
-    LDA &1225
+    LDA current_room_cell
     BNE indexed_xor_load_display_pointer
     LDA room_moving_object_slot_limit
     CMP #&05
@@ -9893,7 +9893,7 @@ ORG draw_and_initialise_room
     STA jet_boots_enabled_this_room
     STA room_moving_objects_active
     STA &79
-    STA &1239
+    STA room_tick_update_selector
     STA &6E
     STA timed_effect_selector
     STA &61
@@ -9928,7 +9928,7 @@ ORG draw_and_initialise_room
     JMP fill_top_row_when_no_room_above
 
 .draw_room_body
-    JSR &1284
+    JSR draw_room_row_cells
     LDX #&50
     LDA #&80
     STA graphic_source_pointer_low
@@ -9960,7 +9960,7 @@ ORG draw_and_initialise_room
 
 .draw_next_row_cell
     INC &04
-    JSR &1284
+    JSR draw_room_row_cells
     INC &09
     LDA &09
     CMP #&08
@@ -10120,7 +10120,7 @@ ORG retreat_secondary_reference_and_pointer
     LDA &71
     SBC #&00
     STA &71
-    JMP &1B98
+    JMP draw_and_initialise_room
 .retreat_secondary_reference_and_pointer_source_end
 
 ASSERT retreat_secondary_reference_and_pointer_source = retreat_secondary_reference_and_pointer
@@ -10168,13 +10168,13 @@ ORG reflect_indexed_entity_at_obstacles
 ; vector. That tail runs 3,987 times against 235 entries here, so it is also
 ; reached directly by other callers.
 .reflect_indexed_entity_at_obstacles_source
-    JSR &362E
+    JSR scan_column_behind_indexed_entry
     BCC probe_opposite_horizontal
     JSR set_indexed_123a_delta_positive
     JMP probe_first_vertical
 
 .probe_opposite_horizontal
-    JSR &363E
+    JSR scan_column_ahead_of_indexed_entry
     BCC probe_first_vertical
     JSR set_indexed_123a_delta_negative
 
@@ -10258,7 +10258,7 @@ ORG draw_matching_records_from_table
     LDA item_and_goal_record_table,Y
     STA &0B
     JSR set_display_pointer_from_grid_position
-    JSR &1E29
+    JSR draw_item_graphic_pair
     JMP step_to_previous_record
 .draw_matching_records_from_table_source_end
 
@@ -10291,7 +10291,7 @@ ORG advance_indexed_entity_with_collision_checks
     JMP advance_indexed_entity_vertical_position
 
 .handle_blocked_indexed_entity_vertical_path
-    LDA &123A,Y
+    LDA secondary_entity_runtime_block,Y
     CMP #&01
     BNE probe_behind_indexed_entity
     JSR scan_column_ahead_of_indexed_entry
@@ -10479,7 +10479,7 @@ ORG load_display_pointer_then_scan_markers
     JSR load_display_pointer_from_indexed_pair
     TYA
     PHA
-    JSR &220F
+    JSR enter_adjust_display_pointer_then_scan_markers
     PLA
     TAY
     RTS
@@ -10546,7 +10546,7 @@ ORG load_indexed_pair_output_from_y_tables
 .load_indexed_pair_output_from_y_tables_source
     LDA &0068,Y
     STA indexed_pair_output_value
-    LDA &1231,Y
+    LDA primary_entity_runtime_block,Y
     LSR A
     STA indexed_pair_output_half_offset
     RTS
@@ -10578,7 +10578,7 @@ ORG scan_column_below_indexed_entry
     JSR enter_scan_display_column_for_blocking_byte
     BCC restore_y_and_return
     LDA #&04
-    JSR &334C
+    JSR submit_sound_block_with_pitch
     SEC
 
 .restore_y_and_return
@@ -10619,7 +10619,7 @@ ORG reverse_indexed_123a_delta_at_limits
     LDA #&01
 
 .store_indexed_123a_delta
-    STA &123A,Y
+    STA secondary_entity_runtime_block,Y
     RTS
 
 .set_indexed_123a_delta_negative
@@ -10651,9 +10651,9 @@ ORG advance_indexed_entity_horizontal_position
 .advance_indexed_entity_horizontal_position_source
     LDA &0068,Y
     CLC
-    ADC &123A,Y
+    ADC secondary_entity_runtime_block,Y
     STA &0068,Y
-    LDA &123A,Y
+    LDA secondary_entity_runtime_block,Y
     BMI step_entity_left
     CLC
     LDA &0047,Y
@@ -10696,7 +10696,7 @@ ORG reverse_indexed_123b_delta_at_limits
 ; directly by reflect_indexed_entity_at_obstacles, so they are named for what
 ; they do rather than for either caller reason.
 .reverse_indexed_123b_delta_at_limits_source
-    LDA &1231,Y
+    LDA primary_entity_runtime_block,Y
     AND #&FE
     CMP &1237
     BEQ set_indexed_123b_delta_positive
@@ -10740,7 +10740,7 @@ ORG advance_indexed_entity_vertical_position
 ; reflect_indexed_entity_at_obstacles drive, so the direction reversals those
 ; apply reach the display here.
 .advance_indexed_entity_vertical_position_source
-    LDA &1231,Y
+    LDA primary_entity_runtime_block,Y
     STA indexed_pair_output_half_offset
     LDA &123B,Y
     STA &40
@@ -10750,7 +10750,7 @@ ORG advance_indexed_entity_vertical_position
     STA &3F
     JSR apply_signed_vertical_step_to_pointer
     LDA indexed_pair_output_half_offset
-    STA &1231,Y
+    STA primary_entity_runtime_block,Y
     LDA &3E
     STA &0047,Y
     LDA &3F
@@ -10844,12 +10844,12 @@ ORG initialise_room_moving_objects
 
 .load_matched_indexed_xor_record
     LDA &32
-    STA &1225
+    STA current_room_cell
     LDX &31
     INX
     INX
     STX room_moving_object_slot_limit
-    LDA &1225
+    LDA current_room_cell
     CMP #ROOM_MOVING_OBJECT_FISH
     BEQ test_existing_special_xor_state
     CMP #ROOM_MOVING_OBJECT_MOUSE
@@ -10868,7 +10868,7 @@ ORG initialise_room_moving_objects
 .copy_indexed_xor_record_fields
     INY
     LDA room_moving_object_record_table,Y
-    STA &121D,X
+    STA indexed_xor_graphic_state,X
     INX
     CPX #&03
     BNE copy_indexed_xor_record_fields
@@ -10885,7 +10885,7 @@ ORG initialise_room_moving_objects
     LDX #&00
 
 .build_indexed_xor_display_pointers
-    LDA &121D
+    LDA indexed_xor_graphic_state
     STA &0A
     LDA indexed_xor_graphic_selector_state,X
     STA &0B
@@ -10898,7 +10898,7 @@ ORG initialise_room_moving_objects
     INX
     CPX #&08
     BNE build_indexed_xor_display_pointers
-    LDA &1225
+    LDA current_room_cell
     ASL A
     ASL A
     ASL A
@@ -11722,7 +11722,7 @@ ORG &8100
     LDX #&00
 .copy_transient_decoder_byte
     LDA &5B00,X
-    STA &0100,X
+    STA transient_xor_message_decoder,X
     INX
     CPX #&B0
     BNE copy_transient_decoder_byte
@@ -11786,7 +11786,7 @@ ORG &8100
     LDX #&00
 .copy_irq_workspace_byte
     LDA &5BB0,X
-    STA &0380,X
+    STA chained_irq1v_vector,X
     INX
     CPX #&61
     BNE copy_irq_workspace_byte
