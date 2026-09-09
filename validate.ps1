@@ -97,6 +97,24 @@ if ($relativeNumericOperands.Count -ne 0) {
     throw "Raw symbol-relative operand in quest1.asm; use a named offset or alias: $firstRelativeNumericOperand"
 }
 
+$numericCopyDestinationPattern = '(?im)^\s*COPYBLOCK\s+[^\r\n,]+,\s*[^\r\n,]+,\s*(?:&|\$)[0-9A-F]+\s*(?:;.*)?$'
+$numericCopyDestinations = [regex]::Matches($assemblyText, $numericCopyDestinationPattern)
+if ($numericCopyDestinations.Count -ne 0) {
+    throw "Raw COPYBLOCK destination in quest1.asm; derive it from a named runtime or loaded symbol: $($numericCopyDestinations[0].Value.Trim())"
+}
+
+$rawAddressAssertionPattern = '(?im)^\s*ASSERT\s+.*=\s*(?:&|\$)[0-9A-F]+\s*(?:;.*)?$'
+$rawAddressAssertions = [regex]::Matches($assemblyText, $rawAddressAssertionPattern)
+if ($rawAddressAssertions.Count -ne 0) {
+    throw "Raw absolute-address assertion in quest1.asm; use a named boundary or size: $($rawAddressAssertions[0].Value.Trim())"
+}
+
+$rawAddressCommentPattern = '(?im)^\s*;.*\$[0-9A-F]{3,4}\b.*$'
+$rawAddressComments = [regex]::Matches($assemblyText, $rawAddressCommentPattern)
+if ($rawAddressComments.Count -ne 0) {
+    throw "Raw address in quest1.asm comment; describe the named source behavior or boundary instead: $($rawAddressComments[0].Value.Trim())"
+}
+
 $variantDefinitions = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools\reconstruction\variants') -Filter '*.json' -File
 if ($variantDefinitions.Count -eq 0) {
     throw 'Standalone source has no reconstruction variant definitions.'
