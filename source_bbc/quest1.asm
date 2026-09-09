@@ -2953,8 +2953,8 @@ CLEAR inline_printer_alignment_padding_source, inline_printer_alignment_padding_
 
 ORG sound_block_channel
 ; Initial MOS SOUND parameter bytes. The duration low byte is explicit here;
-; its high byte at $32A7 is also the first opcode of
-; test_display_pointer_in_xor_draw_window, an intentional code/data overlap.
+; its high byte is also the first opcode of test_display_pointer_in_xor_draw_window,
+; an intentional code/data overlap.
 .initial_sound_parameter_block_source
     EQUW INITIAL_SOUND_CHANNEL_WORD
     EQUW INITIAL_SOUND_AMPLITUDE_WORD
@@ -3931,8 +3931,8 @@ ORG initialise_new_game
 ; the display pointer selects the first icon position. The loop that follows
 ; clears water_environment_flag and runs once per icon.
 ; Those two values are what remove_last_icon_and_stamp_room_cell reads back: it
-; addresses an icon as $3CF0 plus the count times sixteen, so this is where both
-; the base and the starting count come from.
+; addresses an icon as status_icon_row_base plus the count times
+; STATUS_ICON_BYTE_STRIDE, so this is where both the base and starting count come from.
 .initialise_new_game_source
     JSR place_initial_map_objects
     JSR restore_item_and_goal_records
