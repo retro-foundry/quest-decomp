@@ -3056,7 +3056,7 @@
       ]
     },
     {
-      "name": "check_player_relative_display_pattern_15",
+      "name": "check_player_relative_column_junction",
       "runtime_start": 10805,
       "runtime_end_exclusive": 10830,
       "loaded_start": 16949,
@@ -3080,7 +3080,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all thirty-six instructions 2,659 times, with 2,657 early failures against 2 full matches",
-        "analysis/runtime_trace/played_key_and_door/executed_pcs.csv proves six callers, five inside $29B9 and one at 0x2a46 in check_player_relative_display_pattern_15",
+        "analysis/runtime_trace/played_key_and_door/executed_pcs.csv proves six callers, including the direct call from check_player_relative_column_junction",
         "the shift-by-four and $0E00-page bias reproduce copy_16_byte_graphic_to_display record addressing, which is what identifies A as a record index"
       ]
     },

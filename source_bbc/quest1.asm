@@ -1207,7 +1207,7 @@ ORG process_player_cell_interactions
 .process_player_cell_interactions_source_end
 
 ASSERT process_player_cell_interactions_source = process_player_cell_interactions
-ASSERT process_player_cell_interactions_source_end = check_player_relative_display_pattern_15
+ASSERT process_player_cell_interactions_source_end = check_player_relative_column_junction
 COPYBLOCK process_player_cell_interactions_source, process_player_cell_interactions_source_end, &41B9
 CLEAR process_player_cell_interactions_source, process_player_cell_interactions_source_end
 
@@ -4496,7 +4496,7 @@ ORG move_player_down_by_velocity
     RTS
 
 .test_landing_pattern
-    JSR check_player_relative_display_pattern_15
+    JSR check_player_relative_column_junction
     LDA player_jump_or_swim_requested
     BEQ stop_fall
     LDA player_contact_or_damage_flag
@@ -4992,12 +4992,12 @@ COPYBLOCK scan_four_display_bytes_for_markers_source, scan_four_display_bytes_fo
 ; copying its bytes to loaded $4157-$41A1.
 CLEAR scan_four_display_bytes_for_markers_source, scan_four_display_bytes_for_markers_source_end
 
-ORG check_player_relative_display_pattern_15
+ORG check_player_relative_column_junction
 
 ; Align the player pointer low byte, add PLAYER_RELATIVE_PATTERN_POINTER_OFFSET,
 ; and test GRAPHIC_COLUMN_JUNCTION. A carry-clear result returns through the
 ; shared no-match exit; carry set tail-transfers to the pattern-match handler.
-.check_player_relative_display_pattern_15_source
+.check_player_relative_column_junction_source
     CLC
     LDA player_display_pointer_low
     AND #PLAYER_BLOCKED_POINTER_LOW_MASK
@@ -5010,15 +5010,15 @@ ORG check_player_relative_display_pattern_15
     JSR display_pattern_test
     BCC player_cell_interaction_no_match_return
     JMP display_pattern_match_tail_entry
-.check_player_relative_display_pattern_15_source_end
+.check_player_relative_column_junction_source_end
 
-ASSERT check_player_relative_display_pattern_15_source = check_player_relative_display_pattern_15
-ASSERT check_player_relative_display_pattern_15_source_end = &2A4E
-COPYBLOCK check_player_relative_display_pattern_15_source, check_player_relative_display_pattern_15_source_end, &4235
+ASSERT check_player_relative_column_junction_source = check_player_relative_column_junction
+ASSERT check_player_relative_column_junction_source_end = &2A4E
+COPYBLOCK check_player_relative_column_junction_source, check_player_relative_column_junction_source_end, &4235
 
 ; Runtime $2A35-$2A4D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4235-$424D.
-CLEAR check_player_relative_display_pattern_15_source, check_player_relative_display_pattern_15_source_end
+CLEAR check_player_relative_column_junction_source, check_player_relative_column_junction_source_end
 
 ORG room_moving_object_graphic_state_block
 

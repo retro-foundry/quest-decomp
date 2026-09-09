@@ -65,7 +65,7 @@ routines highlighted in detail below include:
 - runtime `$2957-$29A1`, loaded `$4157-$41A1`,
   `scan_four_display_bytes_for_markers`;
 - runtime `$2A35-$2A4D`, loaded `$4235-$424D`,
-  `check_player_relative_display_pattern_15`;
+  `check_player_relative_column_junction`;
 - runtime `$2AFD-$2B23`, loaded `$42FD-$4323`, `enter_room_below`;
 - runtime `$2B57-$2B87`, loaded `$4357-$4387`,
   `check_player_candidate_bounds_overlap`;
