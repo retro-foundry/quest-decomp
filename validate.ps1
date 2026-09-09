@@ -41,7 +41,40 @@ if ($variantDefinitions.Count -eq 0) {
     throw 'Standalone source has no reconstruction variant definitions.'
 }
 
+$pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+if (-not $pythonCommand) {
+    throw 'Python is required to validate the bundled reconstruction tools.'
+}
+
+$pythonTools = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tools') -Filter '*.py' -File -Recurse
+foreach ($pythonTool in $pythonTools) {
+    & $pythonCommand.Source -c "import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))" $pythonTool.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python syntax validation failed: $($pythonTool.FullName)"
+    }
+}
+
+foreach ($variantDefinition in $variantDefinitions) {
+    try {
+        Get-Content -LiteralPath $variantDefinition.FullName -Raw | ConvertFrom-Json | Out-Null
+    }
+    catch {
+        throw "Invalid reconstruction variant JSON: $($variantDefinition.FullName): $_"
+    }
+}
+
 & (Join-Path $PSScriptRoot 'build.ps1') -BeebAsm $BeebAsm
+
+$variantSmokeOutput = Join-Path $PSScriptRoot 'build\reconstruction\QUEST1-validation-variant'
+& $pythonCommand.Source (Join-Path $PSScriptRoot 'tools\reconstruction\apply_variant.py') `
+    --variant sector_e_level_1 --output-payload $variantSmokeOutput | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw 'Bundled reconstruction variant smoke test failed.'
+}
+if (-not (Test-Path -LiteralPath $variantSmokeOutput -PathType Leaf)) {
+    throw 'Bundled reconstruction variant smoke test produced no payload.'
+}
+Remove-Item -LiteralPath $variantSmokeOutput
 
 $actualLength = (Get-Item -LiteralPath $payload).Length
 if ($actualLength -ne $expectedLength) {

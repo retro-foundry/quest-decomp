@@ -177,7 +177,7 @@ def main() -> int:
     grid = terrain_grid(screens)
     places = standing_places(grid)
     if not places:
-        raise SystemExit("no two-row gap resting on solid ground was found")
+        raise SystemExit("no player-tall gap resting on solid ground was found")
 
     # A wide floor is a safer landing than a one-block ledge, and a spot near
     # the middle of the room is more use than one wedged against an edge.
