@@ -5610,7 +5610,7 @@ ORG dispatch_room_cell
     EQUW draw_curved_bowl_before_alternating_suffix-1 ; ROOM_CELL_CURVED_BOWL_LEFT
     EQUW draw_first_key_column_motif-1 ; ROOM_CELL_FIRST_KEY_MOTIF
     EQUW draw_second_key_column_motif-1 ; ROOM_CELL_SECOND_KEY_MOTIF; entry load remains unexecuted
-    EQUW draw_repeated_87_blank_pairs_by_state-1 ; ROOM_CELL_PROGRESS_CROSSED_DIAGONAL_PAIRS
+    EQUW draw_progress_crossed_diagonal_blank_pairs-1 ; ROOM_CELL_PROGRESS_CROSSED_DIAGONAL_PAIRS
     EQUW draw_bordered_horizontal_bar_row-1 ; ROOM_CELL_BORDERED_BAR
     EQUW draw_centered_slope_pair_by_column-1 ; ROOM_CELL_CENTERED_SLOPE
     EQUW draw_blank_state_column_motif-1 ; ROOM_CELL_BLANK_STATE_MOTIF
@@ -5619,7 +5619,7 @@ ORG dispatch_room_cell
     EQUW draw_pillar_base_row_in_last_column-1 ; ROOM_CELL_LAST_COLUMN_PILLAR
     EQUW draw_alternating_or_curved_bowl_row-1 ; ROOM_CELL_ALTERNATING_OR_CURVED_BOWL
     EQUW draw_table_selected_four_tile_half_row-1 ; ROOM_CELL_FOUR_TILE_HALF_ROW
-    EQUW draw_record_08_or_edge_pattern_row-1 ; ROOM_CELL_CURVED_BOWL_OR_EDGE_PATTERN
+    EQUW draw_curved_bowl_or_edge_pattern_row-1 ; ROOM_CELL_CURVED_BOWL_OR_EDGE_PATTERN
     EQUW draw_fixed_edge_pair_or_alternating_pattern_row-1 ; ROOM_CELL_FIXED_EDGE_PAIR
     EQUW draw_ff_state_column_motif-1 ; ROOM_CELL_FF_STATE_MOTIF
     EQUW draw_narrow_bar_fixture_row-1 ; ROOM_CELL_NARROW_BAR_FIXTURE
@@ -6689,12 +6689,12 @@ COPYBLOCK replace_saved_cell_then_play_sound_source, replace_saved_cell_then_pla
 CLEAR replace_saved_cell_then_play_sound_source, replace_saved_cell_then_play_sound_source_end
 
 
-ORG draw_repeated_87_blank_pairs_by_state
+ORG draw_progress_crossed_diagonal_blank_pairs
 
 ; ROOM_CELL_PROGRESS_CROSSED_DIAGONAL_PAIRS. A zero column enters the adjacent
 ; edge-pattern handler. Other columns draw leading blanks for removed progress
 ; pairs, then progress_pattern_pair_count crossed-diagonal/blank pairs.
-.draw_repeated_87_blank_pairs_by_state_source
+.draw_progress_crossed_diagonal_blank_pairs_source
     CMP #ROOM_COLUMN_FIRST
     BEQ draw_fixed_edge_pair_or_alternating_pattern_row
     LDA #PROGRESS_PATTERN_CELL_MAX_PAIRS
@@ -6715,15 +6715,15 @@ ORG draw_repeated_87_blank_pairs_by_state
     DEX
     BNE draw_next_xor_crossed_diagonal_blank_pair
     RTS
-.draw_repeated_87_blank_pairs_by_state_source_end
+.draw_progress_crossed_diagonal_blank_pairs_source_end
 
-ASSERT draw_repeated_87_blank_pairs_by_state_source = draw_repeated_87_blank_pairs_by_state
-ASSERT draw_repeated_87_blank_pairs_by_state_source_end = &15B1
-COPYBLOCK draw_repeated_87_blank_pairs_by_state_source, draw_repeated_87_blank_pairs_by_state_source_end, &2D8F
+ASSERT draw_progress_crossed_diagonal_blank_pairs_source = draw_progress_crossed_diagonal_blank_pairs
+ASSERT draw_progress_crossed_diagonal_blank_pairs_source_end = &15B1
+COPYBLOCK draw_progress_crossed_diagonal_blank_pairs_source, draw_progress_crossed_diagonal_blank_pairs_source_end, &2D8F
 
 ; Runtime $158F-$15B0 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2D8F-$2DB0.
-CLEAR draw_repeated_87_blank_pairs_by_state_source, draw_repeated_87_blank_pairs_by_state_source_end
+CLEAR draw_progress_crossed_diagonal_blank_pairs_source, draw_progress_crossed_diagonal_blank_pairs_source_end
 
 
 ORG initialise_cross_room_robot_ghost_from_record
@@ -6895,12 +6895,12 @@ COPYBLOCK draw_narrow_bar_fixture_row_source, draw_narrow_bar_fixture_row_source
 CLEAR draw_narrow_bar_fixture_row_source, draw_narrow_bar_fixture_row_source_end
 
 
-ORG draw_record_08_or_edge_pattern_row
+ORG draw_curved_bowl_or_edge_pattern_row
 
 ; ROOM_CELL_CURVED_BOWL_OR_EDGE_PATTERN draws its curved-bowl graphic in the penultimate
 ; column, alternates in the last, and blanks elsewhere. The shared edge-pattern
 ; handlers select blanks, alternating tiles, or GRAPHIC_EDGE_PATTERN_A/B.
-.draw_record_08_or_edge_pattern_row_source
+.draw_curved_bowl_or_edge_pattern_row_source
     CMP #CELL_12_PATTERN_COLUMN
     BNE select_record_08_edge_last_column
     JMP draw_eight_curved_bowl_tiles
@@ -6931,17 +6931,17 @@ ORG draw_record_08_or_edge_pattern_row
 
 .draw_alternating_row_from_record_edge_handlers
     JMP draw_eight_alternating_tiles
-.draw_record_08_or_edge_pattern_row_source_end
+.draw_curved_bowl_or_edge_pattern_row_source_end
 
-ASSERT draw_record_08_or_edge_pattern_row_source = draw_record_08_or_edge_pattern_row
+ASSERT draw_curved_bowl_or_edge_pattern_row_source = draw_curved_bowl_or_edge_pattern_row
 ASSERT draw_column_gated_58_59_pair_row_source = draw_column_gated_58_59_pair_row
 ASSERT draw_fixed_edge_pair_or_alternating_pattern_row_source = draw_fixed_edge_pair_or_alternating_pattern_row
-ASSERT draw_record_08_or_edge_pattern_row_source_end = &15DF
-COPYBLOCK draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_row_source_end, &2DB1
+ASSERT draw_curved_bowl_or_edge_pattern_row_source_end = &15DF
+COPYBLOCK draw_curved_bowl_or_edge_pattern_row_source, draw_curved_bowl_or_edge_pattern_row_source_end, &2DB1
 
 ; Runtime $15B1-$15DE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2DB1-$2DDE.
-CLEAR draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_row_source_end
+CLEAR draw_curved_bowl_or_edge_pattern_row_source, draw_curved_bowl_or_edge_pattern_row_source_end
 
 
 ORG update_and_draw_two_cross_room_robot_ghosts

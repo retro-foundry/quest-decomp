@@ -1564,7 +1564,7 @@
       ]
     },
     {
-      "name": "draw_repeated_87_blank_pairs_by_state",
+      "name": "draw_progress_crossed_diagonal_blank_pairs",
       "runtime_start": 5519,
       "runtime_end_exclusive": 5553,
       "loaded_start": 11663,
@@ -1588,7 +1588,7 @@
       ]
     },
     {
-      "name": "draw_record_08_or_edge_pattern_row",
+      "name": "draw_curved_bowl_or_edge_pattern_row",
       "runtime_start": 5553,
       "runtime_end_exclusive": 5599,
       "loaded_start": 11697,
