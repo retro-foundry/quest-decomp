@@ -1835,7 +1835,7 @@ ORG print_item_slot_label
 
 .print_item_slot_label_ordinary_code
     SEC
-    SBC #&26
+    SBC #ITEM_LABEL_CODE_BIAS
 
 .print_item_slot_label_zero_code
     STA shared_workspace_33
@@ -1844,7 +1844,7 @@ ORG print_item_slot_label
     TAY
 
 .print_item_slot_label_emit
-    LDX #&06
+    LDX #ITEM_LABEL_CHARACTER_COUNT
 
 .print_item_slot_label_emit_loop
     LDA item_slot_label_table,Y
@@ -10451,17 +10451,17 @@ ORG draw_item_graphic_pair
 .draw_item_graphic_pair_source
     TXA
     PHA
-    CMP #&03
+    CMP #GOLDEN_DRAGON_ITEM_RECORD_INDEX
     BNE draw_selected_item_graphic_pair
     JSR show_golden_dragon_ending
 
 .draw_selected_item_graphic_pair
     PLA
     ASL A
-    ADC #&28
+    ADC #ITEM_CODE_KEY_1
     JSR copy_16_byte_graphic_to_display
     CLC
-    ADC #&01
+    ADC #ITEM_GRAPHIC_RECORDS_PER_PAIR-1
     JMP copy_16_byte_graphic_to_display
 .draw_item_graphic_pair_source_end
 
@@ -11001,20 +11001,46 @@ CLEAR relocated_game_entry_source, relocated_game_entry_source_end
 ORG item_slot_label_table
 ; Runtime 0B03-0B50: blank inventory slot plus twelve six-character labels.
 .item_slot_label_table_source
+.blank_item_slot_label
     EQUS "      "
+.key_1_item_slot_label
     EQUS "  key "
+.key_2_item_slot_label
     EQUS "  key "
+.key_3_item_slot_label
     EQUS "  key "
+.salt_item_slot_label
     EQUS "  salt"
+.worm_item_slot_label
     EQUS " worm "
+.access_card_item_slot_label
     EQUS "  card"
+.herring_item_slot_label
     EQUS "herrin"
+.mouse_item_slot_label
     EQUS " mouse"
+.cheese_item_slot_label
     EQUS "cheese"
+.cross_item_slot_label
     EQUS " cross"
+.eye_item_slot_label
     EQUS "  eye "
+.bottle_item_slot_label
     EQUS "bottle"
 .item_slot_label_table_source_end
+ASSERT key_1_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_1-ITEM_LABEL_CODE_BIAS)*3
+ASSERT key_2_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_2-ITEM_LABEL_CODE_BIAS)*3
+ASSERT key_3_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_3-ITEM_LABEL_CODE_BIAS)*3
+ASSERT salt_item_slot_label = item_slot_label_table + (ITEM_CODE_GOLDEN_DRAGON_OR_SALT-ITEM_LABEL_CODE_BIAS)*3
+ASSERT worm_item_slot_label = item_slot_label_table + (ITEM_CODE_WORM-ITEM_LABEL_CODE_BIAS)*3
+ASSERT access_card_item_slot_label = item_slot_label_table + (ITEM_CODE_ACCESS_CARD-ITEM_LABEL_CODE_BIAS)*3
+ASSERT herring_item_slot_label = item_slot_label_table + (ITEM_CODE_HERRING-ITEM_LABEL_CODE_BIAS)*3
+ASSERT mouse_item_slot_label = item_slot_label_table + (ITEM_CODE_MOUSE-ITEM_LABEL_CODE_BIAS)*3
+ASSERT cheese_item_slot_label = item_slot_label_table + (ITEM_CODE_CHEESE-ITEM_LABEL_CODE_BIAS)*3
+ASSERT cross_item_slot_label = item_slot_label_table + (ITEM_CODE_CROSS-ITEM_LABEL_CODE_BIAS)*3
+ASSERT eye_item_slot_label = item_slot_label_table + (ITEM_CODE_EYE-ITEM_LABEL_CODE_BIAS)*3
+ASSERT bottle_item_slot_label = item_slot_label_table + (ITEM_CODE_BOTTLE-ITEM_LABEL_CODE_BIAS)*3
+ASSERT item_slot_label_table_source_end-item_slot_label_table_source = (ITEM_GOAL_RECORD_COUNT+1)*ITEM_LABEL_CHARACTER_COUNT
 ASSERT item_slot_label_table_source = item_slot_label_table
 ASSERT item_slot_label_table_source_end = &0B51
 COPYBLOCK item_slot_label_table_source, item_slot_label_table_source_end, &2403
