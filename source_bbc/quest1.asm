@@ -1298,27 +1298,27 @@ ORG add_collected_icon
 
 ; Add one icon to the collected row, unless it is already
 ; full.
-; The count at $A1 is capped at twelve and returns unchanged when it is already
-; there; otherwise it is incremented and the new icon drawn at $3F60 plus the
-; count times sixteen, record 1 from the alternate graphic bank, with the bank
-; selector restored afterwards.
+; collected_icon_count is capped at POWER_CRYSTAL_TOTAL and returns unchanged
+; when full. Otherwise the count is incremented and a collected-icon record is
+; drawn at collected_icon_row_base plus the count times STATUS_ICON_BYTE_STRIDE,
+; with the primary graphic bank restored afterwards.
 ; This is the counterpart of remove_last_icon_and_stamp_room_cell, which spends
-; from the other row: that one addresses $3CF0 plus $2A times sixteen and counts
-; down from twelve, this one addresses $3F60 plus $A1 times sixteen and counts
-; up to twelve. So the display carries two rows of twelve, one being spent and
-; one being collected.
+; from status_icon_row_base using power_crystals_remaining while this routine
+; counts upward in collected_icon_row_base. The display therefore carries two
+; twelve-icon rows, one being spent and one being collected.
 ;
 ; Twelve is also the number of power crystals the player's account lists, which
 ; is consistent with this being the crystal counter, but no table of twelve
-; crystal rooms has been found: $0900 is twelve records and turned out to hold
-; the items instead. So what places the crystals is still unlocated and this
+; crystal rooms has been found: item_and_goal_record_table contains twelve
+; records but holds the items instead. So what places the crystals is still unlocated and this
 ; routine is named for the mechanism rather than the object.
-; $0C6B is also the startup room sequence's exit: its two pulls discard that
-; routine's saved X and Y loop values before RTS returns to initialise_new_game.
+; discard_two_stack_bytes_and_return is also the startup room sequence's exit:
+; its two pulls discard that routine's saved X and Y values before returning to
+; initialise_new_game.
 .add_collected_icon_source
     LDA collected_icon_count
     CMP #POWER_CRYSTAL_TOTAL
-    BEQ add_collected_icon_branch_1
+    BEQ collected_icon_row_full
     INC collected_icon_count
     LDA collected_icon_count
     ASL A
@@ -1328,7 +1328,7 @@ ORG add_collected_icon
     ADC #LO(collected_icon_row_base)
     STA display_pointer_low
     LDA #HI(collected_icon_row_base)
-    ADC #&00
+    ADC #HI(STATUS_ICON_BYTE_STRIDE) ; propagate the scaled low-byte addition's carry
     STA display_pointer_high
     LDA #GRAPHIC_BANK_STATUS_OFFSET
     STA graphic_source_base_pointer_offset
@@ -1342,7 +1342,7 @@ ORG add_collected_icon
     PLA
     PLA
 
-.add_collected_icon_branch_1
+.collected_icon_row_full
     RTS
 .add_collected_icon_source_end
 
@@ -2102,22 +2102,20 @@ CLEAR load_room_enemy_display_pointer_source, load_room_enemy_display_pointer_so
 
 ORG advance_secondary_reference_and_pointer
 
-; Increment the secondary reference value at $8F, advance
-; the pointer at level_room_map_offset_low/high by $78, and dispatch to $1B98.
-; This is one of the actions reachable through display_action_jump_table, whose
-; $1209 vector transfers here. The two five-byte table entries adjust the
-; primary reference at $90 instead and dispatch to the same target, so the three
-; form a set that steps different references before the same work.
+; Increment the secondary room reference, advance level_room_map_offset by one
+; complete level map, then redraw and initialise the room. This is one of the
+; actions reachable through display_action_jump_table. Its two adjacent table
+; entries adjust the primary room reference instead before the same redraw.
 .advance_secondary_reference_and_pointer_source
     INC reference_pair_secondary_value
     CLC
     LDA level_room_map_offset_low
-    ADC #&78
+    ADC #ROOM_LEVEL_MAP_BYTES
     STA level_room_map_offset_low
-    BCC advance_secondary_reference_and_pointer_branch_1
+    BCC level_room_map_pointer_advanced
     INC level_room_map_offset_high
 
-.advance_secondary_reference_and_pointer_branch_1
+.level_room_map_pointer_advanced
     JMP draw_and_initialise_room
 .advance_secondary_reference_and_pointer_source_end
 
@@ -3706,34 +3704,34 @@ CLEAR xor_draw_lift_or_hazard_source, xor_draw_lift_or_hazard_source_end
 
 ORG test_lift_or_hazard_hit_player
 
-; Read and clear the collision flag at $0B, and charge energy
-; for it when this room entity class is the one that hurts.
+; Read and clear the shared collision flag, and charge energy when this room
+; entity is the damaging hazard class.
 ; The flag is taken into X and reset in the same breath, so each collision is
 ; counted once no matter how many callers ask. Energy is only spent when the
-; entity class byte at $1249 is exactly 1 and the flag was set, which is what
-; lets one class be harmful and another merely solid.
-; The flag is returned in the carry through the closing CPX, so the caller
-; learns whether there was a collision even when no energy was charged.
+; active_lift_or_hazard_class selects whether contact hurts or acts as a solid
+; moving surface. A hazard hit applies damage and then returns
+; LIFT_HAZARD_CONTACT_NONE; only a hit on the lift class returns
+; LIFT_HAZARD_CONTACT_DETECTED, telling the caller to carry or push the player.
 ;
-; The class byte this tests, $1249, comes straight from the room's record in
-; lift_and_hazard_room_record_table, so whether the moving thing in a room hurts
+; The class comes straight from lift_and_hazard_room_record_table, so whether
+; the moving thing in a room hurts
 ; is fixed per room. Seventeen records select LIFT_OR_HAZARD_HAZARD and hurt;
 ; three - A4, B2 and B6 - are not, and those are the rooms where the moving
 ; thing is a surface to ride.
 .test_lift_or_hazard_hit_player_source
     LDX display_grid_column
-    LDA #&00
+    LDA #LIFT_HAZARD_CONTACT_NONE
     STA display_grid_column
     LDA active_lift_or_hazard_class
     CMP #LIFT_OR_HAZARD_HAZARD
-    BNE test_lift_or_hazard_hit_player_branch_1
-    CPX #&01
-    BNE test_lift_or_hazard_hit_player_branch_1
-    LDX #&00
+    BNE return_lift_contact_result
+    CPX #LIFT_HAZARD_CONTACT_DETECTED
+    BNE return_lift_contact_result
+    LDX #LIFT_HAZARD_CONTACT_NONE
     JSR apply_player_damage_and_redraw_energy
 
-.test_lift_or_hazard_hit_player_branch_1
-    CPX #&01
+.return_lift_contact_result
+    CPX #LIFT_HAZARD_CONTACT_DETECTED
     RTS
 .test_lift_or_hazard_hit_player_source_end
 
