@@ -1199,7 +1199,7 @@ ORG process_player_cell_interactions
     LDA #ITEM_CODE_BOTTLE
     JSR consume_matching_item_from_slots
     BCC player_cell_interactions_rts
-    LDA #ROOM_CELL_TRANSITION_3C
+    LDA #ROOM_CELL_SAVED_TRANSITION_ROW
     JSR start_saved_display_block_shift_effect
 
 .player_cell_interactions_rts
@@ -3028,7 +3028,7 @@ ORG place_initial_map_objects
     STA room_E1_row_0_cell_1
     LDA #ROOM_CELL_ORACLE_SIGN
     STA room_A9_row_1_cell_2
-    LDA #ROOM_CELL_TRANSITION_3C
+    LDA #ROOM_CELL_SAVED_TRANSITION_ROW
     STA room_F5_row_2_cell_2
     LDA #ROOM_CELL_ALTERNATING_RIGHT_HALF
     STA room_D6_row_0_cell_0
@@ -5661,7 +5661,7 @@ ORG dispatch_room_cell
     EQUW draw_alternating_in_right_half-1 ; ROOM_CELL_ALTERNATING_RIGHT_HALF
     EQUW draw_blank_then_configure_column_seven_object-1 ; ROOM_CELL_COLUMN_7_OBJECT
     EQUW draw_table_selected_sequence_in_columns_five_to_seven-1 ; ROOM_CELL_COLUMNS_5_TO_7_SEQUENCE
-    EQUW draw_transition_row_by_column-1 ; ROOM_CELL_TRANSITION_3C
+    EQUW draw_transition_row_by_column-1 ; ROOM_CELL_SAVED_TRANSITION_ROW
     EQUW draw_table_selected_eight_tiles_in_columns_four_five-1 ; ROOM_CELL_COLUMNS_4_5_SEQUENCE
     EQUW draw_left_edge_or_full_last_column-1 ; ROOM_CELL_LEFT_EDGE_OR_FULL
     EQUW draw_right_edge_or_full_last_column-1 ; ROOM_CELL_RIGHT_EDGE_OR_FULL
@@ -8957,7 +8957,7 @@ CLEAR right_columns_four_tile_graphic_sequences_source, right_columns_four_tile_
 
 ORG draw_transition_row_by_column
 
-; ROOM_CELL_TRANSITION_3C saves the cell/display reference in column zero.
+; ROOM_CELL_SAVED_TRANSITION_ROW saves the cell/display reference in column zero.
 ; Columns zero and one draw blanks; columns two and three
 ; draw four blanks followed by a four-selector sequence from
 ; middle_columns_transition_graphic_sequences; columns four through seven draw
