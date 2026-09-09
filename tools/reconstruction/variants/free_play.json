@@ -1,0 +1,22 @@
+{
+  "name": "free_play",
+  "description": "Start where the game normally does, but never lose energy.",
+  "evidence": [
+    "$2B88 is the damage routine: it plays a sound, decrements the energy count at $3B, and sets the death flag at $62 when that decrement reaches zero, then redraws the bar through $2630",
+    "replacing the decrement with LDA #$01 leaves the Z flag clear, so the BNE that guards the death store is always taken; $2630 begins TYA/PHA/LDA $3B and never reads A on entry, so clobbering A is safe"
+  ],
+  "qualifications": [
+    "two NOPs cannot be used in place of the decrement: NOP sets no flags, so the guarding BNE would read whatever the preceding subroutine return left behind and could set the death flag on the first contact",
+    "$2B88 still plays its damage sound and redraws the bar, so contact remains visible and audible; only the energy cost is removed",
+    "the vertical velocity step at $4D is deliberately left alone: gravity subtracts the same step at $277B that the jet boots add, so raising it for stronger flight makes the fall proportionally faster and the game unplayable",
+    "flying is gated per room by something not yet identified; the thrust code at $2689 and $2699 applies unconditionally, so the gate lies elsewhere"
+  ],
+  "patches": [
+    {
+      "name": "no_energy_loss",
+      "runtime_address": "2B8F",
+      "expect": "c6 3b",
+      "write": "a9 01"
+    }
+  ]
+}

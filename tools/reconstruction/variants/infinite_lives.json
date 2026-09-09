@@ -1,0 +1,20 @@
+{
+  "name": "infinite_lives",
+  "description": "The unmodified game, except the player never loses energy and never dies.",
+  "evidence": [
+    "$2B88 is the single action every collision path funnels through, and the damage routine has two lifted entry points: $2B88 sets up and falls through, while $2B8F is a separate entry, so both have to be covered",
+    "$2B8F decrements the energy count at $3B, and $2B93 loads 1 into the death flag at $62 when that decrement reaches zero",
+    "replacing the decrement with LDA #$01 leaves the Z flag clear so the guarding BNE always skips the death store, and $2630 begins TYA/PHA/LDA $3B so clobbering A is safe",
+    "loading 0 rather than 1 before the death store makes it harmless even if a caller enters below the decrement"
+  ],
+  "qualifications": [
+    "two NOPs cannot replace the decrement: NOP sets no flags, so the guarding BNE would read whatever the preceding subroutine return left behind and could set the death flag on the first contact",
+    "damage still plays its sound and redraws the bar, so contact stays visible and audible; only the cost is removed",
+    "$2732 also writes the death flag, inside the control poller and reached by a key nothing has ever pressed, so it is left alone",
+    "everything else is the original game: the starting room, enemies, lifts, collisions and the pause keys are all unchanged"
+  ],
+  "patches": [
+    { "name": "no_energy_loss", "runtime_address": "2B8F", "expect": "c6 3b", "write": "a9 01" },
+    { "name": "death_flag_never_set", "runtime_address": "2B93", "expect": "a9 01", "write": "a9 00" }
+  ]
+}

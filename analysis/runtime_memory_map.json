@@ -1,0 +1,145 @@
+{
+  "acceptance": [
+    "each copied destination segment byte-compares with its Quest1 source range",
+    "Ghidra runtime memory contains no blocks for 0x03e1-0x03ff or 0x0d00-0x0dff",
+    "relocated entry 0x0b00 is disassembled from source bytes at loaded address 0x2400"
+  ],
+  "authority": {
+    "execution_address": 23569,
+    "execution_address_hex": "0x5c11",
+    "length": 16160,
+    "load_address": 7424,
+    "load_address_hex": "0x1d00",
+    "path": "original/game/$.QUEST1",
+    "sha256": "d83eadf906c83a1b1244f4ed85f34147c754ffa1ac5528738cb967185bcb528b"
+  },
+  "container": {
+    "base_address": 896,
+    "base_address_hex": "0x0380",
+    "end_exclusive": 17152,
+    "end_exclusive_hex": "0x4300",
+    "length": 16256,
+    "path": "analysis/binaries/quest_runtime_0380_4300.bin",
+    "sha256": "9988df0f5d4eb7a11aafbefb1cb2ee4b074873cf0662b457c28b9cb8a71fcbdf",
+    "warning": "synthetic zero-filled gaps must be removed after Ghidra import"
+  },
+  "cpu": "6502:LE:16:default",
+  "entry_chain": [
+    {
+      "address": 23569,
+      "address_hex": "0x5c11",
+      "role": "DFS execution entry"
+    },
+    {
+      "address": 22912,
+      "address_hex": "0x5980",
+      "role": "loader initialization entry"
+    },
+    {
+      "address": 2816,
+      "address_hex": "0x0b00",
+      "role": "relocated game entry"
+    }
+  ],
+  "excluded_loaded_ranges": [
+    {
+      "end_exclusive": 23584,
+      "end_exclusive_hex": "0x5c20",
+      "role": "DFS entry stub retained only in the load-view program",
+      "start": 23569,
+      "start_hex": "0x5c11"
+    }
+  ],
+  "machine_profile": "BBC_MICRO_MODEL_B",
+  "schema": "quest.runtime_memory_map.v1",
+  "steady_runtime_segments": [
+    {
+      "destination_end_exclusive": 993,
+      "destination_end_exclusive_hex": "0x03e1",
+      "destination_start": 896,
+      "destination_start_hex": "0x0380",
+      "evidence": "$5A69-$5A79 copy loop",
+      "length": 97,
+      "length_hex": "0x0061",
+      "loaded_source_end_exclusive": 23569,
+      "loaded_source_end_exclusive_hex": "0x5c11",
+      "loaded_source_start": 23472,
+      "loaded_source_start_hex": "0x5bb0",
+      "meaning_level": "behavioral",
+      "name": "irq_workspace_and_handler",
+      "source_file_offset": 16048,
+      "source_file_offset_hex": "0x3eb0"
+    },
+    {
+      "destination_end_exclusive": 3328,
+      "destination_end_exclusive_hex": "0x0d00",
+      "destination_start": 1024,
+      "destination_start_hex": "0x0400",
+      "evidence": "$5989-$59B3 copy loop",
+      "length": 2304,
+      "length_hex": "0x0900",
+      "loaded_source_end_exclusive": 9728,
+      "loaded_source_end_exclusive_hex": "0x2600",
+      "loaded_source_start": 7424,
+      "loaded_source_start_hex": "0x1d00",
+      "meaning_level": "behavioral",
+      "name": "runtime_low",
+      "source_file_offset": 0,
+      "source_file_offset_hex": "0x0000"
+    },
+    {
+      "destination_end_exclusive": 17152,
+      "destination_end_exclusive_hex": "0x4300",
+      "destination_start": 3584,
+      "destination_start_hex": "0x0e00",
+      "evidence": "$59B4-$59DE copy loop",
+      "length": 13568,
+      "length_hex": "0x3500",
+      "loaded_source_end_exclusive": 23296,
+      "loaded_source_end_exclusive_hex": "0x5b00",
+      "loaded_source_start": 9728,
+      "loaded_source_start_hex": "0x2600",
+      "meaning_level": "behavioral",
+      "name": "runtime_high",
+      "source_file_offset": 2304,
+      "source_file_offset_hex": "0x0900"
+    }
+  ],
+  "synthetic_gaps": [
+    {
+      "end_exclusive": 1024,
+      "end_exclusive_hex": "0x0400",
+      "length": 31,
+      "meaning": "untouched/unknown RAM; zero bytes exist only in the transport container",
+      "start": 993,
+      "start_hex": "0x03e1"
+    },
+    {
+      "end_exclusive": 3584,
+      "end_exclusive_hex": "0x0e00",
+      "length": 256,
+      "meaning": "untouched/unknown RAM; zero bytes exist only in the transport container",
+      "start": 3328,
+      "start_hex": "0x0d00"
+    }
+  ],
+  "transient_segments": [
+    {
+      "destination_end_exclusive": 432,
+      "destination_end_exclusive_hex": "0x01b0",
+      "destination_start": 256,
+      "destination_start_hex": "0x0100",
+      "evidence": "$59DF-$59EC copy loop",
+      "length": 176,
+      "length_hex": "0x00b0",
+      "loaded_source_end_exclusive": 23472,
+      "loaded_source_end_exclusive_hex": "0x5bb0",
+      "loaded_source_start": 23296,
+      "loaded_source_start_hex": "0x5b00",
+      "meaning_level": "behavioral",
+      "name": "relocation_trampoline_stack_page",
+      "source_file_offset": 15872,
+      "source_file_offset_hex": "0x3e00"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "invisible_enemies",
+  "description": "Second-class entities are never drawn, so they cannot block or be seen, while walls stay solid.",
+  "evidence": [
+    "$23BF xor_draw_lift_or_hazard is the only routine that draws the lift/moth-hazard class, tail-jumping to the XOR renderer with the pointer from $51/$52",
+    "update_one_lift_or_hazard and update_lift_and_hazard_group call it once before and once after each move, which with an XOR renderer erases and redraws",
+    "obstruction is decided by what is present in the display, so an entity that is never drawn cannot block the player"
+  ],
+  "qualifications": [
+    "the entities still exist and still move: only their drawing is suppressed, so anything that reads their coordinates rather than the display still sees them",
+    "walls and floors are untouched and remain solid",
+    "if any entity was already drawn before this takes effect it will never be erased, because erasing is the same call"
+  ],
+  "patches": [
+    { "name": "never_draw_entities", "runtime_address": "23C7", "expect": "a2 0c", "write": "60 0c" },
+    { "name": "pause_on_f2", "runtime_address": "26B5", "expect": "a2 96", "write": "a2 8d" },
+    { "name": "resume_on_f3", "runtime_address": "26BC", "expect": "a2 a6", "write": "a2 8c" }
+  ]
+}

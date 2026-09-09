@@ -1,0 +1,27 @@
+{
+  "name": "fly_in_every_room",
+  "description": "The jet boots work in every room, not only rooms carrying the triangle symbol.",
+  "evidence": [
+    "$2685 loads $A6 and branches past both thrust polls when it is zero, so $A6 is the jet boot enable: with it clear, neither INKEY $B7 nor INKEY $97 is read and $0E never gains upward velocity",
+    "$1B98 draw_and_initialise_room clears $A6 at $1BAA, in a run of stores sharing the LDA #$00 at $1BA4, so every room starts with the boots disabled",
+    "$167A writes LDA #$01 into $A6 while a particular cell is drawn, taken 13 times against 110 for that cell handler in the traces, which is the room granting flight as its symbol is painted",
+    "the player reports flying in rooms showing a triangle symbol, 1,0 and 2,0, and not in 3,0 or 3,1, which matches a flag granted by drawing one specific cell",
+    "the traces bear the split out: the BEQ at $2687 was taken 765 times against 2086 fall-throughs, so the boots were disabled for a quarter of the polls already recorded",
+    "$2685 is the only reader: the apparent BIT $A6 at $3111 is the last byte of the JSR $244E operand at $310F, not an instruction",
+    "the thrust keys are INKEY -73 and -105, which are matrix row 4 column 8 and row 6 column 8, the BBC : and / keys; the title screen names them * and ? because those are the shifted legends"
+  ],
+  "qualifications": [
+    "LDA #$01 replaces LDA $A6 rather than the store at $1BAA, because that store shares its zero with ten others in the same run and cannot be retargeted in place",
+    "A is not read after the branch - $2689 loads X immediately - and LDA #$01 leaves Z clear, so the branch is never taken and nothing downstream sees a different accumulator",
+    "$A6 is left doing its real job: it is still cleared per room and still set by the symbol, so anything else that comes to depend on it is unaffected. Only the poll ignores it",
+    "flight in a room the designer did not intend it in can reach places the room was not built for; this is a deliberate cheat, not a bug fix"
+  ],
+  "patches": [
+    {
+      "name": "thrust_poll_ignores_room_flag",
+      "runtime_address": "2685",
+      "expect": "a5 a6",
+      "write": "a9 01"
+    }
+  ]
+}

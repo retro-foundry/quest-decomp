@@ -1,0 +1,96 @@
+{
+  "name": "room_4_1_card",
+  "description": "Start in room 4,1 - 4 across, 1 down carrying the access card, resting at character row 19, taking no damage, able to fly in every room.",
+  "evidence": [
+    "set_room_data_pointer builds the room cell pointer as $37D0 plus the level base at $72/$73 plus the sector times five, and $72/$73 is a copy of $70/$71",
+    "the level transitions maintain that base: $1CC7 adds $78 going down and $1CB5 subtracts $78 going up, so the base is the level times $78",
+    "$3200 already writes $8F, $90 and $70/$71 together from four immediates, and its own values of 4, 3 and $01E0 satisfy that relation exactly, since 4 times $78 is $01E0",
+    "initialise_new_game writes $90, $8F, $A0, $70 and $71 at $0BD1 through $0BDE, fourteen bytes, using one LDA #$00 for the last four",
+    "$0BDF immediately loads a fresh constant and no branch reads the flags, so what the patch leaves in A and P after $0BDE does not matter",
+    "$0C29 through $0C3C is the start point: it writes $7460 to both $36/$37 and $38/$39, $1C to $35 and $B0 to $2C, and $7460 is exactly $3000 plus 27 times $280 plus $1C times 8, so the pointer is character row 27 at column unit $1C and $35 is that same column",
+    "$2C is the vertical position in eighths of a row from row 5: enter_room_above rebuilds the pointer as $35 times 8 plus $7D80, which is row 31, and writes $2C = $D0, and $D0 over 8 plus 5 is 31; the stock start point's $B0 gives 27, the row its pointer encodes, so the same formula fits both",
+    "$28B0 reads $2C rather than the display pointer to decide the player has reached the ceiling, taking enter_room_above when $2C over 2 is under 9",
+    "the only other constant writers of $35 are the edge transitions, $2AD1 with $00 and $2AE8 with $4C, and neither writes a vertical, so room entry keeps the height from the previous room and no per-room start point is stored",
+    "the access card is item code $32 and the Key is $2C: sampling $0C and $0D across the played_access_card replay shows the slots taking 44 and 50 decimal, and a captured frame labels each",
+    "draw_two_item_slots reads $0C,X and uses the value directly as a graphic index, so a slot holds the item code itself",
+    "the damage routine has two lifted entries, $2B88 and $2B8F, so the later one is the one to patch; LDA #$01 replaces DEC $3B because NOP sets no flags and the guarding BNE then reads stale ones",
+    "$2685 loads $A6 and branches past both thrust polls when it is zero; $1BAA clears $A6 for every room and $167A sets it while one particular cell is drawn, so the boots are granted by a room's symbol"
+  ],
+  "qualifications": [
+    "patching only $8F and $90 without the pointer produces corrupt rooms above level 0, which is what an earlier attempt did",
+    "an earlier version patched only $0BD1 through $0BD8 and left the $A0, $70 and $71 stores running on whatever A the call returned, so it produced a correct room only for row 0, and with an item in A it drew an empty room",
+    "$3200 normally jumps into the room draw rather than returning; its jump is replaced with an RTS so it can be called, which changes that routine for any other caller, though no trace has ever entered it",
+    "the stock start point is open floor only in the opening room; carrying it into another room can place the player inside a wall or over a cavern, which is why the start point is chosen per room",
+    "the start point has to be a place the player rests on, not a height to fall from: a long fall tunnels through thin terrain, which is how the first attempt left the Music Room within a second",
+    "find_start_point.py reads the floor out of the drawn screen, which is the right authority because terrain collision is display based at $290B, but it only sees the room as first drawn, so a floor that a moving platform provides is not among its answers",
+    "an earlier version moved the display pointer and $35 but left $2C at the stock $B0, so the game believed the player was eight rows lower than they were drawn and the room-above transition could never fire",
+    "coordinates are across then down, matching how the rooms are named in conversation: across is $90 and down is $8F",
+    "across-first is confirmed by the Music Room, which is three along and one down from the opening room and appears at $90 = 4, $8F = 1; the row-first reading put a room of pits there instead",
+    "the level shown on a room sign is the down index plus one, so down 0 displays as Level 1",
+    "flying in a room the designer did not intend it in can reach places the room was not built for; see the fly_in_every_room variant for the full reasoning"
+  ],
+  "patches": [
+    {
+      "name": "teleport_row",
+      "runtime_address": "3200",
+      "expect": "a9 04",
+      "write": "a9 01"
+    },
+    {
+      "name": "teleport_column",
+      "runtime_address": "3204",
+      "expect": "a9 03",
+      "write": "a9 04"
+    },
+    {
+      "name": "teleport_base_low",
+      "runtime_address": "3208",
+      "expect": "a9 e0",
+      "write": "a9 78"
+    },
+    {
+      "name": "teleport_base_high",
+      "runtime_address": "320C",
+      "expect": "a9 01",
+      "write": "a9 00"
+    },
+    {
+      "name": "teleport_returns",
+      "runtime_address": "3210",
+      "expect": "4c 06 12",
+      "write": "60 ea ea"
+    },
+    {
+      "name": "start_calls_teleport",
+      "runtime_address": "0BD1",
+      "expect": "a9 01 85 90 a9 00 85 8f 85 a0 85 70 85 71",
+      "write": "20 00 32 a9 32 85 0c a9 00 85 a0 ea ea ea",
+      "parameter": "item_code",
+      "parameter_offset": 4
+    },
+    {
+      "name": "start_point",
+      "runtime_address": "0C29",
+      "expect": "a9 60 85 36 85 38 a9 74 85 37 85 39 a9 1c 85 35 a9 b0 85 2c",
+      "write": "a9 80 85 36 85 38 a9 61 85 37 85 39 a9 40 85 35 a9 70 85 2c"
+    },
+    {
+      "name": "no_energy_loss",
+      "runtime_address": "2B8F",
+      "expect": "c6 3b",
+      "write": "a9 01"
+    },
+    {
+      "name": "death_flag_never_set",
+      "runtime_address": "2B93",
+      "expect": "a9 01",
+      "write": "a9 00"
+    },
+    {
+      "name": "thrust_poll_ignores_room_flag",
+      "runtime_address": "2685",
+      "expect": "a5 a6",
+      "write": "a9 01"
+    }
+  ]
+}

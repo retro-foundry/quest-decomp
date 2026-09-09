@@ -1,0 +1,28 @@
+{
+  "name": "unpause_fix",
+  "description": "Make the paused game resumable by polling a key that exists.",
+  "evidence": [
+    "$26B5 reads INKEY -106, the BBC COPY key that beebjit maps to End, and only if it is down falls into the busy-wait at $26BC",
+    "$26BC reads INKEY -90 and loops until it reports pressed, so that key is the only way out of the pause",
+    "every confirmed INKEY number in this game fits N-1 = row*16 + col, which places -90 at column 9 row 5",
+    "column 9 of a BBC Model B keyboard carries only the four cursor keys and COPY, at rows 1, 2, 3, 7 and 6, so row 5 is not connected to any key and INKEY -90 can never report pressed",
+    "two recorded sessions confirm it: $26BC spun 643,444 and 92,436 times while $26C3, the instruction after the loop, never executed once"
+  ],
+  "qualifications": [
+    "the matrix formula is derived from ten confirmed values rather than from a datasheet, and the claim that column 9 carries only five keys is from knowledge of the Model B keyboard rather than measured here; both would have to be wrong for the original to be resumable",
+    "this changes original behaviour rather than restoring intended behaviour: what the author meant the resume key to be is unknown, because $A6 polls a matrix position with no key wired to it",
+    "the replacement is BBC f3, INKEY -116, reached from PC F3; its matrix position of row 7 column 3 sits consecutively with f1 and f2, which is what a function key row should look like",
+    "on some laptops a function key needs Fn held, which beebjit's own KEYS file notes",
+    "an earlier test appeared to show f3 failing, but that trace ended at cycle 200,000,000 while the session could run to 630,000,000, so a later resume would have been invisible to it. The player reports seeing it work"
+  ],
+  "patches": [
+    {
+      "name": "resumable_pause",
+      "runtime_address": "26BC",
+      "expect": "a2 a6",
+      "write": "a2 8c",
+      "parameter": "resume_inkey_operand",
+      "parameter_offset": 1
+    }
+  ]
+}

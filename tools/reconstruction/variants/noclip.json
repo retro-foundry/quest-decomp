@@ -1,0 +1,20 @@
+{
+  "name": "noclip",
+  "description": "Nothing in the display blocks the player: walk through walls, enemies and everything else.",
+  "evidence": [
+    "$290B scan_display_column_for_blocking_byte reads (display_pointer),Y and reports carry set for any byte that is neither zero nor $C0, so obstruction is decided by what is drawn rather than by object coordinates",
+    "both movement routines call it before committing a step, and only a carry-clear return reaches the step itself",
+    "entities are XOR-drawn into the same display the scan reads, which is why an enemy blocks the player exactly as a wall does and why disabling the collision action at $2B88 removed the damage but not the obstruction",
+    "the routine already ends CLC then RTS at $292D, so returning that immediately is the answer it gives for a clear column"
+  ],
+  "qualifications": [
+    "this removes every obstruction, not just enemies: the scan cannot distinguish an enemy pixel from a wall pixel, so walls, floors and ledges stop blocking too",
+    "gravity still applies, so the player will fall through floors unless the jet boots are held",
+    "the marker scans that read the same display for other purposes are untouched, so doors and items still respond"
+  ],
+  "patches": [
+    { "name": "nothing_blocks", "runtime_address": "290B", "expect": "a2 00", "write": "18 60" },
+    { "name": "pause_on_f2", "runtime_address": "26B5", "expect": "a2 96", "write": "a2 8d" },
+    { "name": "resume_on_f3", "runtime_address": "26BC", "expect": "a2 a6", "write": "a2 8c" }
+  ]
+}

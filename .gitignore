@@ -6,3 +6,5 @@
 *.code-workspace
 .vs/
 .vscode/
+__pycache__/
+*.pyc

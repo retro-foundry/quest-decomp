@@ -1,0 +1,32 @@
+{
+  "name": "sector_e_level_1",
+  "description": "Start the player in sector E level 1 instead of the default starting room.",
+  "evidence": [
+    "$0BC8 is the game start initialiser: it writes $01 to the primary reference at $90 and $00 to the secondary reference at $8F before the first room is drawn",
+    "$90 is the horizontal room index: enter_room_to_the_right increments it through the $1211 vector and enter_room_to_the_left decrements it through $120C",
+    "$8F is the vertical room index: enter_room_above decrements it through the $1203 vector, so $8F counts downwards from the top and $00 is the topmost level",
+    "the title program states that sector A is at the extreme left and sector H at the extreme right, so the sector letter is a linear function of $90"
+  ],
+  "qualifications": [
+    "the mapping from $90 to a sector letter is not proved from the bytes; start_sector is determined by reading the location sign the game draws",
+    "$0BC8 has no runtime evidence in any committed trace because it runs before every traced window begins"
+  ],
+  "patches": [
+    {
+      "name": "start_room",
+      "runtime_address": "0BD1",
+      "expect": "a9 01 85 90",
+      "write": "a9 05 85 90",
+      "parameter": "start_sector",
+      "parameter_offset": 1
+    },
+    {
+      "name": "start_level",
+      "runtime_address": "0BD5",
+      "expect": "a9 00 85 8f",
+      "write": "a9 00 85 8f",
+      "parameter": "start_level",
+      "parameter_offset": 1
+    }
+  ]
+}

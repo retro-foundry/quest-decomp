@@ -46,6 +46,29 @@ to be exactly `$3F20` bytes with SHA-256
 That digest is the byte-exact authority established by the reverse-engineering
 project, so validation needs no copyrighted original media.
 
+## Optional gameplay variants
+
+The variant definitions and every tool referenced by the source comments are
+included in this repository. Build first, then create a modified payload with:
+
+```powershell
+python tools/reconstruction/apply_variant.py --variant invisible_enemies
+```
+
+This writes `build/reconstruction/QUEST1-invisible_enemies`. It does not modify
+the byte-exact build. To create an SSD, supply your own Quest disc image:
+
+```powershell
+python tools/reconstruction/apply_variant.py --variant invisible_enemies `
+  --base-disc C:\path\to\Disc037-Quest.ssd
+```
+
+Generate a start-room definition with
+`tools/reconstruction/make_start_room_variant.py`. The optional
+`tools/runtime_trace/find_start_point.py` helper requires a locally installed
+BeebJIT executable under `build/emulators`; it is not required to build,
+validate, generate, or apply variants.
+
 ## Layout and provenance
 
 The DFS payload loads at `$1D00`, executes at `$5C11`, and internally relocates
@@ -54,10 +77,10 @@ substantial code and data. The source preserves those addresses and uses
 `source_bbc/reconstruction.json` records the evidence level and original address
 range for each reconstructed routine and data block.
 
-Some source comments cite evidence artifacts and optional variant tools from
-the larger private analysis workspace. Those citations document how names and
-behavior were established; none of those files is a build or validation
-dependency of this standalone repository.
+Source comments may cite evidence artifacts from the larger analysis workspace.
+Those citations document how names and behavior were established and are not a
+build or validation dependency. Referenced variant and start-position scripts,
+however, are present here under `tools/`.
 
 The original game and its assets remain the property of their respective
 copyright holders. No original disk image is included here.
