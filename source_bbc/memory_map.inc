@@ -7,6 +7,76 @@
 ; ---------------------------------------------------------------------------
 ; Proven Quest state in zero page
 ; ---------------------------------------------------------------------------
+; Canonical names for bytes reused as scratch/state by several unrelated
+; routines. More specific aliases below document roles where dataflow proves
+; one; source operands use these shared names when no single role is universal.
+shared_workspace_00 = &0000
+shared_workspace_01 = &0001
+shared_workspace_02 = &0002
+shared_workspace_03 = &0003
+shared_workspace_04 = &0004
+shared_workspace_05 = &0005
+shared_workspace_09 = &0009
+shared_workspace_0a = &000A
+shared_workspace_0b = &000B
+shared_workspace_0f = &000F
+shared_workspace_13 = &0013
+shared_workspace_14 = &0014
+shared_workspace_15 = &0015
+shared_workspace_16 = &0016
+shared_workspace_20 = &0020
+shared_workspace_21 = &0021
+shared_workspace_22 = &0022
+shared_workspace_23 = &0023
+shared_workspace_28 = &0028
+shared_workspace_29 = &0029
+shared_workspace_2d = &002D
+shared_workspace_2e = &002E
+shared_workspace_2f = &002F
+shared_workspace_30 = &0030
+shared_workspace_31 = &0031
+shared_workspace_32 = &0032
+shared_workspace_33 = &0033
+shared_workspace_34 = &0034
+shared_workspace_3a = &003A
+shared_workspace_3b = &003B
+shared_workspace_47 = &0047
+shared_workspace_48 = &0048
+shared_workspace_49 = &0049
+shared_workspace_4a = &004A
+shared_workspace_4b = &004B
+shared_workspace_4c = &004C
+shared_workspace_4e = &004E
+shared_workspace_59 = &0059
+shared_workspace_5a = &005A
+shared_workspace_5b = &005B
+shared_workspace_5c = &005C
+shared_workspace_63 = &0063
+shared_workspace_66 = &0066
+shared_workspace_68 = &0068
+shared_workspace_6a = &006A
+shared_workspace_6d = &006D
+shared_workspace_6e = &006E
+shared_workspace_70 = &0070
+shared_workspace_71 = &0071
+shared_workspace_72 = &0072
+shared_workspace_73 = &0073
+shared_workspace_74 = &0074
+shared_workspace_75 = &0075
+shared_workspace_79 = &0079
+shared_workspace_7e = &007E
+shared_workspace_7f = &007F
+shared_workspace_80 = &0080
+shared_workspace_88 = &0088
+shared_workspace_89 = &0089
+shared_workspace_8c = &008C
+shared_workspace_9b = &009B
+shared_workspace_9c = &009C
+shared_workspace_9e = &009E
+shared_workspace_9f = &009F
+shared_workspace_a2 = &00A2
+shared_workspace_a3 = &00A3
+shared_workspace_a5 = &00A5
 item_slot_first                 = &000C ; measured: holds a carried item's code; $2C is the Key and $32 the access card, both read off a captured status bar
 item_slot_second                = &000D ; port-contract: second carried-item code tested alongside item_slot_first
 player_vertical_velocity        = &000E ; behavioral: jet boots add the step, gravity subtracts it, vertical movement consumes it
