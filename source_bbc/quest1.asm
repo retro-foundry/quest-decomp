@@ -6093,10 +6093,10 @@ ORG draw_two_item_slots
 ; draws its two-record item graphic; an empty slot draws one blank row. Y is
 ; preserved across the whole walk. convert_item_code_to_index is the embedded
 ; code-to-record-index entry.
-; The two slots are compared against by $213C and $342A, and the title program
-; states that carried objects are shown at the top-right of the screen with a
-; description. The source-owned pickup routine now proves that matching codes
-; are placed in this array before this renderer is entered.
+; test_item_code_matches_either_slot and room_moving_object_test_required_item
+; both consume this same pair of slots. The title program states that carried
+; objects are shown at the top-right with a description, and the source-owned
+; pickup routine proves that matching codes enter this array before rendering.
 .draw_two_item_slots_source
     STA graphic_source_pointer_low
     LDA #ITEM_GRAPHIC_POINTER_HIGH_CLEAR
@@ -7706,9 +7706,10 @@ CLEAR draw_room_sign_or_collect_password_source, draw_room_sign_or_collect_passw
 
 ORG test_display_pointer_in_xor_draw_window
 
-; Return carry clear exactly when the little-endian
-; display pointer at $7C/$7D is in $4180-$7FFF. The high-byte path used by all
-; 485 committed no-input calls exits at the first full display page; the $41 low-byte boundary
+; Return carry clear exactly when display_pointer is within the XOR draw window,
+; from room_render_display_start through the byte before
+; QUEST_DISPLAY_END_EXCLUSIVE. The high-byte path used by all committed no-input
+; calls exits at XOR_DRAW_WINDOW_FIRST_FULL_PAGE; the partial first-page boundary
 ; and carry-set rejection paths are byte-proven but not trace-observed.
 .test_display_pointer_in_xor_draw_window_source
     LDA display_pointer_high
@@ -7739,10 +7740,10 @@ CLEAR test_display_pointer_in_xor_draw_window_source, test_display_pointer_in_xo
 
 ORG enter_submit_osword_07_sound_block
 
-; Runtime $32C0-$32C4 is one JMP thunk followed by two mutable packed-BCD data
-; bytes. Ghidra's linear sweep decoded the initial $45,$10 as EOR $10, but no
-; trace executes them and the source-owned BCD routine reads, writes and prints
-; them as separate counter bytes.
+; One JMP thunk followed by the mutable bcd_counter_low and bcd_counter_high
+; bytes. A linear sweep can misdecode their initial values as an instruction,
+; but no trace executes them and the source-owned BCD routine reads, writes, and
+; prints them independently.
 .enter_submit_osword_07_sound_block_source
     JMP submit_osword_07_sound_block
 
@@ -7906,7 +7907,7 @@ CLEAR ghost_countdown_steering_update_source, ghost_countdown_steering_update_so
 
 ORG handle_matching_ghost
 
-; A mismatch returns through the preceding $3034 RTS. A
+; A mismatch returns through ghost_reference_mismatch_return. A
 ; match copies the indexed horizontal value to candidate_horizontal_position,
 ; converts the even vertical offset to the collision coordinate, selects the
 ; ghost's tall overlap extent, and tail-enters the player/candidate guard.
@@ -7936,11 +7937,11 @@ CLEAR handle_matching_ghost_source, handle_matching_ghost_source_end
 
 ORG set_ghost_steps_toward_player
 
-; the first body range of Ghidra function $304F. Matching
-; secondary fields set the signed ghost vertical step from the player/pair
-; half-offset comparison. Matching primary fields set a signed horizontal step. Control then
-; enters the separately sourced mode block at $3083/$3085/$3088. The external
-; $307F entry tail-jumps to the sourced horizontal value/pointer step.
+; Matching secondary fields set the signed ghost vertical step from the
+; player/pair half-offset comparison. Matching primary fields set a signed
+; horizontal step. Control then enters apply_ghost_player_axis_mode, whose
+; alternate entry points finish the same mode-dependent update. The preceding
+; external tail enters the sourced horizontal value/pointer step.
 .set_ghost_steps_toward_player_source
     LDA reference_pair_secondary_value
     CMP cross_room_robot_ghost_secondary_field,X
