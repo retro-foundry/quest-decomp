@@ -10511,7 +10511,30 @@ CLEAR item_label_table_padding_source, item_label_table_padding_source_end
 ORG music_tune_sequence
 ; twelve-note sequence required by the music puzzle.
 .music_tune_sequence_source
-    EQUB &44, &3C, &34, &44, &3C, &34, &50, &48, &44, &50, &48, &44
+.music_tune_note_0
+    EQUB &44
+.music_tune_note_1
+    EQUB &3C
+.music_tune_note_2
+    EQUB &34
+.music_tune_note_3
+    EQUB &44
+.music_tune_note_4
+    EQUB &3C
+.music_tune_note_5
+    EQUB &34
+.music_tune_note_6
+    EQUB &50
+.music_tune_note_7
+    EQUB &48
+.music_tune_note_8
+    EQUB &44
+.music_tune_note_9
+    EQUB &50
+.music_tune_note_10
+    EQUB &48
+.music_tune_note_11
+    EQUB &44
 .music_tune_sequence_source_end
 ASSERT music_tune_sequence_source_end-music_tune_sequence_source = MUSIC_TUNE_NOTE_COUNT
 ASSERT music_tune_sequence_source = music_tune_sequence
@@ -10613,8 +10636,38 @@ CLEAR music_note_pitch_table_source, music_note_pitch_table_source_end
 ORG startup_room_sequence_table
 ; sixteen packed secondary/primary startup-room references.
 .startup_room_sequence_table_source
-    EQUB &86, &31, &14, &05, &96, &42, &35, &73
-    EQUB &17, &54, &90, &53, &61, &45, &60, &01
+.startup_room_sequence_0_reference
+    EQUB &86
+.startup_room_sequence_1_reference
+    EQUB &31
+.startup_room_sequence_2_reference
+    EQUB &14
+.startup_room_sequence_3_reference
+    EQUB &05
+.startup_room_sequence_4_reference
+    EQUB &96
+.startup_room_sequence_5_reference
+    EQUB &42
+.startup_room_sequence_6_reference
+    EQUB &35
+.startup_room_sequence_7_reference
+    EQUB &73
+.startup_room_sequence_8_reference
+    EQUB &17
+.startup_room_sequence_9_reference
+    EQUB &54
+.startup_room_sequence_10_reference
+    EQUB &90
+.startup_room_sequence_11_reference
+    EQUB &53
+.startup_room_sequence_12_reference
+    EQUB &61
+.startup_room_sequence_13_reference
+    EQUB &45
+.startup_room_sequence_14_reference
+    EQUB &60
+.startup_room_sequence_15_reference
+    EQUB &01
 .startup_room_sequence_table_source_end
 ASSERT startup_room_sequence_table_source = startup_room_sequence_table
 ASSERT startup_room_sequence_table_source_end = unreachable_runtime_low_tail_jsr
