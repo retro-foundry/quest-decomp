@@ -299,10 +299,10 @@ ORG &9000
 .caterpillar_direction_frame_3
     EQUB &11, &22, &07, &6F, &69, &0F, &01, &07, &CC, &06, &6F, &6F, &6F, &06, &00, &00
     EQUB &00, &06, &6F, &6F, &6F, &07, &00, &00, &00, &00, &00, &00, &0E, &6F, &6F, &06
-.unidentified_flying_creature_frame_0
+.bat_wings_raised_frame
     EQUB &0C, &86, &C3, &61, &30, &10, &00, &00, &88, &44, &22, &0F, &6F, &87, &E3, &22
     EQUB &11, &22, &44, &0F, &6F, &1E, &4C, &44, &03, &16, &3C, &68, &C0, &80, &00, &00
-.unidentified_flying_creature_frame_1
+.bat_wings_lowered_frame
     EQUB &00, &00, &00, &03, &34, &70, &00, &00, &22, &22, &22, &0F, &6F, &87, &23, &22
     EQUB &44, &44, &44, &0F, &6F, &1E, &4C, &44, &00, &00, &00, &0E, &E1, &F0, &00, &00
 .moth_and_hazard_frame_0
@@ -2678,7 +2678,7 @@ ORG initialise_room_entity_from_table
 ;
 ; $1221 selects the four-byte graphic descriptor copied from $1FDF. The three
 ; selected graphic pairs and their rooms are
-;   unidentified flying form B5 D0 A1 G2 E3 D6
+;   bat                       B5 D0 A1 G2 E3 D6
 ;   small bouncing robot      C3 F1 C1 B3 B6 E2 A2 C7
 ;   moth/hazard               C5 E5 F4 E4 H7 D7
 ; See analysis/room_map.md for the rooms alongside what the account says of
@@ -11635,7 +11635,7 @@ ORG enemy_graphic_descriptor_table
 ; Four decoded graphic pairs selected by room-entity type at $1FB9. The fourth
 ; jellyfish pair is present but no six-byte room record selects it.
 .enemy_graphic_descriptor_table_source
-    EQUW &0480, &04A0 ; unidentified_flying_creature_frame_0/1
+    EQUW &0480, &04A0 ; bat_wings_raised/lowered_frame
     EQUW &0640, &0660 ; small_bouncing_robot_frame_0/1
     EQUW &04C0, &04E0 ; moth_and_hazard_frame_0/1
     EQUW &0620, &0600 ; jellyfish_frame_0/1 (unselected here)

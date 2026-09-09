@@ -114,7 +114,7 @@ saved_effect_display_pointer_low  = &1243 ; dataflow: low byte of the display po
 saved_effect_display_pointer_high = &1244 ; dataflow: high byte paired with saved_effect_display_pointer_low, including the proved page carry
 room_effect_state_block           = &1245 ; structural: six mutable effect/entity bytes initialised with the room and consumed by tick/update code
 indexed_xor_graphic_pointer_table = &0B5F ; behavioral: four active roaming/effect graphic pointers populated for the room
-enemy_graphic_descriptor          = &0B67 ; behavioral: selected unidentified-flying-creature, small-bouncing-robot, moth/hazard or jellyfish frame pair
+enemy_graphic_descriptor          = &0B67 ; behavioral: selected bat, small-bouncing-robot, moth/hazard or jellyfish frame pair
 lift_and_hazard_graphic_descriptor = &0B6B ; behavioral: selected pair of lift/hazard sprite-frame pointers
 unused_graphic_frame_pointer_words = &0B6F ; structural: small-bouncing-robot frame 0/1 and ghost-frame 0/3 pointers below every proved runtime selector index
 player_graphic_frame_pointer_table = &0B77 ; behavioral: two upper-plus-middle and four lower player part pointers selected by X=$18-$22
@@ -268,7 +268,7 @@ draw_item_graphic_pair          = &1E29 ; behavioral: draws the two-record graph
 show_golden_dragon_ending       = &1E3F ; behavioral: prints the inline Golden Dragon message and sets the main-loop exit flag
 initialise_indexed_xor_graphics_for_room = &1E6C ; behavioral: scans the room-specific XOR-graphic table and initialises four indexed instances
 initialise_room_entity_from_table = &1F2F ; behavioral: unpacks a six-byte record at $0A00, the enemy table, into the whole entity state; the renderer that reads the four fields it writes, $3532, was shown by play to draw the enemy robots, and $1221 is the enemy type
-enemy_graphic_descriptor_table    = &1FDF ; behavioral: unidentified-flying-creature, small-bouncing-robot, moth/hazard and unselected jellyfish frame pairs
+enemy_graphic_descriptor_table    = &1FDF ; behavioral: bat, small-bouncing-robot, moth/hazard and unselected jellyfish frame pairs
 initialise_second_room_entity_from_table = &1FEF ; behavioral: the five-byte-record counterpart, reading $0A96, the lift and hazard table; the $1249 it writes decides which of the two a room gets, and only A4, B2 and B6 get a platform
 lift_and_hazard_graphic_descriptor_table = &2082 ; behavioral: lift/hazard class selects one of two sprite-frame pointer pairs
 match_packed_record_against_references = &208A ; behavioral: matches a two-byte packed record against $8F and $90
