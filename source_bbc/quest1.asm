@@ -6575,21 +6575,19 @@ ORG draw_column_sensitive_room_patterns
 
 
 ORG draw_bordered_horizontal_bar_row
-; Runtime $1437-$14D8. A contiguous room-cell entry cluster for types $07,
-; $08, $0A-$0C and $14. The $1437 entry chooses bordered-row selector $12.
-; The $143E/$1443/$1448/$14A0 entries store interaction selector $FF/$28/$2A
-; or zero, then share a column-sensitive motif: outer columns draw the $04/$03
-; pair, middle columns frame either blanks or selector $25, and column seven
-; can draw the stored selector between blank and $04/$03 pairs. The $14A5
-; entry draws a centred $10/$11 or mirrored $50/$51 slope pair in columns four
-; and five and delegates other columns to the adjacent pattern handler.
+; Runtime $1437-$14D8. Draw bordered bars, key-selected column motifs and the
+; centred patterned-slope pair. The motif handlers save either no item, one of
+; the two key codes, or COLUMN_MOTIF_OUTER_ONLY. Outer columns draw alternating
+; edge pairs; middle columns frame the selected two-tile motif with blanks; the
+; final column uses alternating end caps. The slope handler owns columns four
+; and five and delegates all others to draw_column_sensitive_room_patterns.
 .draw_bordered_horizontal_bar_row_source
     LDX #GRAPHIC_HORIZONTAL_BAR
     STX bordered_row_interior_graphic
     JMP draw_bordered_row_with_selected_interior
 
 .draw_ff_state_column_motif_source
-    LDY #&FF
+    LDY #COLUMN_MOTIF_OUTER_ONLY
     JMP store_column_motif_selector
 .draw_first_key_column_motif_source
     LDY #ITEM_CODE_KEY_1
@@ -6599,24 +6597,24 @@ ORG draw_bordered_horizontal_bar_row
 
 .store_column_motif_selector
     STY saved_interaction_item_code
-    CMP #&02
+    CMP #COLUMN_MOTIF_LEFT_OUTER_END
     BPL select_column_motif_middle_or_right
 .draw_outer_04_03_pair_row
     JMP draw_eight_04_03_tiles
 
 .select_column_motif_middle_or_right
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ draw_column_motif_last_column
-    CMP #&02
+    CMP #COLUMN_MOTIF_LEFT_OUTER_END
     BNE select_column_motif_middle_columns
     JSR save_display_pointer_and_cell_reference
 
 .select_column_motif_middle_columns
-    CMP #&06
+    CMP #COLUMN_MOTIF_MIDDLE_END
     BPL draw_outer_04_03_pair_row
-    LDX #&03
+    LDX #COLUMN_MOTIF_SIDE_BLANK_TILES
     JSR draw_blank_tile_run
-    CPY #&00
+    CPY #COLUMN_MOTIF_NONE
     BEQ draw_blank_column_motif_pair
     LDA #GRAPHIC_UNIFORM_PATTERN
     JMP draw_column_motif_pair
@@ -6625,15 +6623,15 @@ ORG draw_bordered_horizontal_bar_row
 .draw_column_motif_pair
     JSR copy_16_byte_graphic_to_display
     JSR copy_16_byte_graphic_to_display
-    LDX #&03
+    LDX #COLUMN_MOTIF_SIDE_BLANK_TILES
     JMP draw_blank_tile_run
 
 .draw_column_motif_last_column
-    CPY #&FF
+    CPY #COLUMN_MOTIF_OUTER_ONLY
     BEQ draw_outer_04_03_pair_row
-    CPY #&00
+    CPY #COLUMN_MOTIF_NONE
     BEQ draw_outer_04_03_pair_row
-    LDX #&02
+    LDX #COLUMN_MOTIF_LAST_COLUMN_EDGE_TILES
     JSR draw_04_03_alternating_run
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
@@ -6642,36 +6640,36 @@ ORG draw_bordered_horizontal_bar_row
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_BLANK
     JSR copy_16_byte_graphic_to_display
-    LDX #&02
+    LDX #COLUMN_MOTIF_LAST_COLUMN_EDGE_TILES
     JMP draw_04_03_alternating_run
 
 .draw_blank_state_column_motif_source
-    LDY #&00
+    LDY #COLUMN_MOTIF_NONE
     JMP store_column_motif_selector
 
 .draw_centered_slope_pair_by_column_source
-    CMP #&04
+    CMP #CENTERED_SLOPE_FIRST_COLUMN
     BMI draw_column_sensitive_room_patterns
-    CMP #&06
+    CMP #CENTERED_SLOPE_END_COLUMN
     BPL draw_column_sensitive_room_patterns
-    LDX #&03
+    LDX #COLUMN_MOTIF_SIDE_BLANK_TILES
     JSR draw_blank_tile_run
     LDA room_graphics_column
-    CMP #&04
+    CMP #CENTERED_SLOPE_FIRST_COLUMN
     BNE draw_mirrored_centered_slope_pair
     JSR save_display_pointer_and_cell_reference
     LDA #GRAPHIC_PATTERNED_SLOPE_A
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_PATTERNED_SLOPE_B
     JSR copy_16_byte_graphic_to_display
-    LDX #&03
+    LDX #COLUMN_MOTIF_SIDE_BLANK_TILES
     JMP draw_blank_tile_run
 .draw_mirrored_centered_slope_pair
     LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_PATTERNED_SLOPE_A
     JSR copy_16_byte_graphic_to_display
     LDA #GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_PATTERNED_SLOPE_B
     JSR copy_16_byte_graphic_to_display
-    LDX #&03
+    LDX #COLUMN_MOTIF_SIDE_BLANK_TILES
     JMP draw_blank_tile_run
 .draw_bordered_horizontal_bar_row_source_end
 
