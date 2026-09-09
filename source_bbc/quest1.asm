@@ -5180,7 +5180,7 @@ ORG process_terminal_password_markers
 ASSERT process_terminal_password_markers_source = process_terminal_password_markers
 ASSERT terminal_password_list_cursor_source = &217A
 ASSERT process_terminal_password_markers_source_end = terminal_interaction_text_stream
-COPYBLOCK process_terminal_password_markers_source, process_terminal_password_markers_source_end, &3946
+COPYBLOCK process_terminal_password_markers_source, process_terminal_password_markers_source_end, process_terminal_password_markers+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2146-$2195 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $3946-$3995.
@@ -5214,7 +5214,7 @@ ORG terminal_interaction_text_stream
 .terminal_interaction_text_stream_source_end
 ASSERT terminal_interaction_text_stream_source = terminal_interaction_text_stream
 ASSERT terminal_interaction_text_stream_source_end = terminal_interaction_text_padding
-COPYBLOCK terminal_interaction_text_stream_source, terminal_interaction_text_stream_source_end, &3996
+COPYBLOCK terminal_interaction_text_stream_source, terminal_interaction_text_stream_source_end, terminal_interaction_text_stream+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR terminal_interaction_text_stream_source, terminal_interaction_text_stream_source_end
 
 ORG terminal_interaction_text_padding
@@ -5224,7 +5224,7 @@ ORG terminal_interaction_text_padding
 .terminal_interaction_text_padding_source_end
 ASSERT terminal_interaction_text_padding_source = terminal_interaction_text_padding
 ASSERT terminal_interaction_text_padding_source_end = enter_main_gameplay_loop
-COPYBLOCK terminal_interaction_text_padding_source, terminal_interaction_text_padding_source_end, &39ED
+COPYBLOCK terminal_interaction_text_padding_source, terminal_interaction_text_padding_source_end, terminal_interaction_text_padding+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR terminal_interaction_text_padding_source, terminal_interaction_text_padding_source_end
 
 
@@ -5273,7 +5273,7 @@ ORG check_player_candidate_bounds_overlap
 
 ASSERT check_player_candidate_bounds_overlap_source = check_player_candidate_bounds_overlap
 ASSERT check_player_candidate_bounds_overlap_source_end = apply_player_damage_and_redraw_energy
-COPYBLOCK check_player_candidate_bounds_overlap_source, check_player_candidate_bounds_overlap_source_end, &4357
+COPYBLOCK check_player_candidate_bounds_overlap_source, check_player_candidate_bounds_overlap_source_end, check_player_candidate_bounds_overlap+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2B57-$2B87 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4357-$4387.
@@ -5307,7 +5307,7 @@ ORG apply_player_damage_and_redraw_energy
 ASSERT apply_player_damage_and_redraw_energy_source = apply_player_damage_and_redraw_energy
 ASSERT decrement_player_energy_and_redraw_source = decrement_player_energy_and_redraw
 ASSERT apply_player_damage_and_redraw_energy_source_end = &2B9C
-COPYBLOCK apply_player_damage_and_redraw_energy_source, apply_player_damage_and_redraw_energy_source_end, &4388
+COPYBLOCK apply_player_damage_and_redraw_energy_source, apply_player_damage_and_redraw_energy_source_end, apply_player_damage_and_redraw_energy+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2B88-$2B9B overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4388-$439B.
@@ -5349,7 +5349,7 @@ ASSERT draw_blank_tile_run_source = tile_run_shared_rts
 ASSERT draw_eight_blank_tiles_entry = draw_eight_blank_tiles
 ASSERT draw_blank_tile_run_entry = draw_blank_tile_run
 ASSERT draw_blank_tile_run_source_end = &1371
-COPYBLOCK draw_blank_tile_run_source, draw_blank_tile_run_source_end, &2B61
+COPYBLOCK draw_blank_tile_run_source, draw_blank_tile_run_source_end, tile_run_shared_rts+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1361-$1370 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2B61-$2B70.
@@ -5384,7 +5384,7 @@ ORG test_marker_below_player
 
 ASSERT test_marker_below_player_source = test_marker_below_player
 ASSERT test_marker_below_player_source_end = &29B9
-COPYBLOCK test_marker_below_player_source, test_marker_below_player_source_end, &41A2
+COPYBLOCK test_marker_below_player_source, test_marker_below_player_source_end, test_marker_below_player+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $29A2-$29B8 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $41A2-$41B8.
@@ -5437,7 +5437,7 @@ ORG xor_draw_player_two_parts
 
 ASSERT xor_draw_player_two_parts_source = xor_draw_player_two_parts
 ASSERT xor_draw_player_two_parts_source_end = &2ABA
-COPYBLOCK xor_draw_player_two_parts_source, xor_draw_player_two_parts_source_end, &4289
+COPYBLOCK xor_draw_player_two_parts_source, xor_draw_player_two_parts_source_end, xor_draw_player_two_parts+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2A89-$2AB9 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4289-$42B9.
@@ -5482,7 +5482,7 @@ ORG draw_room_row_cells
 
 ASSERT draw_room_row_cells_source = draw_room_row_cells
 ASSERT draw_room_row_cells_source_end = &12A8
-COPYBLOCK draw_room_row_cells_source, draw_room_row_cells_source_end, &2A84
+COPYBLOCK draw_room_row_cells_source, draw_room_row_cells_source_end, draw_room_row_cells+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1284-$12A7 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2A84-$2AA7.
@@ -5516,7 +5516,7 @@ ORG enter_room_to_the_right
 
 ASSERT enter_room_to_the_right_source = enter_room_to_the_right
 ASSERT enter_room_to_the_right_source_end = &2AE6
-COPYBLOCK enter_room_to_the_right_source, enter_room_to_the_right_source_end, &42CF
+COPYBLOCK enter_room_to_the_right_source, enter_room_to_the_right_source_end, enter_room_to_the_right+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2ACF-$2AE5 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $42CF-$42E5.
@@ -5549,7 +5549,7 @@ ORG capture_player_state_for_redraw
 
 ASSERT capture_player_state_for_redraw_source = capture_player_state_for_redraw
 ASSERT capture_player_state_for_redraw_source_end = &2ACF
-COPYBLOCK capture_player_state_for_redraw_source, capture_player_state_for_redraw_source_end, &42BA
+COPYBLOCK capture_player_state_for_redraw_source, capture_player_state_for_redraw_source_end, capture_player_state_for_redraw+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2ABA-$2ACE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $42BA-$42CE.
@@ -5713,7 +5713,7 @@ ORG enter_room_to_the_left
 
 ASSERT enter_room_to_the_left_source = enter_room_to_the_left
 ASSERT enter_room_to_the_left_source_end = &2AFD
-COPYBLOCK enter_room_to_the_left_source, enter_room_to_the_left_source_end, &42E6
+COPYBLOCK enter_room_to_the_left_source, enter_room_to_the_left_source_end, enter_room_to_the_left+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2AE6-$2AFC overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $42E6-$42FC.
@@ -5755,7 +5755,7 @@ ORG enter_room_below
 
 ASSERT enter_room_below_source = enter_room_below
 ASSERT enter_room_below_source_end = &2B24
-COPYBLOCK enter_room_below_source, enter_room_below_source_end, &42FD
+COPYBLOCK enter_room_below_source, enter_room_below_source_end, enter_room_below+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2AFD-$2B23 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $42FD-$4323.
@@ -5798,7 +5798,7 @@ ORG enter_room_above
 
 ASSERT enter_room_above_source = enter_room_above
 ASSERT enter_room_above_source_end = &2B57
-COPYBLOCK enter_room_above_source, enter_room_above_source_end, &4337
+COPYBLOCK enter_room_above_source, enter_room_above_source_end, enter_room_above+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2B37-$2B56 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4337-$4356.
@@ -5831,7 +5831,7 @@ ORG set_player_pointer_from_horizontal_position
 
 ASSERT set_player_pointer_from_horizontal_position_source = set_player_pointer_from_horizontal_position
 ASSERT set_player_pointer_from_horizontal_position_source_end = &2B37
-COPYBLOCK set_player_pointer_from_horizontal_position_source, set_player_pointer_from_horizontal_position_source_end, &4324
+COPYBLOCK set_player_pointer_from_horizontal_position_source, set_player_pointer_from_horizontal_position_source_end, set_player_pointer_from_horizontal_position+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2B24-$2B36 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4324-$4336.
@@ -5940,7 +5940,7 @@ ORG set_display_pointer_three_rows_below_player_cell
 
 ASSERT set_display_pointer_three_rows_below_player_cell_source = set_display_pointer_three_rows_below_player_cell
 ASSERT set_display_pointer_three_rows_below_player_cell_source_end = &2C0E
-COPYBLOCK set_display_pointer_three_rows_below_player_cell_source, set_display_pointer_three_rows_below_player_cell_source_end, &43FE
+COPYBLOCK set_display_pointer_three_rows_below_player_cell_source, set_display_pointer_three_rows_below_player_cell_source_end, set_display_pointer_three_rows_below_player_cell+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2BFE-$2C0D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $43FE-$440D.
@@ -6034,7 +6034,7 @@ ORG pick_up_item_below_player
 
 ASSERT pick_up_item_below_player_source = pick_up_item_below_player
 ASSERT pick_up_item_below_player_source_end = &2C6E
-COPYBLOCK pick_up_item_below_player_source, pick_up_item_below_player_source_end, &440E
+COPYBLOCK pick_up_item_below_player_source, pick_up_item_below_player_source_end, pick_up_item_below_player+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2C0E-$2C6D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $440E-$446D.
@@ -6082,7 +6082,7 @@ ORG draw_curved_bowl_after_alternating_prefix
 
 draw_fixed_pair_tile_run_source_end = &1437
 ASSERT draw_fixed_pair_tile_run_source = draw_fixed_pair_tile_run
-COPYBLOCK draw_fixed_pair_tile_run_source, draw_fixed_pair_tile_run_source_end, &2BD4
+COPYBLOCK draw_fixed_pair_tile_run_source, draw_fixed_pair_tile_run_source_end, draw_fixed_pair_tile_run+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_fixed_pair_tile_run_source, draw_fixed_pair_tile_run_source_end
 
 
@@ -6179,7 +6179,7 @@ ORG draw_two_item_slots
 
 ASSERT draw_two_item_slots_source = draw_two_item_slots
 ASSERT draw_two_item_slots_source_end = &2CE6
-COPYBLOCK draw_two_item_slots_source, draw_two_item_slots_source_end, &446E
+COPYBLOCK draw_two_item_slots_source, draw_two_item_slots_source_end, draw_two_item_slots+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2C6E-$2CE5 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $446E-$44E5.
@@ -6291,7 +6291,7 @@ ORG drop_carried_item
 
 ASSERT drop_carried_item_source = drop_carried_item
 ASSERT drop_carried_item_source_end = &2D81
-COPYBLOCK drop_carried_item_source, drop_carried_item_source_end, &44E6
+COPYBLOCK drop_carried_item_source, drop_carried_item_source_end, drop_carried_item+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2CE6-$2D80 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $44E6-$4580.
@@ -6473,7 +6473,7 @@ ASSERT draw_second_key_column_motif_source = draw_second_key_column_motif
 ASSERT draw_blank_state_column_motif_source = draw_blank_state_column_motif
 ASSERT draw_centered_slope_pair_by_column_source = draw_centered_slope_pair_by_column
 ASSERT draw_bordered_horizontal_bar_row_source_end = save_display_pointer_and_cell_reference
-COPYBLOCK draw_bordered_horizontal_bar_row_source, draw_bordered_horizontal_bar_row_source_end, &2C37
+COPYBLOCK draw_bordered_horizontal_bar_row_source, draw_bordered_horizontal_bar_row_source_end, draw_bordered_horizontal_bar_row+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR draw_bordered_horizontal_bar_row_source, draw_bordered_horizontal_bar_row_source_end
 
 
@@ -6505,7 +6505,7 @@ ORG draw_table_selected_four_tile_half_row
 
 ASSERT draw_table_selected_four_tile_half_row_source = draw_table_selected_four_tile_half_row
 ASSERT draw_table_selected_four_tile_half_row_source_end = &156E
-COPYBLOCK draw_table_selected_four_tile_half_row_source, draw_table_selected_four_tile_half_row_source_end, &2D50
+COPYBLOCK draw_table_selected_four_tile_half_row_source, draw_table_selected_four_tile_half_row_source_end, draw_table_selected_four_tile_half_row+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $1550-$156D overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $2D50-$2D6D.
@@ -6522,7 +6522,7 @@ ORG right_half_four_tile_graphic_sequences
 .right_half_four_tile_graphic_sequences_source_end
 ASSERT right_half_four_tile_graphic_sequences_source = right_half_four_tile_graphic_sequences
 ASSERT right_half_four_tile_graphic_sequences_source_end = draw_graphic_selector_sequence
-COPYBLOCK right_half_four_tile_graphic_sequences_source, right_half_four_tile_graphic_sequences_source_end, &2D6E
+COPYBLOCK right_half_four_tile_graphic_sequences_source, right_half_four_tile_graphic_sequences_source_end, right_half_four_tile_graphic_sequences+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR right_half_four_tile_graphic_sequences_source, right_half_four_tile_graphic_sequences_source_end
 
 
@@ -6549,7 +6549,7 @@ ORG save_display_pointer_and_cell_reference
 
 save_display_pointer_and_cell_reference_source_end = &1550
 ASSERT save_display_pointer_and_cell_reference_source = save_display_pointer_and_cell_reference
-COPYBLOCK save_display_pointer_and_cell_reference_source, save_display_pointer_and_cell_reference_source_end, &2CD9
+COPYBLOCK save_display_pointer_and_cell_reference_source, save_display_pointer_and_cell_reference_source_end, save_display_pointer_and_cell_reference+HIGH_RUNTIME_TO_LOADED_DELTA
 CLEAR save_display_pointer_and_cell_reference_source, save_display_pointer_and_cell_reference_source_end
 
 
@@ -6586,7 +6586,7 @@ ORG consume_matching_item_from_slots
 
 ASSERT consume_matching_item_from_slots_source = consume_matching_item_from_slots
 ASSERT consume_matching_item_from_slots_source_end = &2D98
-COPYBLOCK consume_matching_item_from_slots_source, consume_matching_item_from_slots_source_end, &4581
+COPYBLOCK consume_matching_item_from_slots_source, consume_matching_item_from_slots_source_end, consume_matching_item_from_slots+HIGH_RUNTIME_TO_LOADED_DELTA
 
 ; Runtime $2D81-$2D97 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4581-$4597.
