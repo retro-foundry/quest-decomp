@@ -86,7 +86,7 @@ item_names = (
     "golden_dragon__also_salt_item_code",
     "worm_item",
     "access_card_item",
-    "herring_item",
+    "fish_facing_left__also_herring_item_graphic",
     "mouse_facing_left__also_item_graphic",
     "cheese_item",
     "cross_item",

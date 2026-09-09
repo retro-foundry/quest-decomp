@@ -25,7 +25,7 @@
       "record_size": 32,
       "evidence": [
         "all known pointers into this range are $20-aligned and the XOR renderer consumes them as multi-row Mode 1 source graphics",
-        "xor_graphic_into_display proves eight scanlines with source bytes N+0/N+8/N+16/N+24; decoding in that exact order identifies four caterpillar directions at $0400-$0460, bat frames at $0480/$04A0, a moth at $04C0/$04E0, a jellyfish at $0600/$0620, small bouncing robots at $0640/$0660, a right-facing mouse at $0680 and a fish at $06A0; the indexed pointer set pairs that mouse with its left-facing/item graphic at $1160",
+        "xor_graphic_into_display proves eight scanlines with source bytes N+0/N+8/N+16/N+24; decoding in that exact order identifies four caterpillar directions at $0400-$0460, bat frames at $0480/$04A0, a moth at $04C0/$04E0, a jellyfish at $0600/$0620, small bouncing robots at $0640/$0660, a right-facing mouse at $0680 and a right-facing fish at $06A0; the indexed pointer sets pair them with the left-facing/item mouse at $1160 and left-facing/herring fish at $1140",
         "enemy_graphic_descriptor_table selects the bat, small-bouncing-robot, moth/hazard and jellyfish pairs; the six-byte room records do not select the jellyfish pair",
         "the decoded bank identifies all $0500-$05E0 records as player artwork and all $06C0-$0760 records as ghost artwork; xor_draw_player_two_parts draws two rows from $0500 or $0560, and xor_graphic_into_display advances the source by $20 for row two, proving $0520/$0580 are the corresponding player middle records",
         "graphic identity and runtime reachability are recorded separately: decoded player and ghost frames retain those identities even where no pointer-table selector has yet been proved"
