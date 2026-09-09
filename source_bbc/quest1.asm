@@ -5314,7 +5314,7 @@ ORG test_item_code_matches_either_slot
 
 ; Compare the item code in A with the two carried-item
 ; slots. Return carry set through the local exit on either match; if neither
-; matches, branch to the enclosing routine's shared CLC/RTS at $212A.
+; matches, branch to the enclosing routine's shared carry-clear return.
 .test_item_code_matches_either_slot_source
     CMP item_slot_first
     BEQ item_code_matches_slot
@@ -5336,23 +5336,22 @@ CLEAR test_item_code_matches_either_slot_source, test_item_code_matches_either_s
 
 ORG process_terminal_password_markers
 
-; Continue the terminal stream's $FD password marker and
-; $FC collected-password-list marker. A collected current password sets the
-; result, applies its indexed activation record, and index 5 additionally
-; writes $0A to $397C. An absent password jumps to the denial text at offset
-; $42. The list path begins scanning eight flags and printing inline strings;
-; its next code block and all inline bytes begin at $217A and remain original.
+; Continue the terminal stream's password-input and collected-password-list
+; commands. A collected current password sets the result and applies its indexed
+; activation record. TERMINAL_SPECIAL_PASSWORD_INDEX additionally changes the
+; named F3 room cell to ROOM_CELL_BORDERED_BAR. An absent password selects the
+; denial message. The list path scans all password flags and prints their text.
 .process_terminal_password_markers_source
     TXA
     PHA
     LDX reference_pair_primary_value
     LDA collected_password_flags,X
-    CMP #&01
+    CMP #PASSWORD_COLLECTED
     BNE terminal_password_denied
     STA terminal_interaction_result
-    CPX #&05
+    CPX #TERMINAL_SPECIAL_PASSWORD_INDEX
     BNE activate_terminal_password
-    LDA #&0A
+    LDA #ROOM_CELL_BORDERED_BAR
     STA room_F3_row_1_cell_3
 
 .activate_terminal_password
@@ -5364,14 +5363,14 @@ ORG process_terminal_password_markers
 
 .terminal_password_denied
     PLA
-    LDX #&42
+    LDX #TERMINAL_PASSWORD_DENIED_STREAM_OFFSET
     JMP terminal_stream_next_byte
 
 .terminal_password_list_marker
     TXA
     PHA
-    LDX #&00
-    LDA #&15
+    LDX #TERMINAL_PASSWORD_LIST_FIRST_INDEX
+    LDA #TERMINAL_PASSWORD_LIST_FIRST_CURSOR_ROW
     STA terminal_password_cursor_row
 
 .test_next_terminal_password_flag
@@ -5379,7 +5378,7 @@ ORG process_terminal_password_markers
     BEQ terminal_password_flag_absent_step
     JSR print_inline_vdu_stream
 .terminal_password_list_cursor_source
-    EQUB VDU_TEXT_AT, &1B, &00
+    EQUB VDU_TEXT_AT, TERMINAL_PASSWORD_LIST_CURSOR_X, TERMINAL_PASSWORD_LIST_CURSOR_Y_FROM_STATE
     LDA terminal_password_cursor_row
     JSR OSWRCH
     INC terminal_password_cursor_row
@@ -5389,7 +5388,7 @@ ORG process_terminal_password_markers
     PLA
     TAX
     INX
-    CPX #&08
+    CPX #PASSWORD_COUNT
     BNE test_next_terminal_password_flag
     PLA
     TAX
@@ -5408,29 +5407,29 @@ CLEAR process_terminal_password_markers_source, process_terminal_password_marker
 
 ORG terminal_interaction_text_stream
 ; Control-marked stream consumed by run_terminal_interaction:
-; zero ends the stream; $FC inserts the collected-password list; $FD tests the
-; current password; $FE selects the granted continuation; $FF skips to the next
-; message alternative.
+; TERMINAL_STREAM_NUL_CHARACTER is emitted through OSWRCH like ordinary text.
+; The named high-byte commands insert the collected-password list, test the
+; current password, select the granted continuation, or end the interaction.
 .terminal_interaction_text_stream_source
-    EQUB VDU_TEXT_AT, &07, &13
+    EQUB VDU_TEXT_AT, TERMINAL_TITLE_CURSOR_X, TERMINAL_TITLE_CURSOR_Y
     EQUS "TERMINAL "
-    EQUB &00
-    EQUB VDU_TEXT_AT, &1A, &11
+    EQUB TERMINAL_STREAM_NUL_CHARACTER
+    EQUB VDU_TEXT_AT, TERMINAL_PASSWORDS_CURSOR_X, TERMINAL_PASSWORDS_CURSOR_Y
     EQUS "PASSWORDS"
-    EQUB &FC
-    EQUB VDU_TEXT_AT, &05, &17
+    EQUB TERMINAL_STREAM_PASSWORD_LIST
+    EQUB VDU_TEXT_AT, TERMINAL_ACCESS_CURSOR_X, TERMINAL_ACCESS_CURSOR_Y
     EQUS "ACCESS "
-    EQUB &FE
+    EQUB TERMINAL_STREAM_ACCESS_CARD_TEST
     EQUS "GRANTED"
-    EQUB &FD
-    EQUB VDU_TEXT_AT, &07, &1A
+    EQUB TERMINAL_STREAM_PASSWORD_INPUT
+    EQUB VDU_TEXT_AT, TERMINAL_ACTIVATED_CURSOR_X, TERMINAL_ACTIVATED_CURSOR_Y
     EQUS "ACTIVATED"
-    EQUB &FF
+    EQUB TERMINAL_STREAM_END
     EQUS " DENIED"
-    EQUB &FF
-    EQUB VDU_TEXT_AT, &04, &1A
+    EQUB TERMINAL_STREAM_END
+    EQUB VDU_TEXT_AT, TERMINAL_INVALID_CURSOR_X, TERMINAL_INVALID_CURSOR_Y
     EQUS "INVALID PASSWORD"
-    EQUB &FF, &00
+    EQUB TERMINAL_STREAM_END, TERMINAL_STREAM_NUL_CHARACTER
 .terminal_interaction_text_stream_source_end
 ASSERT terminal_interaction_text_stream_source = terminal_interaction_text_stream
 ASSERT terminal_interaction_text_stream_source_end = terminal_interaction_text_padding
@@ -5438,9 +5437,9 @@ COPYBLOCK terminal_interaction_text_stream_source, terminal_interaction_text_str
 CLEAR terminal_interaction_text_stream_source, terminal_interaction_text_stream_source_end
 
 ORG terminal_interaction_text_padding
-; Nineteen zero bytes align the following game-entry vector page at $2200.
+; Alignment bytes place the following game-entry vectors on their required page.
 .terminal_interaction_text_padding_source
-    SKIP &13
+    SKIP TERMINAL_TEXT_PADDING_BYTES
 .terminal_interaction_text_padding_source_end
 ASSERT terminal_interaction_text_padding_source = terminal_interaction_text_padding
 ASSERT terminal_interaction_text_padding_source_end = enter_main_gameplay_loop
