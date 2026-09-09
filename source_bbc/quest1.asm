@@ -2188,7 +2188,7 @@ ORG update_and_draw_room_enemies
 
 .apply_indexed_entity_to_player_and_draw
     JSR load_indexed_pair_output_from_y_tables
-    LDA #&10
+    LDA #ROOM_ENEMY_COLLISION_EXTENT
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
     JSR draw_room_enemy_with_xor_graphic
@@ -2213,13 +2213,13 @@ ORG copy_graphic_byte_to_display
 ; Inputs: Y selects a byte through graphic_source_pointer; $75 selects an
 ; optional EOR #$90 transform; display_pointer names the current destination.
 ; Output: one byte is stored, display_pointer advances by one with its page
-; carry preserved, and the caller's Y is restored through scratch byte $31.
+; carry preserved, and the caller's Y source index is restored before return.
 ; The initial-render trace exercises 11,434 entries and 44 page carries. Its
 ; observed calls all take the $75 = 0 path; the EOR path is statically proven
 ; by the original instruction stream but is not exercised by a committed run.
 .copy_graphic_byte_to_display_source
     LDA (graphic_source_pointer_low),Y
-    STY shared_workspace_31
+    STY graphic_byte_saved_source_index
     LDY shared_workspace_75
     BEQ copy_graphic_byte_without_xor
     EOR #&90
@@ -2230,7 +2230,7 @@ ORG copy_graphic_byte_to_display
     BNE copy_graphic_byte_pointer_advanced
     INC display_pointer_high
 .copy_graphic_byte_pointer_advanced
-    LDY shared_workspace_31
+    LDY graphic_byte_saved_source_index
     RTS
 .copy_graphic_byte_to_display_source_end
 
@@ -3945,9 +3945,9 @@ ORG update_lift_or_hazard_by_class
 .update_lift_or_hazard_by_class_source
     TYA
     SEC
-    SBC #&08
+    SBC #LIFT_HAZARD_SLOT_GROUP_BASE_INDEX
     ASL A
-    STA shared_workspace_31
+    STA lift_hazard_scaled_slot_offset
     JSR reverse_lift_or_hazard_delta_at_limits
     LDA active_lift_or_hazard_class
     CMP #LIFT_OR_HAZARD_HAZARD
@@ -3957,7 +3957,7 @@ ORG update_lift_or_hazard_by_class
     STA indexed_pair_output_half_offset
     SEC
     LDA lift_or_hazard_horizontal_extent
-    SBC shared_workspace_31
+    SBC lift_hazard_scaled_slot_offset
     STA indexed_pair_output_value
     JSR check_player_candidate_bounds_overlap
     JMP step_entity
@@ -4270,11 +4270,11 @@ ORG walk_player_toward_target_position
 .walk_one_step_toward_target
     LDA player_walk_target_vertical_position
     LSR A
-    STA shared_workspace_31
+    STA player_walk_target_half_vertical_position
     LDX #&02
     LDA player_vertical_position
     LSR A
-    CMP shared_workspace_31
+    CMP player_walk_target_half_vertical_position
     CLC
     BEQ test_horizontal_difference
     BMI apply_vertical_step
@@ -4355,10 +4355,10 @@ ORG run_startup_room_sequence_until_space
 
 .select_next_startup_room
     LDA startup_room_sequence_table-1,Y
-    STA shared_workspace_31
+    STA startup_packed_room_reference
     AND #&0F
     STA reference_pair_primary_value
-    LDA shared_workspace_31
+    LDA startup_packed_room_reference
     LSR A
     LSR A
     LSR A
@@ -5161,10 +5161,10 @@ ORG scan_four_display_bytes_for_markers
 ; nonzero byte, including the post-damage path, marks the column occupied and
 ; returns carry set. A completed clear scan returns carry clear.
 .scan_four_display_bytes_for_markers_source
-    LDX #&04
+    LDX #DISPLAY_MARKER_SCAN_COUNT
     LDY #&00
     STY display_grid_column
-    STY shared_workspace_31
+    STY display_marker_deferred_damage_flag
     STY shared_workspace_79
     STY display_marker_scan_auxiliary_state
     JSR test_display_pointer_in_xor_draw_window
@@ -5200,7 +5200,7 @@ ORG scan_four_display_bytes_for_markers
     TAY
     DEX
     BNE scan_next_display_byte
-    LDA shared_workspace_31
+    LDA display_marker_deferred_damage_flag
     CLC
     BEQ return_via_292e
     JSR apply_player_damage_and_redraw_energy
@@ -5209,7 +5209,7 @@ ORG scan_four_display_bytes_for_markers
 
 .mark_0a_or_05_display_byte
     LDA #&01
-    STA shared_workspace_31
+    STA display_marker_deferred_damage_flag
     JMP advance_display_scan_offset
 .scan_four_display_bytes_for_markers_source_end
 
@@ -5667,7 +5667,7 @@ ORG draw_room_row_cells
 ; through the room data pointer, Y counting 0 to 4, and each is drawn by the
 ; cell dispatcher.
 ; Each cell byte is kept whole in $1225 for the dispatcher to examine, and its
-; low six bits are put in $31 as the record or character index. The tile pair
+; low six bits become room_cell_type_index for record/character dispatch. The tile pair
 ; selector is restored from $F8 after every cell, because the dispatcher may
 ; have advanced it.
 ; draw_and_initialise_room calls this once per cell position as it walks a room,
@@ -5683,7 +5683,7 @@ ORG draw_room_row_cells
     LDA (room_data_pointer_low),Y
     STA current_room_cell
     AND #ROOM_CELL_TYPE_MASK
-    STA shared_workspace_31
+    STA room_cell_type_index
     STY current_room_cell_offset
     JSR dispatch_room_cell
     LDA tile_pair_source_selector
@@ -5789,8 +5789,8 @@ ORG dispatch_room_cell
     JMP draw_character_row_as_tiles
 
 .dispatch_through_vector_table
-    ASL shared_workspace_31
-    LDX shared_workspace_31
+    ASL room_cell_type_index
+    LDX room_cell_type_index
     LDA room_cell_draw_dispatch_table+1,X
     PHA
     LDA room_cell_draw_dispatch_table,X
@@ -7327,8 +7327,8 @@ ORG draw_directional_indexed_pair_if_matching
     LDX #CROSS_ROOM_GHOST_FRAME_3_OFFSET
 
 .directional_indexed_pair_selector_ready
-    STX shared_workspace_31
-    LDA #&03
+    STX indexed_pair_graphic_pointer_offset
+    LDA #CROSS_ROOM_GHOST_CHARACTER_ROWS
     JMP configure_indexed_pair_draw_rows
 
 ASSERT P% = restore_indexed_pair_x_and_return_2ea7
@@ -7364,7 +7364,7 @@ ORG draw_indexed_pair_if_reference_matches
     LDX #CROSS_ROOM_ROBOT_FRAME_1_OFFSET
 
 .indexed_pair_draw_selector_ready
-    STX shared_workspace_31
+    STX indexed_pair_graphic_pointer_offset
     LDA #CROSS_ROOM_ROBOT_CHARACTER_ROWS
 
 .configure_indexed_pair_draw_rows
@@ -7385,7 +7385,7 @@ ORG draw_indexed_pair_if_reference_matches
 
 .indexed_pair_draw_state_ready
     PLA
-    LDX shared_workspace_31
+    LDX indexed_pair_graphic_pointer_offset
     JSR select_graphic_then_xor_draw
     PLA
     TAX
@@ -8137,10 +8137,10 @@ ORG set_indexed_pair_deltas_from_player_position
     BNE check_indexed_pair_horizontal_reference
     LDA indexed_pair_offset_field,X
     LSR A
-    STA shared_workspace_31
+    STA ghost_half_vertical_position
     LDA player_vertical_position
     LSR A
-    CMP shared_workspace_31
+    CMP ghost_half_vertical_position
     BPL set_indexed_pair_vertical_delta_positive
     LDA #CROSS_ROOM_GHOST_VERTICAL_STEP_UP
     JMP store_indexed_pair_vertical_delta
@@ -8374,24 +8374,24 @@ CLEAR consume_collected_icon_and_apply_effect_source, consume_collected_icon_and
 ORG run_horizontal_16_warp_sequence
 
 ; Runtime $31C8-$31EA. Return through the shared $3199 RTS unless the player
-; horizontal position is exactly $16. On a match, count X from $64 to zero;
-; each step preserves X in $31, XOR-draws the player, waits for two vertical
-; syncs through OSBYTE $13, and submits a channel-one sound whose pitch is X.
+; horizontal position is HORIZONTAL_WARP_TRIGGER_POSITION. On a match, count X
+; from HORIZONTAL_WARP_STEP_COUNT to zero; each step preserves X, XOR-draws the
+; player, waits for two vertical syncs, and submits a channel-one sound whose pitch is X.
 ; After all 100 steps, warp to room references 3/4 and tail-draw the player at
 ; the new room position.
 .run_horizontal_16_warp_sequence_source
     LDA player_horizontal_position
-    CMP #&16
+    CMP #HORIZONTAL_WARP_TRIGGER_POSITION
     BNE return_from_horizontal_16_warp_sequence
-    LDX #&64
+    LDX #HORIZONTAL_WARP_STEP_COUNT
 
 .horizontal_16_warp_next_step
-    STX inline_vdu_stream_pointer_low
+    STX warp_sequence_counter_saved
     JSR xor_draw_player_two_parts
-    LDA #&13
+    LDA #OSBYTE_WAIT_VSYNC
     JSR OSBYTE
     JSR OSBYTE
-    LDX inline_vdu_stream_pointer_low
+    LDX warp_sequence_counter_saved
     JSR submit_channel_one_sound_with_x_pitch
     DEX
     BNE horizontal_16_warp_next_step
@@ -9480,9 +9480,10 @@ CLEAR submit_sound_block_with_pitch_source, submit_sound_block_with_pitch_source
 ORG draw_character_row_as_tiles
 
 ; Runtime $1B23-$1B56. Render one scanline row of a MOS character
-; definition as eight tiles. The character code is bit 6 of $1225 plus $31 plus
-; $20, stored at the OSWORD $0A block; the call fills $7FF0-$7FF7 with the
-; eight definition rows. $09 selects the row, which is copied back over the
+; definition as eight tiles. The character code combines the cell's character
+; bit and room_cell_type_index, then adds MOS_CHARACTER_CODE_BIAS before the
+; OSWORD definition call fills character_definition_block with the eight rows.
+; The room column selects the row, which is copied back over the
 ; block's first byte and shifted left eight times. A clear bit draws one blank
 ; tile and a set bit draws one alternating-pair tile, so text and patterned
 ; detail reach the display through the same tile pipeline as the room itself.
@@ -9491,8 +9492,8 @@ ORG draw_character_row_as_tiles
     LDA current_room_cell
     AND #ROOM_CELL_MIRROR_FLAG
     CLC
-    ADC shared_workspace_31
-    ADC #&20
+    ADC room_cell_type_index
+    ADC #MOS_CHARACTER_CODE_BIAS
     STA character_definition_block
     LDX #LO(character_definition_block)
     LDY #HI(character_definition_block)
@@ -10168,11 +10169,11 @@ ORG reflect_indexed_entity_at_obstacles
 
 .prepare_indexed_pair_graphic_fields
     JSR load_indexed_pair_output_from_y_tables
-    LDA #&05
-    STA shared_workspace_31
-    LDA #&01
+    LDA #OBSTACLE_REFLECTION_HORIZONTAL_RANGE
+    STA candidate_range_horizontal_extent
+    LDA #OBSTACLE_REFLECTION_ABOVE_RANGE
     STA candidate_range_above_extent
-    LDA #&10
+    LDA #OBSTACLE_REFLECTION_BELOW_RANGE
     STA candidate_range_below_extent
     JMP enter_test_range_with_supplied_box
 .reflect_indexed_entity_at_obstacles_source_end
