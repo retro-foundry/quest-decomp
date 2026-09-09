@@ -10954,22 +10954,36 @@ COPYBLOCK room_and_item_graphic_records_source, room_and_item_graphic_records_so
 CLEAR room_and_item_graphic_records_source, room_and_item_graphic_records_source_end
 
 ORG room_tile_pair_sets
-; thirteen four-byte tile-pair sets selected by appearance.
+; Thirteen four-byte tile-pair sets selected by appearance index.
 .room_tile_pair_sets_source
+.appearance_0_tile_pair_set
     EQUB &D0, &D1, &91, &90
+.appearance_1_tile_pair_set
     EQUB &02, &01, &01, &02
+.appearance_2_tile_pair_set
     EQUB &05, &45, &45, &05
+.appearance_3_tile_pair_set
     EQUB &1A, &1B, &5B, &5A
+.appearance_4_tile_pair_set
     EQUB &4E, &4F, &0F, &0E
+.appearance_5_tile_pair_set
     EQUB &68, &20, &1E, &00
+.appearance_6_tile_pair_set
     EQUB &03, &04, &04, &03
+.appearance_7_tile_pair_set
     EQUB &C6, &DC, &86, &9C
+.appearance_8_tile_pair_set
     EQUB &1E, &20, &20, &1E
+.appearance_9_tile_pair_set
     EQUB &6A, &7A, &7A, &6A
+.appearance_10_tile_pair_set
     EQUB &9F, &97, &DF, &D7
+.appearance_11_tile_pair_set
     EQUB &07, &07, &07, &07
+.appearance_12_tile_pair_set
     EQUB &82, &81, &81, &82
 .room_tile_pair_sets_source_end
+ASSERT room_tile_pair_sets_source_end-room_tile_pair_sets_source = ROOM_TILE_PAIR_SET_COUNT*ROOM_TILE_PAIR_SET_BYTES
 ASSERT room_tile_pair_sets_source = room_tile_pair_sets
 ASSERT room_tile_pair_sets_source_end = draw_matching_records_from_table
 COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, room_tile_pair_sets+HIGH_RUNTIME_TO_LOADED_DELTA

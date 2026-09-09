@@ -878,6 +878,7 @@ PACKED_RECORD_PRIMARY_MASK      = &0F ; dataflow: low nibble of the second packe
 ROOM_APPEARANCE_PALETTE_MASK    = &0F ; behavioral: low nibble selects the lower-screen palette
 ROOM_APPEARANCE_TILE_OFFSET_MASK = &FC ; dataflow: shifted high nibble becomes a four-byte tile-pair-set offset
 ROOM_TILE_PAIR_SET_BYTES        = &04 ; structural: two primary and two alternate tile selectors per appearance
+ROOM_TILE_PAIR_SET_COUNT        = &0D ; structural: thirteen appearance-indexed tile-pair sets
 ROOM_TILE_PAIR_FIRST_BYTE_INDEX = &00 ; dataflow: copy a room tile-pair set from its first byte
 ENEMY_GRAPHIC_DESCRIPTOR_FIRST_BYTE_INDEX = &00 ; dataflow: copy a selected enemy frame pair from its first byte
 DISPLAY_SHIFT_CLEAR_BYTE        = &00 ; behavioral: blank the vacated leftmost display byte after shifting
