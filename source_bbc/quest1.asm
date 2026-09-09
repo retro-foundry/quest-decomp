@@ -1145,7 +1145,7 @@ ORG remove_last_icon_and_stamp_room_cell
     CLC
     ADC #LO(status_icon_row_base)
     STA display_pointer_low
-    LDA #&00
+    LDA #POINTER_HIGH_CARRY_BIAS
     ADC #HI(status_icon_row_base)
     STA display_pointer_high
     JSR draw_record_three_from_alternate_bank
@@ -4783,12 +4783,12 @@ ORG poll_controls_and_apply_gameplay_actions
 ; on the BBC Micro Model B, so the following clock-write call is retained as
 ; instruction-exact declared-unreachable code.
 .poll_controls_and_apply_gameplay_actions_source
-    LDA #&00
+    LDA #TRANSIENT_CONTROL_STATE_CLEAR
     STA player_jump_or_swim_requested
     LDX #INKEY_MOVE_LEFT
     JSR osbyte_81_inkey
     BCC control_poll_right
-    LDA #&FF
+    LDA #PLAYER_HORIZONTAL_INPUT_LEFT
     STA horizontal_input_delta
     STA horizontal_input_delta_copy
 
@@ -4796,7 +4796,7 @@ ORG poll_controls_and_apply_gameplay_actions
     LDX #INKEY_MOVE_RIGHT
     JSR osbyte_81_inkey
     BCC control_poll_stun_grenade
-    LDA #&01
+    LDA #PLAYER_HORIZONTAL_INPUT_RIGHT
     STA horizontal_input_delta
     STA horizontal_input_delta_copy
     JMP control_poll_thrust_if_enabled
@@ -4832,7 +4832,7 @@ ORG poll_controls_and_apply_gameplay_actions
     LDX #INKEY_JUMP_OR_SWIM
     JSR osbyte_81_inkey
     BCC control_poll_pause
-    LDA #&01
+    LDA #PLAYER_JUMP_SWIM_REQUESTED
     STA player_jump_or_swim_requested
     JMP control_apply_horizontal_movement
 
@@ -4911,28 +4911,28 @@ ORG poll_controls_and_apply_gameplay_actions
     LDX #INKEY_ESCAPE
     JSR osbyte_81_inkey
     BCC control_poll_sound_off
-    LDA #&01
+    LDA #MAIN_LOOP_EXIT_REQUESTED
     STA main_loop_exit_flag
 
 .control_poll_sound_off
     LDX #INKEY_SOUND_OFF
     JSR osbyte_81_inkey
     BCC control_poll_sound_on
-    LDA #&01
+    LDA #SOUND_DISABLED
     STA sound_disabled_flag
 
 .control_poll_sound_on
     LDX #INKEY_SOUND_ON
     JSR osbyte_81_inkey
     BCC control_poll_last_chance_chord
-    LDA #&00
+    LDA #SOUND_ENABLED
     STA sound_disabled_flag
 
 .control_poll_last_chance_chord
     LDX #INKEY_LAST_CHANCE_TRIGGER
     JSR osbyte_81_inkey
     BCC control_skip_redraw
-    LDY #&05
+    LDY #LAST_CHANCE_CHORD_LAST_INDEX
 
 .control_poll_next_chord_key
     TYA
@@ -4956,7 +4956,7 @@ ORG poll_controls_and_apply_gameplay_actions
     JSR wait_vsync_then_call_display_helpers
 
 .control_clear_transient_state
-    LDA #&00
+    LDA #TRANSIENT_CONTROL_STATE_CLEAR
     STA horizontal_input_delta
     STA display_grid_row
     STA player_ground_contact_flag
@@ -4979,29 +4979,29 @@ CLEAR poll_controls_and_apply_gameplay_actions_source, poll_controls_and_apply_g
 
 ORG scan_display_column_for_blocking_byte
 
-; Scan down a display-byte column for at most the count
-; in $41. Out-of-window pointers, zero bytes, and $C0 bytes advance without a
+; Scan down a display-byte column for at most xor_graphic_character_rows_remaining
+; bytes. Out-of-window pointers, zero bytes, and DISPLAY_MARKER_WATER advance without a
 ; hit. Another in-window nonzero byte returns carry set at its pointer. Each
 ; successful step follows the BBC interleaved display layout: increment within
-; an eight-scanline character cell, or add $0279 after scanline seven.
+; an eight-scanline character cell, or apply the named next-row adjustment.
 .scan_display_column_for_blocking_byte_source
-    LDX #&00
+    LDX #DISPLAY_SCAN_INITIAL_COUNT
 
 .scan_next_display_column_byte
     JSR test_display_pointer_in_xor_draw_window
     BCS advance_display_column_pointer
-    LDY #&00
+    LDY #DISPLAY_POINTER_FIRST_BYTE_OFFSET
     LDA (display_pointer_low),Y
     BEQ advance_display_column_pointer
-    CMP #&C0
+    CMP #DISPLAY_MARKER_WATER
     BEQ advance_display_column_pointer
     SEC
     RTS
 
 .advance_display_column_pointer
     LDA display_pointer_low
-    AND #&07
-    CMP #&07
+    AND #MODE1_SCANLINE_INDEX_MASK
+    CMP #MODE1_LAST_SCANLINE_INDEX
     BEQ advance_to_next_mode1_character_row
     INC display_pointer_low
 
@@ -5017,10 +5017,10 @@ ORG scan_display_column_for_blocking_byte
 .advance_to_next_mode1_character_row
     CLC
     LDA display_pointer_low
-    ADC #&79
+    ADC #MODE1_NEXT_CHARACTER_ROW_LOW_ADJUST
     STA display_pointer_low
     LDA display_pointer_high
-    ADC #&02
+    ADC #MODE1_NEXT_CHARACTER_ROW_HIGH_ADJUST
     STA display_pointer_high
     JMP finish_display_column_pointer_step
 .scan_display_column_for_blocking_byte_source_end
@@ -5037,19 +5037,20 @@ CLEAR scan_display_column_for_blocking_byte_source, scan_display_column_for_bloc
 ORG adjust_display_pointer_then_scan_markers
 
 ; If the display-pointer low byte is not eight-byte
-; aligned, decrement only that byte. Otherwise subtract $0279 from the full
+; aligned, decrement only that byte. Otherwise apply the reverse of the Mode 1
+; next-character-row adjustment to the full
 ; little-endian pointer. Both paths continue directly into the four-byte
-; marker scanner at $2957, preserving the outer caller's stack frame.
+; marker scanner, preserving the outer caller's stack frame.
 .adjust_display_pointer_then_scan_markers_source
     LDA display_pointer_low
-    AND #&07
+    AND #MODE1_SCANLINE_INDEX_MASK
     BNE decrement_display_pointer_low_before_scan
     LDA display_pointer_low
     SEC
-    SBC #&79
+    SBC #MODE1_NEXT_CHARACTER_ROW_LOW_ADJUST
     STA display_pointer_low
     LDA display_pointer_high
-    SBC #&02
+    SBC #MODE1_NEXT_CHARACTER_ROW_HIGH_ADJUST
     STA display_pointer_high
     JMP scan_four_display_bytes_for_markers
 
