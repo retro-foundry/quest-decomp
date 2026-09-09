@@ -106,25 +106,29 @@ ORG SPRITE_SOURCE_STAGING_ADDRESS
 .fish_facing_right_frame
     EQUB &08, &0C, &86, &0F, &4B, &86, &0C, &08, &01, &07, &0F, &0F, &0F, &0F, &07, &01
     EQUB &0E, &0F, &3C, &3C, &0F, &0C, &0F, &0E, &00, &08, &0C, &0E, &0F, &00, &0C, &00
-.ghost_frame_0
+.ghost_facing_right_upper_frame
     EQUB &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &00, &10, &72, &74, &F0
     EQUB &30, &60, &40, &C0, &80, &80, &80, &00, &C0, &20, &00, &0A, &00, &00, &20, &40
-.ghost_frame_1
+.ghost_facing_right_middle_frame
     EQUB &00, &10, &10, &30, &30, &72, &74, &70, &F1, &F2, &F0, &F8, &F0, &A0, &F8, &F0
     EQUB &F2, &F0, &F4, &F0, &E0, &10, &F0, &F0, &FA, &E0, &C3, &01, &80, &80, &80, &80
-.ghost_frame_2
+.ghost_facing_right_lower_frame
     EQUB &60, &80, &10, &10, &00, &30, &70, &C0, &F0, &F0, &F0, &B0, &70, &F0, &E0, &D0
     EQUB &F0, &E0, &D0, &D0, &B0, &60, &60, &E0, &80, &80, &80, &00, &00, &00, &00, &00
-.ghost_frame_3
+.ghost_facing_left_upper_frame
     EQUB &70, &80, &00, &0A, &00, &00, &80, &40, &80, &C0, &60, &20, &30, &30, &30, &00
     EQUB &00, &00, &00, &00, &80, &E0, &C0, &F0, &00, &00, &00, &00, &00, &00, &00, &00
-.ghost_frame_4
+.ghost_facing_left_middle_frame
     EQUB &72, &3C, &38, &00, &00, &00, &00, &00, &FA, &F0, &F0, &70, &B0, &C0, &F0, &F0
     EQUB &D0, &E0, &F0, &F0, &D0, &30, &F0, &F0, &00, &00, &80, &00, &C0, &C0, &E0, &E0
-.ghost_frame_5
+.ghost_facing_left_lower_frame
     EQUB &10, &10, &10, &00, &00, &00, &00, &00, &F0, &B0, &F0, &B0, &D0, &60, &70, &30
     EQUB &60, &70, &D0, &E0, &F0, &F0, &70, &B0, &60, &10, &80, &C0, &00, &E0, &E0, &30
 .player_enemy_and_lift_xor_sprite_frames_end
+ASSERT ghost_facing_right_middle_frame = ghost_facing_right_upper_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
+ASSERT ghost_facing_right_lower_frame = ghost_facing_right_middle_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
+ASSERT ghost_facing_left_middle_frame = ghost_facing_left_upper_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
+ASSERT ghost_facing_left_lower_frame = ghost_facing_left_middle_frame+XOR_GRAPHIC_SCANLINE_SPAN_BYTES
 ASSERT player_enemy_and_lift_xor_sprite_frames_end-player_enemy_and_lift_xor_sprite_frames_source = &0380
 
 ; Runtime $0800-$087F: four aligned Mode 1-shaped records after the embedded
@@ -7071,22 +7075,20 @@ CLEAR draw_room_flag_then_fixed_pair_row_source, draw_room_flag_then_fixed_pair_
 
 ORG draw_directional_ghost_if_reference_matches
 
-; Preserve the ghost selector twice for the shared
-; drawing tail, choose ghost graphic-pointer offset $14 for a non-negative
-; value delta or $16 for a negative one, and configure three character rows before entering the
-; common predicate-and-XOR path at $2EBC. The alternate updater at $3009 calls
-; this before and after changing each active pair, forming an erase/redraw pair.
-; $2EA7-$2EA9 is the shared mismatch exit: one saved selector is restored there
-; both for this entry and for draw_cross_room_robot_ghost_if_reference_matches.
+; Preserve the ghost selector twice for the shared drawing tail. A non-negative
+; horizontal delta selects the right-facing upper record; a negative delta
+; selects the left-facing upper record. The XOR renderer consumes that record
+; plus its adjacent middle and lower records. The alternate updater calls this
+; before and after changing each active ghost, forming an erase/redraw pair.
 .draw_directional_ghost_if_reference_matches_source
     TXA
     PHA
     PHA
     LDA cross_room_robot_ghost_value_delta_field,X
-    LDX #CROSS_ROOM_GHOST_FRAME_0_OFFSET
+    LDX #CROSS_ROOM_GHOST_FACING_RIGHT_OFFSET
     CMP #XOR_GRAPHIC_REPEAT_DISABLED
     BPL directional_ghost_selector_ready
-    LDX #CROSS_ROOM_GHOST_FRAME_3_OFFSET
+    LDX #CROSS_ROOM_GHOST_FACING_LEFT_OFFSET
 
 .directional_ghost_selector_ready
     STX cross_room_robot_ghost_graphic_pointer_offset
@@ -10850,7 +10852,7 @@ ORG cross_room_robot_ghost_frame_pointer_table
 ; updater used on levels 8 and 9 selects the two named ghost offsets.
 .cross_room_robot_ghost_frame_pointer_table_source
     EQUW runtime_small_bouncing_robot_frame_0, runtime_small_bouncing_robot_frame_1
-    EQUW runtime_ghost_frame_0, runtime_ghost_frame_3
+    EQUW runtime_ghost_facing_right_upper_frame, runtime_ghost_facing_left_upper_frame
 .cross_room_robot_ghost_frame_pointer_table_source_end
 ASSERT cross_room_robot_ghost_frame_pointer_table_source = cross_room_robot_ghost_frame_pointer_table
 
