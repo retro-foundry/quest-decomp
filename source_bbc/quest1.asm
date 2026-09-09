@@ -2691,9 +2691,9 @@ ORG initialise_room_enemy_from_table
 .initialise_room_enemy_from_table_source
     LDX #&00
     LDA #LO(room_enemy_record_table)
-    STA shared_workspace_13
+    STA packed_record_pointer_low
     LDA #HI(room_enemy_record_table)
-    STA shared_workspace_14
+    STA packed_record_pointer_high
 
 .test_next_entity_record
     TXA
@@ -2838,9 +2838,9 @@ ORG initialise_lifts_and_hazards_from_table
 ; differs.
 .initialise_lifts_and_hazards_from_table_source
     LDA #LO(lift_and_hazard_room_record_table)
-    STA shared_workspace_13
+    STA packed_record_pointer_low
     LDA #HI(lift_and_hazard_room_record_table)
-    STA shared_workspace_14
+    STA packed_record_pointer_high
     LDX #&00
 
 .test_next_lift_or_hazard_record
@@ -4739,7 +4739,7 @@ ORG move_player_down_by_velocity
 
 .test_landing_pattern
     JSR check_player_relative_display_pattern_15
-    LDA shared_workspace_13
+    LDA player_jump_or_swim_requested
     BEQ stop_fall
     LDA player_contact_or_damage_flag
     BNE stop_fall
@@ -4781,7 +4781,7 @@ ORG move_player_down_by_velocity
     RTS
 
 .force_velocity_on_marker
-    LDA shared_workspace_13
+    LDA player_jump_or_swim_requested
     BEQ move_player_down_by_velocity_branch_5
     LDA #&0A
     STA player_vertical_velocity
@@ -4807,7 +4807,7 @@ ORG poll_controls_and_apply_gameplay_actions
 ; instruction-exact declared-unreachable code.
 .poll_controls_and_apply_gameplay_actions_source
     LDA #&00
-    STA shared_workspace_13
+    STA player_jump_or_swim_requested
     LDX #INKEY_MOVE_LEFT
     JSR osbyte_81_inkey
     BCC control_poll_right
@@ -4856,7 +4856,7 @@ ORG poll_controls_and_apply_gameplay_actions
     JSR osbyte_81_inkey
     BCC control_poll_pause
     LDA #&01
-    STA shared_workspace_13
+    STA player_jump_or_swim_requested
     JMP control_apply_horizontal_movement
 
 .control_poll_pause
@@ -5648,7 +5648,7 @@ ORG xor_draw_player_two_parts
     LDX #PLAYER_LOWER_STEP_LEFT_POINTER_OFFSET
 
 .select_second_part_frame
-    LDA shared_workspace_14
+    LDA player_ground_contact_snapshot
     BEQ draw_second_player_part
     LDA player_horizontal_position_snapshot
     LSR A
@@ -5768,7 +5768,7 @@ ORG capture_player_state_for_redraw
     LDA horizontal_input_delta_copy
     STA player_horizontal_input_snapshot
     LDA player_ground_contact_flag
-    STA shared_workspace_14
+    STA player_ground_contact_snapshot
     LDA player_horizontal_position
     STA player_horizontal_position_snapshot
 .return_from_room_transition
@@ -9990,7 +9990,7 @@ ORG draw_and_initialise_room
     JSR OSBYTE
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
-    STA shared_workspace_13
+    STA player_jump_or_swim_requested
     STA shared_workspace_75
     LDA reference_pair_secondary_value
     CMP #&08
@@ -10229,9 +10229,9 @@ ORG draw_matching_records_from_table
 .draw_matching_records_from_table_source
     LDX #ITEM_GOAL_LAST_RECORD_INDEX
     LDA #LO(item_and_goal_record_table)
-    STA shared_workspace_13
+    STA packed_record_pointer_low
     LDA #HI(item_and_goal_record_table)
-    STA shared_workspace_14
+    STA packed_record_pointer_high
 
 .test_next_record
     TXA
@@ -10819,9 +10819,9 @@ ORG initialise_room_moving_objects
 .initialise_room_moving_objects_source
     LDX #&00
     LDA #LO(room_moving_object_record_table)
-    STA shared_workspace_13
+    STA packed_record_pointer_low
     LDA #HI(room_moving_object_record_table)
-    STA shared_workspace_14
+    STA packed_record_pointer_high
 
 .test_next_indexed_xor_record
     TXA
