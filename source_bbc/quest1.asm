@@ -1404,14 +1404,14 @@ ORG process_player_cell_interactions
     LDA #GRAPHIC_SOLID_FILL
     JSR display_pattern_test
     BCC test_pattern_1a_interaction
-    LDA shared_workspace_4e
-    CMP #&20
+    LDA room_interaction_code
+    CMP #ROOM_CELL_ELEPHANT_HOUSE_SIGN
     BNE test_pattern_16_type_21
     LDA #ITEM_CODE_MOUSE
     JMP consume_pattern_16_required_item
 
 .test_pattern_16_type_21
-    CMP #&21
+    CMP #ROOM_CELL_JOKE_SHOP_SIGN
     BNE test_pattern_1a_interaction
     LDA #ITEM_CODE_HERRING
 
@@ -1427,8 +1427,8 @@ ORG process_player_cell_interactions
     LDA #GRAPHIC_DIAGONAL_SLOPE_A
     JSR display_pattern_test
     BCC player_cell_interactions_rts
-    LDA shared_workspace_4e
-    CMP #&24
+    LDA room_interaction_code
+    CMP #ROOM_CELL_HYDROPONICS_SIGN
     BNE player_cell_interactions_rts
     JSR apply_player_damage_and_redraw_energy
     LDA special_item_3e_activation_flag
@@ -2281,7 +2281,7 @@ ORG dispatch_game_tick_updates
 .dispatch_game_tick_updates_branch_1
     LDA room_update_suppression_state
     BNE dispatch_game_tick_updates_branch_12
-    LDA shared_workspace_4e
+    LDA room_interaction_code
     CMP #ROOM_CELL_TELEPORT_SIGN
     BNE dispatch_game_tick_updates_branch_2
     JSR run_horizontal_16_warp_sequence
@@ -2330,7 +2330,7 @@ ORG dispatch_game_tick_updates
     JSR update_lift_and_hazard_group
 
 .dispatch_game_tick_updates_branch_10
-    LDA shared_workspace_4e
+    LDA room_interaction_code
     CMP #ROOM_CELL_ARMOURY_SIGN
     BNE dispatch_game_tick_updates_branch_12
     JSR enter_add_collected_icon
@@ -2351,7 +2351,7 @@ ORG dispatch_game_tick_updates
     JSR set_velocity_step_from_horizontal_band
 
 .dispatch_game_tick_updates_branch_13
-    LDA shared_workspace_4e
+    LDA room_interaction_code
     CMP #ROOM_CELL_TIME_WARP_SIGN
     BNE dispatch_game_tick_updates_branch_14
     JSR advance_bounded_tick_target
@@ -6483,8 +6483,8 @@ ORG drop_carried_item
     RTS
 
 .apply_dropped_item_3a_state
-    LDA shared_workspace_4e
-    CMP #ITEM_CODE_KEY_3
+    LDA room_interaction_code
+    CMP #ROOM_CELL_CHAPEL_SIGN
     BNE write_dropped_item_record
     LDA player_vertical_position
     CMP #CROSS_DROP_REQUIRED_VERTICAL_POSITION
@@ -6496,7 +6496,7 @@ ORG drop_carried_item
     JMP write_dropped_item_record
 
 .apply_dropped_item_3e_state
-    LDA shared_workspace_4e
+    LDA room_interaction_code
     CMP #ROOM_CELL_HYDROCHLORIC_ACID_SIGN
     BNE write_dropped_item_record
     LDA slow_damage_countdown
@@ -7600,7 +7600,7 @@ ORG draw_room_sign_or_collect_password
     LDA #&2D
 
 .select_room_sign_record
-    STA shared_workspace_4e
+    STA room_interaction_code
     SEC
     SBC #ROOM_CELL_MUSIC_ROOM_SIGN
     ASL A
@@ -8330,8 +8330,8 @@ ORG consume_collected_icon_and_apply_effect
     JSR erase_collected_icon
     LDA #&01
     STA reset_indexed_pair_countdowns
-    LDA shared_workspace_4e
-    CMP #&FF
+    LDA room_interaction_code
+    CMP #ROOM_INTERACTION_LONG_ICON_EFFECT
     BNE play_descending_flash_sequence
     DEC shared_workspace_a2
     DEC collected_icon_erase_index
@@ -8344,7 +8344,7 @@ ORG consume_collected_icon_and_apply_effect
     TAY
     LDA #&00
     STA room_appearance_table,Y
-    STA shared_workspace_4e
+    STA room_interaction_code
     STA slow_damage_countdown
     JSR play_descending_flash_sequence
     LDX #&01
@@ -8507,7 +8507,7 @@ ORG start_saved_display_block_shift_effect
     BNE shift_saved_display_block_effect_step
     LDA #&00
     STA timed_effect_selector
-    STA shared_workspace_4e
+    STA room_interaction_code
     RTS
 
 .shift_saved_display_block_effect_step
@@ -8781,8 +8781,8 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     JMP draw_blank_tile_run
 
 .set_ff_state_and_draw_last_column_special_row_source
-    LDX #&FF
-    STX shared_workspace_4e
+    LDX #ROOM_INTERACTION_LONG_ICON_EFFECT
+    STX room_interaction_code
     JSR draw_last_column_special_pair_row
     JMP save_display_pointer_and_cell_reference
 .draw_fixed_pair_gap_and_bordered_rows_source_end
@@ -9881,7 +9881,7 @@ ORG draw_and_initialise_room
     STA indexed_xor_erase_previous_graphic
     STA lift_and_hazard_active
     STA horizontal_band_velocity_effect_state
-    STA shared_workspace_4e
+    STA room_interaction_code
     STA music_tune_progress
     LDA #&01
     STA vertical_velocity_step
