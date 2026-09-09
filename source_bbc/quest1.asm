@@ -2935,8 +2935,10 @@ ORG sound_block_channel
 ; its high byte at $32A7 is also the first opcode of
 ; test_display_pointer_in_xor_draw_window, an intentional code/data overlap.
 .initial_sound_parameter_block_source
-    EQUW &0001, &FF0F, &0000
-    EQUB &00
+    EQUW INITIAL_SOUND_CHANNEL_WORD
+    EQUW INITIAL_SOUND_AMPLITUDE_WORD
+    EQUW INITIAL_SOUND_PITCH_WORD
+    EQUB LO(INITIAL_SOUND_DURATION_WORD)
 .initial_sound_parameter_block_source_end
 ASSERT initial_sound_parameter_block_source = sound_block_channel
 ASSERT initial_sound_parameter_block_source_end = test_display_pointer_in_xor_draw_window
@@ -7710,10 +7712,10 @@ ORG enter_submit_osword_07_sound_block
     JMP submit_osword_07_sound_block
 
 .initial_bcd_counter_low
-    EQUB &45
+    EQUB INITIAL_BCD_COUNTER_LOW_VALUE
 
 .initial_bcd_counter_high
-    EQUB &10
+    EQUB INITIAL_BCD_COUNTER_HIGH_VALUE
 .enter_submit_osword_07_sound_block_source_end
 
 ASSERT enter_submit_osword_07_sound_block_source = enter_submit_osword_07_sound_block
