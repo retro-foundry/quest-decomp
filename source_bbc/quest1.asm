@@ -2354,7 +2354,7 @@ ORG dispatch_game_tick_updates
 .prepare_frame_clock_wait
     LDX #XOR_SPRITE_ERASE_ENABLED
     STX erase_previous_xor_sprite_flag
-    DEX ; XOR_SPRITE_ERASE_ENABLED becomes CROSS_ROOM_ROBOT_GHOST_COUNTDOWNS_RESET
+    DEX ; XOR_SPRITE_ERASE_ENABLED becomes CROSS_ROOM_ROBOT_GHOST_COUNTDOWN_RESET_DISABLED
     STX reset_cross_room_robot_ghost_countdowns
 
 .wait_for_frame_clock_target
@@ -7394,7 +7394,7 @@ ORG draw_cross_room_robot_ghost_if_reference_matches
     PHA
     LDA reset_cross_room_robot_ghost_countdowns
     BEQ cross_room_robot_ghost_draw_state_ready
-    LDA #CROSS_ROOM_ROBOT_GHOST_COUNTDOWNS_RESET
+    LDA #CROSS_ROOM_ROBOT_GHOST_COUNTDOWN_RESET_DISABLED
     STA cross_room_robot_ghost_redraw_countdown,X
 
 .cross_room_robot_ghost_draw_state_ready
@@ -8279,20 +8279,20 @@ CLEAR toggle_first_ghost_axis_mode_when_positions_match_source, toggle_first_gho
 
 ORG run_energy_bar_sweep
 
-; Sweep the energy value from 0 to $FE, redrawing the bar at
+; Sweep the complete visible energy range, redrawing the bar at
 ; every step, with a delay between them.
 ; X counts the energy level and is written to both the snapshot and live energy before each
 ; redraw, so the stored value and the displayed value stay together. The inner
-; loop counts Y down from $FF purely to pass time, giving each step a visible
+; loop counts Y down from ENERGY_SWEEP_DELAY_COUNT purely to pass time, giving each step a visible
 ; pause; at 255 steps of 255 iterations that is the whole bar filling smoothly
 ; rather than jumping.
 ; This is an animation rather than gameplay: nothing reads input and the energy
 ; is overwritten on every iteration.
 .run_energy_bar_sweep_source
-    LDX #&00
+    LDX #ENERGY_SWEEP_FIRST_LEVEL
 
 .sweep_next_energy_level
-    LDY #&FF
+    LDY #ENERGY_SWEEP_DELAY_COUNT
 
 .delay_between_steps
     DEY
@@ -8302,7 +8302,7 @@ ORG run_energy_bar_sweep
     JSR submit_channel_one_sound_with_x_pitch
     JSR redraw_energy_bar_segment
     INX
-    CPX #&FF
+    CPX #ENERGY_SWEEP_END_EXCLUSIVE
     BNE sweep_next_energy_level
     RTS
 .run_energy_bar_sweep_source_end
@@ -8317,11 +8317,11 @@ CLEAR run_energy_bar_sweep_source, run_energy_bar_sweep_source_end
 
 ORG submit_channel_one_sound_with_x_pitch
 
-; Supply X as the pitch for an OSWORD $07 sound on
-; channel byte $11, then tail-enter the common fixed-amplitude submission.
+; Supply X as the pitch for an OSWORD SOUND request on channel one with flush,
+; then tail-enter the common fixed-amplitude submission.
 .submit_channel_one_sound_with_x_pitch_source
     STX sound_block_pitch
-    LDA #&11
+    LDA #SOUND_CHANNEL_ONE_FLUSH
     JMP enter_submit_osword_07_sound_block
 .submit_channel_one_sound_with_x_pitch_source_end
 
@@ -8338,8 +8338,8 @@ ORG consume_collected_icon_and_apply_effect
 ; Consume one collected status icon unless the count is
 ; exactly four, then run the common descending flash effect.
 ; ROOM_INTERACTION_LONG_ICON_EFFECT selects the longer cleanup path: remove a second icon, restore the saved
-; cell with $53, clear the selected room-appearance byte and effect state, flash
-; once, then sweep X from 1 through $FF using OSBYTE calls and pitch-X sounds.
+; cell with LONG_ICON_EFFECT_REPLACEMENT_CELL, clear the selected room appearance and effect state, flash
+; once, then sweep X through every nonzero byte value using OSBYTE calls and pitch-X sounds.
 .consume_collected_icon_and_apply_effect_source
     LDA collected_icon_count
     CMP #&04
@@ -8347,7 +8347,7 @@ ORG consume_collected_icon_and_apply_effect
     DEC collected_icon_count
     LDA collected_icon_count
     JSR erase_collected_icon
-    LDA #&01
+    LDA #CROSS_ROOM_ROBOT_GHOST_COUNTDOWNS_FORCE_RESET
     STA reset_cross_room_robot_ghost_countdowns
     LDA room_interaction_code
     CMP #ROOM_INTERACTION_LONG_ICON_EFFECT
@@ -8356,17 +8356,17 @@ ORG consume_collected_icon_and_apply_effect
     DEC collected_icon_erase_index
     LDA collected_icon_erase_index
     JSR erase_collected_icon
-    LDA #&53
+    LDA #LONG_ICON_EFFECT_REPLACEMENT_CELL
     JSR store_byte_through_saved_pointer
     LDX reference_pair_primary_value
     LDA effect_room_appearance_indices,X
     TAY
-    LDA #&00
+    LDA #LONG_ICON_EFFECT_STATE_CLEAR
     STA room_appearance_table,Y
     STA room_interaction_code
     STA slow_damage_countdown
     JSR play_descending_flash_sequence
-    LDX #&01
+    LDX #COLLECTED_ICON_EFFECT_FIRST_STEP
 
 .collected_icon_effect_next_step
     STX collected_icon_effect_step_saved
@@ -8432,12 +8432,10 @@ CLEAR run_horizontal_16_warp_sequence_source, run_horizontal_16_warp_sequence_so
 ORG draw_status_panel_divider
 
 ; Draw a horizontal rule across the status area by writing
-; $F0 into the same scanline of 66 consecutive character cells, starting at
-; $3CE0.
+; STATUS_PANEL_DIVIDER_PIXEL_BYTE into one scanline of the named divider cells.
 ; store_byte_and_advance_source_pointer does the work, writing one byte and
 ; stepping the pointer by 8, one cell, so the 66 writes land on one display row
-; rather than filling a block. $3CE0 is just past the screen base at $3C80, so
-; this rule sits at the top of the display.
+; rather than filling a block, placing the rule at the top of the display.
 ; draw_two_item_slots leaves through a tail jump here, so the rule is redrawn
 ; whenever the slots are.
 .draw_status_panel_divider_source
@@ -8446,7 +8444,7 @@ ORG draw_status_panel_divider
     STA graphic_source_pointer_low
     LDA #HI(status_panel_divider_start)
     STA graphic_source_pointer_high
-    LDY #&00
+    LDY #DISPLAY_POINTER_FIRST_BYTE_OFFSET
 
 .write_next_divider_cell
     LDA #STATUS_PANEL_DIVIDER_PIXEL_BYTE
@@ -8524,7 +8522,7 @@ ORG start_saved_display_block_shift_effect
 .advance_saved_display_block_shift_effect_source
     DEC timed_effect_countdown
     BNE shift_saved_display_block_effect_step
-    LDA #&00
+    LDA #TIMED_EFFECT_DISABLED
     STA timed_effect_selector
     STA room_interaction_code
     RTS
@@ -8535,7 +8533,7 @@ ORG start_saved_display_block_shift_effect
     ADC #SAVED_DISPLAY_SHIFT_ROW_OFFSET_LOW
     STA display_pointer_low
     LDA saved_effect_display_pointer_high
-    ADC #&00
+    ADC #POINTER_HIGH_CARRY_BIAS
     STA display_pointer_high
     JSR shift_four_row_display_block_right
     CLC
@@ -8568,19 +8566,19 @@ ORG draw_blank_marker_and_column_gated_rows
 
 ; This contiguous room-cell handler cluster contains the two mirrored blank-marker layouts and cell types $36-$3A. Cells $36/$37 draw alternating rows only in columns three-or-seven / column three; $38 uses only column seven; $39 uses columns four-seven. Cell $3A optionally saves the cell/display pointers in column four, draws a blank row, then leaves A stacked for the shared $19E8 continuation. Natural room traces cover the marker, $38-$3A and shared alternating tails; focused real-dispatch fixtures cover every $36/$37 comparison and outcome with exact authority/rebuild parity.
 .draw_blank_marker_and_column_gated_rows_source
-    LDY #&00
+    LDY #GRAPHIC_BLANK
     STY single_tile_room_graphic_selector
     JMP draw_curved_bowl_before_alternating_suffix_body
 
 .draw_blank_marker_after_alternating_prefix_source
-    LDY #&00
+    LDY #GRAPHIC_BLANK
     STY single_tile_room_graphic_selector
     JMP draw_curved_bowl_after_alternating_prefix_body
 
 .draw_alternating_only_in_columns_three_or_seven_source
-    CMP #&03
+    CMP #ROOM_COLUMN_THREE
     BEQ draw_eight_alternating_tiles_from_column_gate
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ draw_eight_alternating_tiles_from_column_gate
     JMP draw_eight_blank_tiles
 
@@ -8588,22 +8586,22 @@ ORG draw_blank_marker_and_column_gated_rows
     JMP draw_eight_alternating_tiles
 
 .draw_alternating_only_in_column_three_source
-    CMP #&03
+    CMP #ROOM_COLUMN_THREE
     BEQ draw_eight_alternating_tiles_from_column_gate
     JMP draw_eight_blank_tiles
 
 .draw_alternating_only_in_last_column_source
-    CMP #&07
+    CMP #ROOM_COLUMN_LAST
     BEQ draw_eight_alternating_tiles_from_column_gate
     JMP draw_eight_blank_tiles
 
 .draw_alternating_in_right_half_source
-    CMP #&04
+    CMP #ROOM_HALF_COLUMN_COUNT
     BPL draw_eight_alternating_tiles_from_column_gate
     JMP draw_eight_blank_tiles
 
 .draw_blank_then_configure_column_seven_object_source
-    CMP #&04
+    CMP #ROOM_HALF_COLUMN_COUNT
     BNE save_column_and_draw_blank_row
     JSR save_display_pointer_and_cell_reference
 
