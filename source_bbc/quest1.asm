@@ -224,7 +224,7 @@
 ;          the mutable $0900 table. restore_item_and_goal_records copies the
 ;          whole range before room setup begins.
 ;
-;   $0A00  room_entity_record_table, twenty six-byte records, the first entity
+;   $0A00  room_enemy_record_table, twenty six-byte records, the room enemies
 ;          class. Every record resolves to a real room, and the set contains
 ;          every room the account calls out for an enemy. So this is the table
 ;          the creatures come from.
@@ -1692,27 +1692,27 @@ COPYBLOCK write_twelve_video_ula_palette_entries_source, write_twelve_video_ula_
 ASSERT write_four_video_ula_palette_entries_end = &1284
 COPYBLOCK write_four_video_ula_palette_entries, write_four_video_ula_palette_entries_end, &2A69
 
-ORG draw_indexed_entity_with_xor_graphic
+ORG draw_room_enemy_with_xor_graphic
 
-; Runtime $3532-$3557. Draw the graphic for the Y-indexed entity. It sets the
-; character-row count to 1, and when $1221 equals 2 or $1222 is less than 2 it
-; first configures the two-row repeated graphic. Bit 1 of the entry field at
-; $68 then selects a row count of 8 or $0A in X, after which the display
-; pointer is loaded for that entry and the XOR renderer is tail-called.
+; Runtime $3532-$3557. Draw the graphic for the Y-indexed room enemy. It sets
+; the character-row count to 1. Moths, or rooms whose last slot index is below
+; two, first configure a two-row graphic with doubled source scanlines. Bit 1
+; of the entry field at $68 then selects a row count of 8 or $0A in X, after
+; which the display pointer is loaded and the XOR renderer is tail-called.
 ;
 ; This is the enemy renderer. Suppressing it was tested in play and the enemy
 ; robots disappeared while the lifts kept working, which is the strongest thing
-; known about any of the four sprite renderers. The fields it reads, $1221,
-; $1222, $68 and the pointer at $47/$48, are exactly the ones
-; initialise_room_entity_from_table unpacks from the $0A00 record table, so the
+; known about any of the four sprite renderers. The species, last slot, $68 and
+; pointer at $47/$48 are exactly the fields initialise_room_enemy_from_table
+; unpacks from the $0A00 record table, so the
 ; table and the renderer are the same subsystem.
-.draw_indexed_entity_with_xor_graphic_source
+.draw_room_enemy_with_xor_graphic_source
     LDA #&01
     STA xor_graphic_character_rows_remaining
-    LDA &1221
-    CMP #&02
+    LDA active_enemy_species
+    CMP #ENEMY_SPECIES_MOTH
     BEQ configure_two_row_repeat_for_entity
-    LDA &1222
+    LDA active_enemy_last_slot_index
     CMP #&02
     BPL select_entity_row_count
 
@@ -1730,15 +1730,15 @@ ORG draw_indexed_entity_with_xor_graphic
 .load_pointer_then_draw_entity
     JSR load_display_pointer_from_indexed_pair
     JMP select_graphic_then_xor_draw
-.draw_indexed_entity_with_xor_graphic_source_end
+.draw_room_enemy_with_xor_graphic_source_end
 
-ASSERT draw_indexed_entity_with_xor_graphic_source = draw_indexed_entity_with_xor_graphic
-ASSERT draw_indexed_entity_with_xor_graphic_source_end = &3558
-COPYBLOCK draw_indexed_entity_with_xor_graphic_source, draw_indexed_entity_with_xor_graphic_source_end, &4D32
+ASSERT draw_room_enemy_with_xor_graphic_source = draw_room_enemy_with_xor_graphic
+ASSERT draw_room_enemy_with_xor_graphic_source_end = &3558
+COPYBLOCK draw_room_enemy_with_xor_graphic_source, draw_room_enemy_with_xor_graphic_source_end, &4D32
 
 ; Runtime $3532-$3557 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4D32-$4D57.
-CLEAR draw_indexed_entity_with_xor_graphic_source, draw_indexed_entity_with_xor_graphic_source_end
+CLEAR draw_room_enemy_with_xor_graphic_source, draw_room_enemy_with_xor_graphic_source_end
 
 
 ORG apply_signed_vertical_step_to_pointer
@@ -2134,25 +2134,26 @@ COPYBLOCK advance_secondary_reference_and_pointer_source, advance_secondary_refe
 CLEAR advance_secondary_reference_and_pointer_source, advance_secondary_reference_and_pointer_source_end
 
 
-ORG update_and_draw_indexed_entities
+ORG update_and_draw_room_enemies
 
-; Runtime $3563-$35C1. Iterate backward over the even-indexed entity slots,
-; optionally erase each old XOR image, dispatch its behavior by the shared type
-; byte, apply player-seeking deltas when the range tests succeed, update its
-; position, apply its player interaction, redraw it, and clear the repeated-
-; source flag through the shared tail return.
-.update_and_draw_indexed_entities_source
-    LDY &1222
+; Runtime $3563-$35C1. Iterate backward over the active room-enemy slots,
+; optionally erase each old XOR image, and dispatch by species. Bats use the
+; direct player-range test; moths use collision-aware movement and both limit
+; clamps; the small robot (and the unselected jellyfish descriptor) use the
+; obstacle-reflection path. Then apply pursuit deltas when available, move,
+; process player overlap, redraw, and clear the repeated-source flag.
+.update_and_draw_room_enemies_source
+    LDY active_enemy_last_slot_index
 
 .update_next_indexed_entity
     LDA &61
     BEQ dispatch_indexed_entity_behavior
-    JSR draw_indexed_entity_with_xor_graphic
+    JSR draw_room_enemy_with_xor_graphic
 
 .dispatch_indexed_entity_behavior
-    LDA &1221
-    BEQ prepare_default_player_range_test
-    CMP #&02
+    LDA active_enemy_species
+    BEQ prepare_bat_player_range_test
+    CMP #ENEMY_SPECIES_MOTH
     BNE update_obstacle_reflecting_indexed_entity
     JSR advance_indexed_entity_with_collision_checks
     JSR reverse_indexed_123b_delta_at_limits
@@ -2165,7 +2166,7 @@ ORG update_and_draw_indexed_entities
     JSR reflect_indexed_entity_at_obstacles
     JMP apply_player_direction_if_in_range
 
-.prepare_default_player_range_test
+.prepare_bat_player_range_test
     JSR load_indexed_pair_output_from_y_tables
     JSR enter_test_player_in_range_and_set_direction
 
@@ -2190,20 +2191,20 @@ ORG update_and_draw_indexed_entities
     LDA #&10
     STA xor_graphic_character_rows_remaining
     JSR enter_player_candidate_bounds_overlap
-    JSR draw_indexed_entity_with_xor_graphic
+    JSR draw_room_enemy_with_xor_graphic
     DEY
     DEY
     BPL update_next_indexed_entity
     JMP clear_xor_graphic_repeat_and_return
-.update_and_draw_indexed_entities_source_end
+.update_and_draw_room_enemies_source_end
 
-ASSERT update_and_draw_indexed_entities_source = update_and_draw_indexed_entities
-ASSERT update_and_draw_indexed_entities_source_end = &35C2
-COPYBLOCK update_and_draw_indexed_entities_source, update_and_draw_indexed_entities_source_end, &4D63
+ASSERT update_and_draw_room_enemies_source = update_and_draw_room_enemies
+ASSERT update_and_draw_room_enemies_source_end = &35C2
+COPYBLOCK update_and_draw_room_enemies_source, update_and_draw_room_enemies_source_end, &4D63
 
 ; Runtime $3563-$35C1 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4D63-$4DC1.
-CLEAR update_and_draw_indexed_entities_source, update_and_draw_indexed_entities_source_end
+CLEAR update_and_draw_room_enemies_source, update_and_draw_room_enemies_source_end
 
 
 ORG copy_graphic_byte_to_display
@@ -2273,7 +2274,7 @@ ORG dispatch_game_tick_updates
     JSR update_and_draw_two_indexed_pairs
     LDA &1239
     BEQ dispatch_game_tick_updates_branch_1
-    JSR update_and_draw_indexed_entities
+    JSR update_and_draw_room_enemies
 
 .dispatch_game_tick_updates_branch_1
     LDA &6E
@@ -2649,34 +2650,36 @@ COPYBLOCK shift_four_row_display_block_right_source, shift_four_row_display_bloc
 CLEAR shift_four_row_display_block_right_source, shift_four_row_display_block_right_source_end
 
 
-ORG initialise_room_entity_from_table
+ORG initialise_room_enemy_from_table
 
 ; Runtime $1F2F-$1FDE. Find the entity record for the current room and unpack it
 ; into every field the entity system reads.
 ; The table at $0A00 holds twenty six-byte records: X counts up to $14 and is
 ; multiplied by six. The first two bytes are the packed match tested by
 ; match_packed_record_against_references, which also leaves the graphic
-; selectors in $31 and $32; those go to $1222 and $1221.
+; selectors in $31 and $32; those become active_enemy_last_slot_index and
+; active_enemy_species.
 ; The remaining four bytes are two grid positions, each read, scaled by eight
 ; into a movement limit, and converted to a display pointer:
 ; the first with a bias of $0A goes to $1237, $1231, $68 and the pointer $47/$48
 ; the second with a bias of -6 and -3 goes to $1236, $1233, $1238, $1235, $6A
 ; and the pointer $49/$4A
 ; Four bytes are then copied from the table at $1FDF into $0B67, selected by
-; $1221 times four unless $79 is set, and the deltas at $123A to $123D are
+; active_enemy_species times four unless $79 is set, and the deltas at $123A to $123D are
 ; seeded with 1 and 2.
 ; Everything written here is read back by routines this source already owns:
 ; the limits by both delta clamps, the pointers by the probes, $68 by the pair
-; loader, and $1221/$1222 by the entity draw.
+; loader, and the active species/last-slot fields by the enemy draw.
 ;
-; This is the enemy table. The chain is: this routine writes $1221, $1222, $68
-; and $47/$48; draw_indexed_entity_with_xor_graphic reads exactly those four;
+; This is the enemy table. The chain is: this routine writes the active species,
+; last slot, $68 and $47/$48; draw_room_enemy_with_xor_graphic reads those four;
 ; and suppressing that renderer was tested in play and made the enemy robots
 ; disappear while leaving the lifts alone. Every one of the twenty records
 ; resolves to a room inside the grid, and the set contains every room the
 ; player's account calls out for an enemy.
 ;
-; $1221 selects the four-byte graphic descriptor copied from $1FDF. The three
+; active_enemy_species selects the four-byte graphic descriptor copied from
+; $1FDF. The three
 ; selected graphic pairs and their rooms are
 ;   bat                       B5 D0 A1 G2 E3 D6
 ;   small bouncing robot      C3 F1 C1 B3 B6 E2 A2 C7
@@ -2684,7 +2687,7 @@ ORG initialise_room_entity_from_table
 ; See analysis/room_map.md for the rooms alongside what the account says of
 ; them. These are decoded graphic identities; the shared state machine means a
 ; visual identity alone must not be used to infer movement or collision rules.
-.initialise_room_entity_from_table_source
+.initialise_room_enemy_from_table_source
     LDX #&00
     LDA #&00
     STA &13
@@ -2709,13 +2712,13 @@ ORG initialise_room_entity_from_table
 
 .unpack_matched_entity_record
     LDA &31
-    STA &1222
+    STA active_enemy_last_slot_index
     LDA &32
-    STA &1221
+    STA active_enemy_species
     LDA #&01
     STA &1239
     INY
-    LDA &0A00,Y
+    LDA room_enemy_record_table,Y
     STA &0A
     ASL A
     ASL A
@@ -2723,7 +2726,7 @@ ORG initialise_room_entity_from_table
     STA &1237
     STA &1231
     INY
-    LDA &0A00,Y
+    LDA room_enemy_record_table,Y
     STA &1236
     CLC
     ADC #&0A
@@ -2735,7 +2738,7 @@ ORG initialise_room_entity_from_table
     LDA display_pointer_high
     STA &48
     INY
-    LDA &0A00,Y
+    LDA room_enemy_record_table,Y
     SEC
     SBC #&03
     STA &0A
@@ -2743,13 +2746,13 @@ ORG initialise_room_entity_from_table
     ASL A
     ASL A
     STA &1233
-    LDA &0A00,Y
+    LDA room_enemy_record_table,Y
     ASL A
     ASL A
     ASL A
     STA &1238
     INY
-    LDA &0A00,Y
+    LDA room_enemy_record_table,Y
     STA &1235
     SEC
     SBC #&06
@@ -2763,7 +2766,7 @@ ORG initialise_room_entity_from_table
     LDY #&0C
     LDA &79
     BNE copy_entity_descriptor
-    LDA &1221
+    LDA active_enemy_species
     ASL A
     ASL A
     TAY
@@ -2788,15 +2791,15 @@ ORG initialise_room_entity_from_table
     CPX #&03
     BNE seed_entity_deltas
     RTS
-.initialise_room_entity_from_table_source_end
+.initialise_room_enemy_from_table_source_end
 
-ASSERT initialise_room_entity_from_table_source = initialise_room_entity_from_table
-ASSERT initialise_room_entity_from_table_source_end = &1FDF
-COPYBLOCK initialise_room_entity_from_table_source, initialise_room_entity_from_table_source_end, &372F
+ASSERT initialise_room_enemy_from_table_source = initialise_room_enemy_from_table
+ASSERT initialise_room_enemy_from_table_source_end = &1FDF
+COPYBLOCK initialise_room_enemy_from_table_source, initialise_room_enemy_from_table_source_end, &372F
 
 ; Runtime $1F2F-$1FDE overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $372F-$37DE.
-CLEAR initialise_room_entity_from_table_source, initialise_room_entity_from_table_source_end
+CLEAR initialise_room_enemy_from_table_source, initialise_room_enemy_from_table_source_end
 
 
 ORG initialise_second_room_entity_from_table
@@ -2809,7 +2812,7 @@ ORG initialise_second_room_entity_from_table
 ; are grid coordinates, each biased before use, scaled by eight into $1246 and
 ; $1247, and converted once to a display pointer kept in $59/$5A.
 ; The four-byte descriptor is copied from the table at $2082 into $0B6B, four
-; bytes past the $0B67 slot initialise_room_entity_from_table fills, so the two
+; bytes past the $0B67 slot initialise_room_enemy_from_table fills, so the two
 ; routines populate adjacent descriptor slots.
 ; The three record tables tile exactly: $0A00 plus twenty six-byte records ends
 ; at $0A78 where indexed_pair_record_table begins, and its ten three-byte
@@ -9967,7 +9970,7 @@ ORG draw_and_initialise_room
     BNE start_next_room_row
     JSR draw_matching_records_from_table
     JSR &1E6C
-    JSR initialise_room_entity_from_table
+    JSR initialise_room_enemy_from_table
     JSR initialise_second_room_entity_from_table
     LDA #&00
     STA alternate_palette_selector
@@ -10326,7 +10329,7 @@ ORG set_display_pointer_from_grid_position
 ; CRTC display start of $3C80, so grid row 1 lands on the first visible row
 ; and row 0 sits in the margin above it. The grid is therefore 1-based
 ; vertically against the visible display, which is why callers bias their
-; stored rows before converting: initialise_room_entity_from_table adds $0A to
+; stored rows before converting: initialise_room_enemy_from_table adds $0A to
 ; one row and subtracts 6 and 3 from the other.
 ;
 ; X is preserved across the whole computation; A and the scratch bytes $33/$34
@@ -11443,7 +11446,7 @@ ORG indexed_xor_graphic_pointer_sets
     EQUW &0EA0, &0EA0, &0EA0, &0EA0
 .indexed_xor_graphic_pointer_sets_source_end
 ASSERT indexed_xor_graphic_pointer_sets_source = indexed_xor_graphic_pointer_sets
-ASSERT indexed_xor_graphic_pointer_sets_source_end = initialise_room_entity_from_table
+ASSERT indexed_xor_graphic_pointer_sets_source_end = initialise_room_enemy_from_table
 COPYBLOCK indexed_xor_graphic_pointer_sets_source, indexed_xor_graphic_pointer_sets_source_end, &370F
 CLEAR indexed_xor_graphic_pointer_sets_source, indexed_xor_graphic_pointer_sets_source_end
 
@@ -11533,34 +11536,37 @@ ASSERT room_appearance_table_source_end = &0A00
 COPYBLOCK room_appearance_table_source, room_appearance_table_source_end, &22B0
 CLEAR room_appearance_table_source, room_appearance_table_source_end
 
-ORG room_entity_record_table
-; Runtime 0A00-0A77: twenty first-class room entity records.
-.room_entity_record_table_source
-    EQUB &05, &01, &06, &11, &18, &1C
-    EQUB &03, &12, &05, &04, &1A, &1E
-    EQUB &41, &15, &02, &00, &0C, &4A
-    EQUB &40, &03, &06, &11, &11, &3C
-    EQUB &41, &00, &03, &21, &18, &2C
-    EQUB &01, &12, &03, &18, &0B, &49
-    EQUB &43, &11, &07, &14, &17, &43
-    EQUB &06, &11, &04, &06, &0B, &3E
-    EQUB &45, &22, &04, &00, &11, &2B
-    EQUB &02, &06, &06, &1D, &08, &28
-    EQUB &45, &24, &04, &00, &14, &40
-    EQUB &42, &14, &06, &34, &18, &4B
-    EQUB &02, &10, &17, &15, &18, &4B
-    EQUB &03, &04, &04, &00, &13, &3E
-    EQUB &44, &25, &04, &15, &14, &32
-    EQUB &04, &24, &04, &08, &19, &2E
-    EQUB &47, &27, &06, &0A, &18, &42
-    EQUB &06, &03, &0C, &10, &12, &3B
-    EQUB &47, &12, &05, &07, &12, &49
-    EQUB &47, &23, &04, &00, &19, &41
-.room_entity_record_table_source_end
-ASSERT room_entity_record_table_source = room_entity_record_table
-ASSERT room_entity_record_table_source_end = &0A78
-COPYBLOCK room_entity_record_table_source, room_entity_record_table_source_end, &2300
-CLEAR room_entity_record_table_source, room_entity_record_table_source_end
+ORG room_enemy_record_table
+; Runtime 0A00-0A77: twenty six-byte room-enemy records. The matched packed
+; room reference leaves the low nibble as the last even slot and the high
+; nibble as ENEMY_SPECIES_*; the remaining four bytes initialise movement
+; positions and limits.
+.room_enemy_record_table_source
+    EQUB &05, &01, &06, &11, &18, &1C ; B5 bat
+    EQUB &03, &12, &05, &04, &1A, &1E ; C3 small bouncing robot
+    EQUB &41, &15, &02, &00, &0C, &4A ; F1 small bouncing robot
+    EQUB &40, &03, &06, &11, &11, &3C ; D0 bat
+    EQUB &41, &00, &03, &21, &18, &2C ; A1 bat
+    EQUB &01, &12, &03, &18, &0B, &49 ; C1 small bouncing robot
+    EQUB &43, &11, &07, &14, &17, &43 ; B3 small bouncing robot
+    EQUB &06, &11, &04, &06, &0B, &3E ; B6 small bouncing robot
+    EQUB &45, &22, &04, &00, &11, &2B ; C5 moth
+    EQUB &02, &06, &06, &1D, &08, &28 ; E5 moth
+    EQUB &45, &24, &04, &00, &14, &40 ; F4 moth
+    EQUB &42, &14, &06, &34, &18, &4B ; E4 moth
+    EQUB &02, &10, &17, &15, &18, &4B ; G2 bat
+    EQUB &03, &04, &04, &00, &13, &3E ; E3 bat
+    EQUB &44, &25, &04, &15, &14, &32 ; H7 moth
+    EQUB &04, &24, &04, &08, &19, &2E ; D6 bat
+    EQUB &47, &27, &06, &0A, &18, &42 ; D7 moth
+    EQUB &06, &03, &0C, &10, &12, &3B ; C7 small bouncing robot
+    EQUB &47, &12, &05, &07, &12, &49 ; A2 small bouncing robot
+    EQUB &47, &23, &04, &00, &19, &41 ; E2 small bouncing robot
+.room_enemy_record_table_source_end
+ASSERT room_enemy_record_table_source = room_enemy_record_table
+ASSERT room_enemy_record_table_source_end = &0A78
+COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, &2300
+CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
 
 ORG indexed_pair_record_table
 ; Runtime 0A78-0A95: ten per-level roaming-pair records.

@@ -256,7 +256,7 @@
       "meaning_level": "behavioral",
       "record_size": 4,
       "evidence": [
-        "initialise_room_entity_from_table copies exactly two enemy sprite-frame pointers from $1fdf into this workspace, and draw_indexed_entity_with_xor_graphic consumes them",
+        "initialise_room_enemy_from_table copies exactly two species-selected sprite-frame pointers from $1fdf into this workspace, and draw_room_enemy_with_xor_graphic consumes them",
         "suppressing that renderer in play makes the enemy robots disappear while leaving the lifts visible"
       ]
     },
@@ -501,7 +501,7 @@
       ]
     },
     {
-      "name": "room_entity_record_table",
+      "name": "room_enemy_record_table",
       "runtime_start": 2560,
       "runtime_end_exclusive": 2680,
       "loaded_start": 8960,
@@ -510,7 +510,7 @@
       "meaning_level": "behavioral",
       "record_size": 6,
       "evidence": [
-        "initialise_room_entity_from_table scans twenty six-byte records and unpacks matched room entity state"
+        "initialise_room_enemy_from_table scans twenty six-byte records and unpacks matched room-enemy state"
       ]
     },
     {
@@ -614,8 +614,8 @@
       "meaning_level": "behavioral",
       "record_size": 4,
       "evidence": [
-        "initialise_room_entity_from_table selects the bat, small-bouncing-robot or moth/hazard frame pair; its fourth jellyfish pair has no selecting room record",
-        "draw_indexed_entity_with_xor_graphic consumes the selected pair; suppressing that renderer makes enemy robots disappear"
+        "initialise_room_enemy_from_table selects the bat, small-bouncing-robot or moth/hazard frame pair; its fourth jellyfish pair has no selecting room record",
+        "draw_room_enemy_with_xor_graphic consumes the selected pair; suppressing that renderer makes enemy robots disappear"
       ]
     },
     {
@@ -2135,7 +2135,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all twenty-two instructions 58 times, with the four-byte copy loop running 232 times, which is 58 times 4",
-        "the times-eight room index is independent confirmation of eight sectors per level, and 80 rooms of one byte from $09B0 reaches $0A00 where room_entity_record_table begins",
+        "the times-eight room index is independent confirmation of eight sectors per level, and 80 rooms of one byte from $09B0 reaches $0A00 where room_enemy_record_table begins",
         "the destination $7FFC to $7FFF is the stored tile pair draw_alternating_tile_run copies into its working pair, and $0382 is the palette byte irq1v_handler writes after arming timer 2"
       ]
     },
@@ -2251,7 +2251,7 @@
       ]
     },
     {
-      "name": "initialise_room_entity_from_table",
+      "name": "initialise_room_enemy_from_table",
       "runtime_start": 7983,
       "runtime_end_exclusive": 8159,
       "loaded_start": 14127,
@@ -2261,7 +2261,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all ninety-three instructions: 16 entries driving 263 record tests against a table of 20, with 5 matches unpacked",
         "the times-six index and the four INY-separated reads past the match confirm a six-byte record stride",
-        "every destination it writes is a field an already-reconstructed routine reads: $1235 and $1236 by reverse_indexed_123a_delta_at_limits, $1237 and $1238 by reverse_indexed_123b_delta_at_limits, $47/$48 by the column probes, $68 by load_indexed_pair_output_from_y_tables, and $1221/$1222 by draw_indexed_entity_with_xor_graphic",
+        "every destination it writes is a field an already-reconstructed routine reads: $1235 and $1236 by reverse_indexed_123a_delta_at_limits, $1237 and $1238 by reverse_indexed_123b_delta_at_limits, $47/$48 by the column probes, $68 by load_indexed_pair_output_from_y_tables, and active_enemy_species/active_enemy_last_slot_index by draw_room_enemy_with_xor_graphic",
         "the shift-by-three scaling matches the eight-byte character cell the grid conversion uses, so the limits are in the same units as the positions"
       ]
     },
@@ -3778,7 +3778,7 @@
       "meaning_level": "behavioral",
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all six instructions once",
-        "the three destinations lie between drawn_record_table at $0900 and room_entity_record_table at $0A00, so they are in the map data region rather than in code"
+        "the three destinations lie between drawn_record_table at $0900 and room_enemy_record_table at $0A00, so they are in the map data region rather than in code"
       ]
     },
     {
@@ -4021,7 +4021,7 @@
       ]
     },
     {
-      "name": "draw_indexed_entity_with_xor_graphic",
+      "name": "draw_room_enemy_with_xor_graphic",
       "runtime_start": 13618,
       "runtime_end_exclusive": 13656,
       "loaded_start": 19762,
@@ -4048,7 +4048,7 @@
       ]
     },
     {
-      "name": "update_and_draw_indexed_entities",
+      "name": "update_and_draw_room_enemies",
       "runtime_start": 13667,
       "runtime_end_exclusive": 13762,
       "loaded_start": 19811,
@@ -4223,7 +4223,7 @@
       "evidence": [
         "analysis/runtime_trace/played_access_card/executed_pcs.csv executes all sixteen instructions 2,368 times, with every instruction sharing that count, so the routine is straight-line",
         "analysis/runtime_trace/played_access_card/executed_pcs.csv proves the sole caller 0x35ab",
-        "the three fields it copies in and out are the same $1231, $123B and $47/$48 that initialise_room_entity_from_table writes when a room is set up"
+        "the three fields it copies in and out are the same $1231, $123B and $47/$48 that initialise_room_enemy_from_table writes when a room is set up"
       ]
     },
     {
