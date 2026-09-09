@@ -5243,42 +5243,61 @@ ORG room_moving_object_graphic_state_block
 
 ; Zero-initialised mutable workspace used by the indexed
 ; XOR renderer, the two room-entity update clusters and the timed room effect.
-; Even offsets $122A/$122C/$122E/$1230 form the four selector-delta slots;
-; $1231-$123D are interleaved entity state, $1239 is also the tick dispatcher
-; selector, and $1242-$124A are the timed-effect and room-effect fields. Odd
-; padding/state bytes are retained explicitly because indexed accesses can
-; address them even where no stronger gameplay meaning is yet proved.
+; The four even-indexed selector-delta slots follow a leading workspace byte.
+; room_enemy_primary_state_block and room_enemy_secondary_state_block contain
+; interleaved position, patrol, movement and tick-dispatch state. The timed
+; effect selector and saved display pointer precede the six-byte lift/hazard
+; state block. Interleaved padding/state bytes remain explicit because indexed
+; accesses can address them even where no stronger gameplay meaning is proved.
 .room_entity_and_effect_state_source
-    EQUB &00                         ; room-moving-object workspace byte 0
-    EQUB &00                         ; $122A selector delta slot 0
-    EQUB &00                         ; room-moving-object workspace byte 2
-    EQUB &00                         ; $122C selector delta slot 1
-    EQUB &00                         ; room-moving-object workspace byte 4
-    EQUB &00                         ; $122E selector delta slot 2
-    EQUB &00                         ; room-moving-object workspace byte 6
-    EQUB &00                         ; $1230 selector delta slot 3
-    SKIP 9                          ; $1231-$1239 primary entity fields/dispatcher
-    SKIP 8                          ; $123A-$1241 secondary room enemy fields
-    EQUB &00                         ; $1242 timed effect selector
-    EQUB &00, &00                    ; $1243/$1244 saved effect display pointer
-    SKIP 6                          ; $1245-$124A room effect/entity state
+.room_moving_object_workspace_lead_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE
+.room_moving_object_delta_slot_0_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE ; interleaved padding after slot 0
+.room_moving_object_delta_slot_1_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE ; interleaved padding after slot 1
+.room_moving_object_delta_slot_2_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE ; interleaved padding after slot 2
+.room_moving_object_delta_slot_3_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE
+.room_enemy_primary_state_block_source
+    SKIP 9
+.room_enemy_secondary_state_block_source
+    SKIP 8
+.timed_effect_selector_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE
+.saved_effect_display_pointer_source
+    EQUB ROOM_ENTITY_STATE_INITIAL_VALUE, ROOM_ENTITY_STATE_INITIAL_VALUE
+.lift_and_hazard_state_block_source
+    SKIP 6
 .room_entity_and_effect_state_source_end
 
 ASSERT room_entity_and_effect_state_source = room_moving_object_graphic_state_block
+ASSERT room_moving_object_delta_slot_0_source = room_moving_object_graphic_selector_delta
+ASSERT room_moving_object_delta_slot_1_source = room_moving_object_delta_slot_1
+ASSERT room_moving_object_delta_slot_2_source = room_moving_object_delta_slot_2
+ASSERT room_moving_object_delta_slot_3_source = room_moving_object_delta_slot_3
+ASSERT room_enemy_primary_state_block_source = room_enemy_primary_state_block
+ASSERT room_enemy_secondary_state_block_source = room_enemy_secondary_state_block
+ASSERT timed_effect_selector_source = timed_effect_selector
+ASSERT saved_effect_display_pointer_source = saved_effect_display_pointer_low
+ASSERT lift_and_hazard_state_block_source = lift_and_hazard_state_block
 ASSERT room_entity_and_effect_state_source_end = enter_run_terminal_interaction
 COPYBLOCK room_entity_and_effect_state_source, room_entity_and_effect_state_source_end, &2A29
 CLEAR room_entity_and_effect_state_source, room_entity_and_effect_state_source_end
 
 ORG enter_run_terminal_interaction
 
-; A three-byte JMP vector to $20B3, giving its caller a
+; A three-byte JMP vector to run_terminal_interaction, giving its caller a
 ; fixed entry independent of where that routine sits.
-; Like enter_copy_16_byte_graphic_to_display at $1226, it is wedged into the
-; runtime variable block rather than sitting in the table at $1200: $124A before
-; it is the lift/hazard slot count that
-; initialise_lifts_and_hazards_from_table writes, and $124E after it is the
-; first instruction of store_byte_and_advance_source_pointer. So the three bytes
-; are a vector between a variable and a routine, not part of either.
+; Like enter_copy_16_byte_graphic_to_display, it is wedged into the runtime
+; variable block rather than the main entry-vector table: the preceding byte is
+; lift_and_hazard_slot_limit, and store_byte_and_advance_source_pointer follows
+; immediately. Thus the three bytes are a vector between a variable and a
+; routine, not part of either.
 .enter_run_terminal_interaction_source
     JMP run_terminal_interaction
 .enter_run_terminal_interaction_source_end
