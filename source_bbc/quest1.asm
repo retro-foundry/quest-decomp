@@ -1258,10 +1258,10 @@ ORG main_gameplay_loop
     EQUB &00
 
 .poll_reincarnation_choice
-    LDX #&BB                       ; BBC Y key, OSBYTE $81 negative key number
+    LDX #INKEY_Y                       ; BBC Y key, OSBYTE $81 negative key number
     JSR osbyte_81_inkey
     BCS initialise_gameplay_display_and_entities
-    LDX #&AA                       ; BBC N key, OSBYTE $81 negative key number
+    LDX #INKEY_N                       ; BBC N key, OSBYTE $81 negative key number
     JSR osbyte_81_inkey
     BCC poll_reincarnation_choice
 
@@ -1279,7 +1279,7 @@ ORG main_gameplay_loop
 .completed_game_exit
     JSR dispatch_completed_crystal_message
 .wait_for_completion_key_release
-    LDX #&9D
+    LDX #INKEY_SPACE
     JSR osbyte_81_inkey
     BCC wait_for_completion_key_release
     RTS
@@ -2994,7 +2994,7 @@ ORG run_terminal_interaction
     JSR play_sound_with_amplitude
 
 .wait_for_terminal_space_release
-    LDX #&9D
+    LDX #INKEY_SPACE
     LDA #OSBYTE_INKEY
     LDY #&FF
     JSR OSBYTE
@@ -4409,7 +4409,7 @@ ORG run_startup_room_sequence_until_space
     JSR enter_dispatch_game_tick_updates
     LDA #&81
     LDY #&FF
-    LDX #&9D
+    LDX #INKEY_SPACE
     JSR OSBYTE
     BCS discard_two_stack_bytes_and_return
     PLA
@@ -4803,7 +4803,7 @@ ORG poll_controls_and_apply_gameplay_actions
 .poll_controls_and_apply_gameplay_actions_source
     LDA #&00
     STA shared_workspace_13
-    LDX #&9E
+    LDX #INKEY_MOVE_LEFT
     JSR osbyte_81_inkey
     BCC control_poll_right
     LDA #&FF
@@ -4811,7 +4811,7 @@ ORG poll_controls_and_apply_gameplay_actions
     STA horizontal_input_delta_copy
 
 .control_poll_right
-    LDX #&BD
+    LDX #INKEY_MOVE_RIGHT
     JSR osbyte_81_inkey
     BCC control_poll_stun_grenade
     LDA #&01
@@ -4820,7 +4820,7 @@ ORG poll_controls_and_apply_gameplay_actions
     JMP control_poll_thrust_if_enabled
 
 .control_poll_stun_grenade
-    LDX #&9D
+    LDX #INKEY_SPACE
     JSR osbyte_81_inkey
     BCC control_poll_thrust_if_enabled
     JSR consume_collected_icon_and_apply_effect
@@ -4828,7 +4828,7 @@ ORG poll_controls_and_apply_gameplay_actions
 .control_poll_thrust_if_enabled
     LDA jet_boots_enabled_this_room
     BEQ control_poll_jump_or_swim
-    LDX #&B7
+    LDX #INKEY_FULL_THRUST
     JSR osbyte_81_inkey
     BCC control_poll_half_thrust
     LDA player_vertical_velocity
@@ -4838,7 +4838,7 @@ ORG poll_controls_and_apply_gameplay_actions
     STA player_vertical_velocity
 
 .control_poll_half_thrust
-    LDX #&97
+    LDX #INKEY_HALF_THRUST
     JSR osbyte_81_inkey
     BCC control_poll_jump_or_swim
     CLC
@@ -4847,7 +4847,7 @@ ORG poll_controls_and_apply_gameplay_actions
     STA player_vertical_velocity
 
 .control_poll_jump_or_swim
-    LDX #&B6
+    LDX #INKEY_JUMP_OR_SWIM
     JSR osbyte_81_inkey
     BCC control_poll_pause
     LDA #&01
@@ -4855,12 +4855,12 @@ ORG poll_controls_and_apply_gameplay_actions
     JMP control_apply_horizontal_movement
 
 .control_poll_pause
-    LDX #&96
+    LDX #INKEY_COPY_PAUSE
     JSR osbyte_81_inkey
     BCC control_apply_horizontal_movement
 
 .control_wait_for_unwired_resume_key
-    LDX #&A6
+    LDX #INKEY_UNWIRED_RESUME
     JSR osbyte_81_inkey
     BCC control_wait_for_unwired_resume_key
     JSR write_system_clock_via_osword_02
@@ -4914,40 +4914,40 @@ ORG poll_controls_and_apply_gameplay_actions
     LDA player_display_pointer_snapshot_high
     CMP player_display_pointer_high
     BNE control_redraw_after_state_change
-    LDX #&CD
+    LDX #INKEY_DROP_ITEM
     JSR osbyte_81_inkey
     BCC control_poll_pick_up
     JSR drop_carried_item
 
 .control_poll_pick_up
-    LDX #&C8
+    LDX #INKEY_PICK_UP_ITEM
     JSR osbyte_81_inkey
     BCC control_poll_exit
     JSR pick_up_item_below_player
 
 .control_poll_exit
-    LDX #&8F
+    LDX #INKEY_ESCAPE
     JSR osbyte_81_inkey
     BCC control_poll_sound_off
     LDA #&01
     STA main_loop_exit_flag
 
 .control_poll_sound_off
-    LDX #&EF
+    LDX #INKEY_SOUND_OFF
     JSR osbyte_81_inkey
     BCC control_poll_sound_on
     LDA #&01
     STA shared_workspace_9e
 
 .control_poll_sound_on
-    LDX #&AE
+    LDX #INKEY_SOUND_ON
     JSR osbyte_81_inkey
     BCC control_poll_last_chance_chord
     LDA #&00
     STA shared_workspace_9e
 
 .control_poll_last_chance_chord
-    LDX #&AD
+    LDX #INKEY_LAST_CHANCE_TRIGGER
     JSR osbyte_81_inkey
     BCC control_skip_redraw
     LDY #&05
@@ -9517,8 +9517,8 @@ ORG draw_character_row_as_tiles
     ADC shared_workspace_31
     ADC #&20
     STA character_definition_block
-    LDX #&EF
-    LDY #&7F
+    LDX #LO(character_definition_block)
+    LDY #HI(character_definition_block)
     LDA #OSWORD_DEFINE_CHARACTER
     JSR OSWORD
     LDX shared_workspace_09
