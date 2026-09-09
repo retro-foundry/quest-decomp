@@ -10833,18 +10833,18 @@ ORG item_slot_label_table
 .bottle_item_slot_label
     EQUS "bottle"
 .item_slot_label_table_source_end
-ASSERT key_1_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_1-ITEM_LABEL_CODE_BIAS)*3
-ASSERT key_2_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_2-ITEM_LABEL_CODE_BIAS)*3
-ASSERT key_3_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_3-ITEM_LABEL_CODE_BIAS)*3
-ASSERT salt_item_slot_label = item_slot_label_table + (ITEM_CODE_GOLDEN_DRAGON_OR_SALT-ITEM_LABEL_CODE_BIAS)*3
-ASSERT worm_item_slot_label = item_slot_label_table + (ITEM_CODE_WORM-ITEM_LABEL_CODE_BIAS)*3
-ASSERT access_card_item_slot_label = item_slot_label_table + (ITEM_CODE_ACCESS_CARD-ITEM_LABEL_CODE_BIAS)*3
-ASSERT herring_item_slot_label = item_slot_label_table + (ITEM_CODE_HERRING-ITEM_LABEL_CODE_BIAS)*3
-ASSERT mouse_item_slot_label = item_slot_label_table + (ITEM_CODE_MOUSE-ITEM_LABEL_CODE_BIAS)*3
-ASSERT cheese_item_slot_label = item_slot_label_table + (ITEM_CODE_CHEESE-ITEM_LABEL_CODE_BIAS)*3
-ASSERT cross_item_slot_label = item_slot_label_table + (ITEM_CODE_CROSS-ITEM_LABEL_CODE_BIAS)*3
-ASSERT eye_item_slot_label = item_slot_label_table + (ITEM_CODE_EYE-ITEM_LABEL_CODE_BIAS)*3
-ASSERT bottle_item_slot_label = item_slot_label_table + (ITEM_CODE_BOTTLE-ITEM_LABEL_CODE_BIAS)*3
+ASSERT key_1_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_1-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT key_2_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_2-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT key_3_item_slot_label = item_slot_label_table + (ITEM_CODE_KEY_3-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT salt_item_slot_label = item_slot_label_table + (ITEM_CODE_GOLDEN_DRAGON_OR_SALT-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT worm_item_slot_label = item_slot_label_table + (ITEM_CODE_WORM-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT access_card_item_slot_label = item_slot_label_table + (ITEM_CODE_ACCESS_CARD-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT herring_item_slot_label = item_slot_label_table + (ITEM_CODE_HERRING-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT mouse_item_slot_label = item_slot_label_table + (ITEM_CODE_MOUSE-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT cheese_item_slot_label = item_slot_label_table + (ITEM_CODE_CHEESE-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT cross_item_slot_label = item_slot_label_table + (ITEM_CODE_CROSS-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT eye_item_slot_label = item_slot_label_table + (ITEM_CODE_EYE-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
+ASSERT bottle_item_slot_label = item_slot_label_table + (ITEM_CODE_BOTTLE-ITEM_LABEL_CODE_BIAS)*ITEM_LABEL_CODE_TO_BYTE_SCALE
 ASSERT item_slot_label_table_source_end-item_slot_label_table_source = (ITEM_GOAL_RECORD_COUNT+1)*ITEM_LABEL_CHARACTER_COUNT
 ASSERT item_slot_label_table_source = item_slot_label_table
 ASSERT item_slot_label_table_source_end = &0B51

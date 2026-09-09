@@ -609,6 +609,7 @@ MUSIC_TUNE_PROGRESS_RESET       = &00 ; behavioral: restart the sequence after a
 LOWER_SCREEN_PALETTE_INITIAL_VALUE = &00 ; structural: initial palette workspace byte before the raster handler is configured
 ITEM_LABEL_CHARACTER_COUNT      = &06 ; behavioral: fixed width of every carried-item label
 ITEM_LABEL_CODE_BIAS            = &26 ; dataflow: bias preceding ITEM_CODE_KEY_1 used when indexing item_slot_label_table, including its blank row
+ITEM_LABEL_CODE_TO_BYTE_SCALE   = &03 ; dataflow: converts each two-step item code into its six-byte label offset
 ITEM_GRAPHIC_RECORDS_PER_PAIR   = &02 ; behavioral: every item image occupies two consecutive graphic records
 GOLDEN_DRAGON_ITEM_RECORD_INDEX = &03 ; behavioral: item/goal record that invokes the Golden Dragon ending before drawing
 ITEM_CODE_NONE                  = &00 ; behavioral: empty carried-item slot
