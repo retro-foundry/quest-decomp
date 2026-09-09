@@ -214,11 +214,11 @@
 ;          records name down 10, outside the grid, matching items the account
 ;          says are produced by puzzles rather than found: the herring and mouse.
 ;
-;   $0930  indexed_xor_room_record_table, sixteen five-byte records. A matching
-;          record configures the type and four positions of the indexed XOR
-;          graphic system. Its last three bytes are the display row and lower
-;          and upper position limits. Types 1 and 2 keep an existing nonzero
-;          $63 state rather than reinitialising it.
+;   $0930  roaming_graphic_room_record_table, sixteen five-byte records. A matching
+;          record configures four positions for a caterpillar, fish, mouse or
+;          lift. Its last three bytes are the display row and lower and upper
+;          position limits. Fish and mouse records keep an existing nonzero
+;          puzzle state at $63 rather than reinitialising it.
 ;
 ;   $0980  initial_item_and_goal_record_table, the 48-byte new-game image of
 ;          the mutable $0900 table. restore_item_and_goal_records copies the
@@ -1502,10 +1502,10 @@ ORG indexed_xor_graphic_state
     EQUB &00                         ; $121D indexed XOR state element 0
     EQUB &00                         ; $121E lower selector limit / element 1
     EQUB &00                         ; $121F upper selector limit / element 2
-    EQUB &00                         ; $1220 room update selector / element 3
-    EQUB &00                         ; $1221 primary room entity type
-    EQUB &00                         ; $1222 primary room entity index
-    EQUB &00                         ; $1223 indexed XOR instance count
+    EQUB &00                         ; $1220 roaming-graphic room selector / element 3
+    EQUB &00                         ; $1221 active enemy species
+    EQUB &00                         ; $1222 active enemy last even slot
+    EQUB &00                         ; $1223 roaming-graphic even-slot loop limit
     EQUB &00                         ; $1224 graphic source base pointer offset
     EQUB &00                         ; $1225 complete current room cell
 .room_render_state_source_end
@@ -2285,9 +2285,9 @@ ORG dispatch_game_tick_updates
     JSR run_horizontal_16_warp_sequence
 
 .dispatch_game_tick_updates_branch_2
-    LDA &1220
+    LDA roaming_graphics_active
     BEQ dispatch_game_tick_updates_branch_3
-    JSR &33C1
+    JSR update_and_draw_roaming_graphics
 
 .dispatch_game_tick_updates_branch_3
     LDA &A3
@@ -6229,7 +6229,7 @@ ORG pick_up_item_below_player
     CMP #&03
     BEQ find_empty_item_slot
     LDA #&00
-    STA &1220
+    STA roaming_graphics_active
 
 .find_empty_item_slot
     PLA
@@ -7984,9 +7984,9 @@ ORG select_graphic_then_xor_draw
 ; X, Y, and the entry stack depth are unchanged at the fall-through boundary.
 .select_graphic_then_xor_draw_source
     PHA
-    LDA &0B5F,X
+    LDA active_roaming_graphic_pointer_table,X
     STA graphic_source_pointer_low
-    LDA &0B60,X
+    LDA active_roaming_graphic_pointer_table+1,X
     STA graphic_source_pointer_high
     PLA
 .select_graphic_then_xor_draw_source_end
@@ -9550,13 +9550,13 @@ COPYBLOCK draw_character_row_as_tiles_source, draw_character_row_as_tiles_source
 CLEAR draw_character_row_as_tiles_source, draw_character_row_as_tiles_source_end
 
 
-ORG reverse_indexed_xor_graphic_delta_at_limits
+ORG reverse_roaming_graphic_delta_at_limits
 
 ; Runtime $343A-$3452. Keep the Y-indexed selector state moving between the
 ; inclusive limits at $121E/$121F. A lower-limit match selects delta +1; an
 ; upper-limit match selects delta -1; an interior value leaves the delta
 ; unchanged. X and Y are preserved.
-.reverse_indexed_xor_graphic_delta_at_limits_source
+.reverse_roaming_graphic_delta_at_limits_source
     LDA indexed_xor_graphic_selector_state,Y
     CMP indexed_xor_graphic_selector_lower_limit
     BEQ indexed_xor_select_positive_delta
@@ -9573,15 +9573,15 @@ ORG reverse_indexed_xor_graphic_delta_at_limits
 .indexed_xor_select_negative_delta
     LDA #&FF
     JMP indexed_xor_store_reversed_delta
-.reverse_indexed_xor_graphic_delta_at_limits_source_end
+.reverse_roaming_graphic_delta_at_limits_source_end
 
-ASSERT reverse_indexed_xor_graphic_delta_at_limits_source = reverse_indexed_xor_graphic_delta_at_limits
-ASSERT reverse_indexed_xor_graphic_delta_at_limits_source_end = &3453
-COPYBLOCK reverse_indexed_xor_graphic_delta_at_limits_source, reverse_indexed_xor_graphic_delta_at_limits_source_end, &4C3A
+ASSERT reverse_roaming_graphic_delta_at_limits_source = reverse_roaming_graphic_delta_at_limits
+ASSERT reverse_roaming_graphic_delta_at_limits_source_end = &3453
+COPYBLOCK reverse_roaming_graphic_delta_at_limits_source, reverse_roaming_graphic_delta_at_limits_source_end, &4C3A
 
 ; Runtime $343A-$3452 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C3A-$4C52.
-CLEAR reverse_indexed_xor_graphic_delta_at_limits_source, reverse_indexed_xor_graphic_delta_at_limits_source_end
+CLEAR reverse_roaming_graphic_delta_at_limits_source, reverse_roaming_graphic_delta_at_limits_source_end
 
 ORG play_note_for_position_and_test_tune
 
@@ -9651,33 +9651,33 @@ COPYBLOCK play_note_for_position_and_test_tune_source, play_note_for_position_an
 CLEAR play_note_for_position_and_test_tune_source, play_note_for_position_and_test_tune_source_end
 
 
-ORG update_and_draw_indexed_xor_graphics
+ORG update_and_draw_roaming_graphics
 
-; Runtime $33C1-$3439. Update the room's active indexed-XOR graphics. Each
-; instance occupies an even Y index because its display pointer is a two-byte
+; Runtime $33C1-$3439. Update the room's active caterpillar, fish, mouse or
+; lift graphics. Each instance occupies an even Y index because its display pointer is a two-byte
 ; zero-page entry. When $61 is nonzero the old image is XOR-erased first; the
 ; selector is then reflected at its configured limits, advanced together with
 ; its display pointer, and drawn in the new position.
 ;
-; Cell types zero and three bypass the candidate/item path. Type zero also
+; Caterpillars and lifts bypass the candidate/item path. A caterpillar also
 ; submits the moved graphic to the player-bounds test as an $12-high candidate.
 ; For the other types, $2203 tests the selector/state-derived candidate. The
 ; carry-set path was not reached in committed play, but its exact static code
-; records the candidate delta and accepts item $30 for type one or item $38 for
-; the other type; if neither carried slot has that item it substitutes the
+; records the candidate delta and accepts item $30 for a fish or item $38 for
+; a mouse; if neither carried slot has that item it substitutes the
 ; scratch value in $33. Every observed $2203 call returns carry clear.
-.update_and_draw_indexed_xor_graphics_source
+.update_and_draw_roaming_graphics_source
     LDY #&00
 
 .indexed_xor_update_loop
     LDA indexed_xor_erase_previous_graphic
     BEQ indexed_xor_old_image_removed
-    JSR draw_indexed_xor_graphic
+    JSR draw_roaming_graphic
 
 .indexed_xor_old_image_removed
     LDA current_room_cell
     BEQ advance_indexed_xor_graphic
-    CMP #&03
+    CMP #ROAMING_GRAPHIC_LIFT
     BEQ advance_indexed_xor_graphic
     SEC
     LDA indexed_xor_graphic_selector_state,Y
@@ -9695,7 +9695,7 @@ ORG update_and_draw_indexed_xor_graphics
     LDA inline_vdu_stream_pointer_low
     STA indexed_xor_graphic_selector_delta,Y
     LDA current_room_cell
-    CMP #&01
+    CMP #ROAMING_GRAPHIC_FISH
     BNE indexed_xor_require_item_38
     LDA #&30
     JMP indexed_xor_test_required_item
@@ -9705,9 +9705,9 @@ ORG update_and_draw_indexed_xor_graphics
     JMP indexed_xor_test_required_item
 
 .advance_indexed_xor_graphic
-    JSR reverse_indexed_xor_graphic_delta_at_limits
-    JSR advance_indexed_xor_graphic_state_and_pointer
-    JSR draw_indexed_xor_graphic
+    JSR reverse_roaming_graphic_delta_at_limits
+    JSR advance_roaming_graphic_state_and_pointer
+    JSR draw_roaming_graphic
     LDA current_room_cell
     BNE indexed_xor_next_instance
     LDA indexed_xor_graphic_selector_state,Y
@@ -9723,7 +9723,7 @@ ORG update_and_draw_indexed_xor_graphics
 .indexed_xor_next_instance
     INY
     INY
-    CPY indexed_xor_instance_count
+    CPY roaming_graphic_slot_limit
     BMI indexed_xor_update_loop
     LDA #&00
     STA xor_graphic_repeat_source_scanlines
@@ -9737,16 +9737,16 @@ ORG update_and_draw_indexed_xor_graphics
     LDA &33                         ; candidate helper scratch/fallback value
     STA indexed_xor_graphic_selector_delta,Y
     JMP advance_indexed_xor_graphic
-.update_and_draw_indexed_xor_graphics_source_end
+.update_and_draw_roaming_graphics_source_end
 
-ASSERT update_and_draw_indexed_xor_graphics_source = update_and_draw_indexed_xor_graphics
-ASSERT update_and_draw_indexed_xor_graphics_source_end = reverse_indexed_xor_graphic_delta_at_limits
+ASSERT update_and_draw_roaming_graphics_source = update_and_draw_roaming_graphics
+ASSERT update_and_draw_roaming_graphics_source_end = reverse_roaming_graphic_delta_at_limits
 ASSERT indexed_xor_test_required_item = &342A
-COPYBLOCK update_and_draw_indexed_xor_graphics_source, update_and_draw_indexed_xor_graphics_source_end, &4BC1
+COPYBLOCK update_and_draw_roaming_graphics_source, update_and_draw_roaming_graphics_source_end, &4BC1
 
 ; Runtime $33C1-$3439 overlaps the loaded transport image. Release it after
 ; copying its source-built bytes to loaded $4BC1-$4C39.
-CLEAR update_and_draw_indexed_xor_graphics_source, update_and_draw_indexed_xor_graphics_source_end
+CLEAR update_and_draw_roaming_graphics_source, update_and_draw_roaming_graphics_source_end
 
 
 ORG initialise_four_dynamic_room_object_slots
@@ -9804,7 +9804,7 @@ COPYBLOCK initialise_four_dynamic_room_object_slots_source, initialise_four_dyna
 CLEAR initialise_four_dynamic_room_object_slots_source, initialise_four_dynamic_room_object_slots_source_end
 
 
-ORG draw_indexed_xor_graphic
+ORG draw_roaming_graphic
 
 ; Runtime $3453-$3487. Y indexes selector inputs and a display pointer. X is
 ; built from whether the signed delta is $FF and whether selector-state bit 2
@@ -9812,7 +9812,7 @@ ORG draw_indexed_xor_graphic
 ; observed globals select the repeated-source/two-row setup; the bypass leaves
 ; the initial one-row count in place. The final jump tail-calls the proven
 ; graphic selector and XOR renderer.
-.draw_indexed_xor_graphic_source
+.draw_roaming_graphic_source
     LDA #&01
     STA xor_graphic_character_rows_remaining
     LDX #&00
@@ -9835,7 +9835,7 @@ ORG draw_indexed_xor_graphic
 .indexed_xor_selector_ready
     LDA &1225
     BNE indexed_xor_load_display_pointer
-    LDA &1223
+    LDA roaming_graphic_slot_limit
     CMP #&05
     BPL indexed_xor_load_display_pointer
     JSR configure_two_row_repeated_xor_graphic
@@ -9845,15 +9845,15 @@ ORG draw_indexed_xor_graphic
     STA display_pointer_high
     LDA indexed_xor_display_pointer_low,Y
     JMP select_graphic_then_xor_draw
-.draw_indexed_xor_graphic_source_end
+.draw_roaming_graphic_source_end
 
-ASSERT draw_indexed_xor_graphic_source = draw_indexed_xor_graphic
-ASSERT draw_indexed_xor_graphic_source_end = &3488
-COPYBLOCK draw_indexed_xor_graphic_source, draw_indexed_xor_graphic_source_end, &4C53
+ASSERT draw_roaming_graphic_source = draw_roaming_graphic
+ASSERT draw_roaming_graphic_source_end = &3488
+COPYBLOCK draw_roaming_graphic_source, draw_roaming_graphic_source_end, &4C53
 
 ; Runtime $3453-$3487 overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C53-$4C87.
-CLEAR draw_indexed_xor_graphic_source, draw_indexed_xor_graphic_source_end
+CLEAR draw_roaming_graphic_source, draw_roaming_graphic_source_end
 
 ORG draw_and_initialise_room
 
@@ -9891,7 +9891,7 @@ ORG draw_and_initialise_room
     STA &A3
     STA &A5
     STA jet_boots_enabled_this_room
-    STA &1220
+    STA roaming_graphics_active
     STA &79
     STA &1239
     STA &6E
@@ -9969,7 +9969,7 @@ ORG draw_and_initialise_room
     CMP #&1F
     BNE start_next_room_row
     JSR draw_matching_records_from_table
-    JSR &1E6C
+    JSR initialise_roaming_graphics_for_room
     JSR initialise_room_enemy_from_table
     JSR initialise_second_room_entity_from_table
     LDA #&00
@@ -10017,13 +10017,13 @@ COPYBLOCK draw_and_initialise_room_source, draw_and_initialise_room_source_end, 
 CLEAR draw_and_initialise_room_source, draw_and_initialise_room_source_end
 
 
-ORG advance_indexed_xor_graphic_state_and_pointer
+ORG advance_roaming_graphic_state_and_pointer
 
 ; Runtime $3488-$34BA. Add the Y-indexed signed delta to selector state, then
 ; move the paired display pointer by one Mode 1 byte column (eight bytes).
 ; Delta sign alone chooses +8 or -8. X and Y are preserved; A returns the
 ; updated display-pointer high byte.
-.advance_indexed_xor_graphic_state_and_pointer_source
+.advance_roaming_graphic_state_and_pointer_source
     LDA indexed_xor_graphic_selector_state,Y
     CLC
     ADC indexed_xor_graphic_selector_delta,Y
@@ -10049,15 +10049,15 @@ ORG advance_indexed_xor_graphic_state_and_pointer
     SBC #&00
     STA indexed_xor_display_pointer_high,Y
     RTS
-.advance_indexed_xor_graphic_state_and_pointer_source_end
+.advance_roaming_graphic_state_and_pointer_source_end
 
-ASSERT advance_indexed_xor_graphic_state_and_pointer_source = advance_indexed_xor_graphic_state_and_pointer
-ASSERT advance_indexed_xor_graphic_state_and_pointer_source_end = &34BB
-COPYBLOCK advance_indexed_xor_graphic_state_and_pointer_source, advance_indexed_xor_graphic_state_and_pointer_source_end, &4C88
+ASSERT advance_roaming_graphic_state_and_pointer_source = advance_roaming_graphic_state_and_pointer
+ASSERT advance_roaming_graphic_state_and_pointer_source_end = &34BB
+COPYBLOCK advance_roaming_graphic_state_and_pointer_source, advance_roaming_graphic_state_and_pointer_source_end, &4C88
 
 ; Runtime $3488-$34BA overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $4C88-$4CBA.
-CLEAR advance_indexed_xor_graphic_state_and_pointer_source, advance_indexed_xor_graphic_state_and_pointer_source_end
+CLEAR advance_roaming_graphic_state_and_pointer_source, advance_roaming_graphic_state_and_pointer_source_end
 
 
 ORG set_room_data_pointer
@@ -10806,21 +10806,21 @@ COPYBLOCK show_golden_dragon_ending_source, show_golden_dragon_ending_source_end
 CLEAR show_golden_dragon_ending_source, show_golden_dragon_ending_source_end
 
 
-ORG initialise_indexed_xor_graphics_for_room
+ORG initialise_roaming_graphics_for_room
 
 ; Runtime $1E6C-$1F0E. Scan the sixteen five-byte records at $0930 for the
-; current room. No match returns without changing the indexed XOR-graphic
+; current room. No match returns without changing the roaming-graphic
 ; configuration. A match saves the record type and a selector derived from the
-; packed room bytes; types 1 and 2 return early when the existing state at $63
-; is nonzero.
+; packed room bytes; fish and mouse records return early when the existing
+; puzzle state at $63 is nonzero.
 ;
 ; Otherwise the record's final three bytes become a display row and lower and
 ; upper position limits. Four selector states derived from those limits are
 ; converted into display pointers. An eight-byte graphic-pointer set selected
 ; by the record type is copied from $1F0F to $0B5F, and the four alternating +1/-1
 ; selector deltas are initialised. The downstream $343A/$3453/$3488 routines
-; clamp, draw, and advance these same four indexed instances.
-.initialise_indexed_xor_graphics_for_room_source
+; clamp, draw, and advance these same four roaming instances.
+.initialise_roaming_graphics_for_room_source
     LDX #&00
     LDA #&30
     STA &13
@@ -10848,11 +10848,11 @@ ORG initialise_indexed_xor_graphics_for_room
     LDX &31
     INX
     INX
-    STX &1223
+    STX roaming_graphic_slot_limit
     LDA &1225
-    CMP #&01
+    CMP #ROAMING_GRAPHIC_FISH
     BEQ test_existing_special_xor_state
-    CMP #&02
+    CMP #ROAMING_GRAPHIC_MOUSE
     BNE initialise_indexed_xor_record
 
 .test_existing_special_xor_state
@@ -10862,12 +10862,12 @@ ORG initialise_indexed_xor_graphics_for_room
 
 .initialise_indexed_xor_record
     LDX #&01
-    STX &1220
+    STX roaming_graphics_active
     DEX
 
 .copy_indexed_xor_record_fields
     INY
-    LDA indexed_xor_room_record_table,Y
+    LDA roaming_graphic_room_record_table,Y
     STA &121D,X
     INX
     CPX #&03
@@ -10906,8 +10906,8 @@ ORG initialise_indexed_xor_graphics_for_room
     LDX #&00
 
 .copy_indexed_xor_graphic_pointers
-    LDA indexed_xor_graphic_pointer_sets,Y
-    STA indexed_xor_graphic_pointer_table,X
+    LDA roaming_graphic_pointer_sets,Y
+    STA active_roaming_graphic_pointer_table,X
     INY
     INX
     CPX #&08
@@ -10919,15 +10919,15 @@ ORG initialise_indexed_xor_graphics_for_room
     STA &122C
     STA &1230
     RTS
-.initialise_indexed_xor_graphics_for_room_source_end
+.initialise_roaming_graphics_for_room_source_end
 
-ASSERT initialise_indexed_xor_graphics_for_room_source = initialise_indexed_xor_graphics_for_room
-ASSERT initialise_indexed_xor_graphics_for_room_source_end = &1F0F
-COPYBLOCK initialise_indexed_xor_graphics_for_room_source, initialise_indexed_xor_graphics_for_room_source_end, &366C
+ASSERT initialise_roaming_graphics_for_room_source = initialise_roaming_graphics_for_room
+ASSERT initialise_roaming_graphics_for_room_source_end = &1F0F
+COPYBLOCK initialise_roaming_graphics_for_room_source, initialise_roaming_graphics_for_room_source_end, &366C
 
 ; Runtime $1E6C-$1F0E overlaps the loaded transport image. Release it after
 ; copying its bytes to loaded $366C-$370E.
-CLEAR initialise_indexed_xor_graphics_for_room_source, initialise_indexed_xor_graphics_for_room_source_end
+CLEAR initialise_roaming_graphics_for_room_source, initialise_roaming_graphics_for_room_source_end
 
 
 ; Named gameplay databases. One EQUB row is one proved record.
@@ -11027,19 +11027,19 @@ ORG music_tune_sequence
     EQUB &44, &3C, &34, &44, &3C, &34, &50, &48, &44, &50, &48, &44
 .music_tune_sequence_source_end
 ASSERT music_tune_sequence_source = music_tune_sequence
-ASSERT music_tune_sequence_source_end = indexed_xor_graphic_pointer_table
+ASSERT music_tune_sequence_source_end = active_roaming_graphic_pointer_table
 COPYBLOCK music_tune_sequence_source, music_tune_sequence_source_end, &2453
 CLEAR music_tune_sequence_source, music_tune_sequence_source_end
 
-ORG indexed_xor_graphic_pointer_table
+ORG active_roaming_graphic_pointer_table
 ; Runtime 0B5F-0B66: four pointers populated during room initialisation.
-.indexed_xor_graphic_pointer_table_source
+.active_roaming_graphic_pointer_table_source
     EQUW &0000, &0000, &0000, &0000
-.indexed_xor_graphic_pointer_table_source_end
-ASSERT indexed_xor_graphic_pointer_table_source = indexed_xor_graphic_pointer_table
-ASSERT indexed_xor_graphic_pointer_table_source_end = &0B67
-COPYBLOCK indexed_xor_graphic_pointer_table_source, indexed_xor_graphic_pointer_table_source_end, &245F
-CLEAR indexed_xor_graphic_pointer_table_source, indexed_xor_graphic_pointer_table_source_end
+.active_roaming_graphic_pointer_table_source_end
+ASSERT active_roaming_graphic_pointer_table_source = active_roaming_graphic_pointer_table
+ASSERT active_roaming_graphic_pointer_table_source_end = &0B67
+COPYBLOCK active_roaming_graphic_pointer_table_source, active_roaming_graphic_pointer_table_source_end, &245F
+CLEAR active_roaming_graphic_pointer_table_source, active_roaming_graphic_pointer_table_source_end
 
 ORG enemy_graphic_descriptor
 ; Runtime 0B67-0B6A: current enemy's two sprite-frame pointers.
@@ -11433,22 +11433,22 @@ ASSERT room_tile_pair_sets_source_end = draw_matching_records_from_table
 COPYBLOCK room_tile_pair_sets_source, room_tile_pair_sets_source_end, &3590
 CLEAR room_tile_pair_sets_source, room_tile_pair_sets_source_end
 
-ORG indexed_xor_graphic_pointer_sets
+ORG roaming_graphic_pointer_sets
 ; Runtime 1F0F-1F2E: four sets of four little-endian graphic pointers. They are
 ; the four-direction caterpillar; the fish's right- and left-facing graphics;
-; the mouse's right- and left-facing graphics; and a background-only set.
+; the mouse's right- and left-facing graphics; and the vertical lift graphic.
 ; These roaming/puzzle graphics are separate from the room-entity pairs
 ; selected by the descriptor table at $1FDF.
-.indexed_xor_graphic_pointer_sets_source
-    EQUW &0400, &0420, &0440, &0460
-    EQUW &06A0, &1140, &06A0, &1140
-    EQUW &0680, &1160, &0680, &1160
-    EQUW &0EA0, &0EA0, &0EA0, &0EA0
-.indexed_xor_graphic_pointer_sets_source_end
-ASSERT indexed_xor_graphic_pointer_sets_source = indexed_xor_graphic_pointer_sets
-ASSERT indexed_xor_graphic_pointer_sets_source_end = initialise_room_enemy_from_table
-COPYBLOCK indexed_xor_graphic_pointer_sets_source, indexed_xor_graphic_pointer_sets_source_end, &370F
-CLEAR indexed_xor_graphic_pointer_sets_source, indexed_xor_graphic_pointer_sets_source_end
+.roaming_graphic_pointer_sets_source
+    EQUW &0400, &0420, &0440, &0460 ; ROAMING_GRAPHIC_CATERPILLAR
+    EQUW &06A0, &1140, &06A0, &1140 ; ROAMING_GRAPHIC_FISH
+    EQUW &0680, &1160, &0680, &1160 ; ROAMING_GRAPHIC_MOUSE
+    EQUW &0EA0, &0EA0, &0EA0, &0EA0 ; ROAMING_GRAPHIC_LIFT
+.roaming_graphic_pointer_sets_source_end
+ASSERT roaming_graphic_pointer_sets_source = roaming_graphic_pointer_sets
+ASSERT roaming_graphic_pointer_sets_source_end = initialise_room_enemy_from_table
+COPYBLOCK roaming_graphic_pointer_sets_source, roaming_graphic_pointer_sets_source_end, &370F
+CLEAR roaming_graphic_pointer_sets_source, roaming_graphic_pointer_sets_source_end
 
 ORG item_and_goal_record_table
 ; Runtime 0900-092F: twelve mutable item/goal records.
@@ -11471,30 +11471,31 @@ ASSERT item_and_goal_record_table_source_end = &0930
 COPYBLOCK item_and_goal_record_table_source, item_and_goal_record_table_source_end, &2200
 CLEAR item_and_goal_record_table_source, item_and_goal_record_table_source_end
 
-ORG indexed_xor_room_record_table
-; Runtime 0930-097F: sixteen indexed-XOR room records.
-.indexed_xor_room_record_table_source
-    EQUB &40, &01, &10, &1D, &46
-    EQUB &03, &00, &18, &30, &46
-    EQUB &05, &01, &18, &04, &1B
-    EQUB &C4, &02, &13, &10, &2B
-    EQUB &01, &02, &0A, &2C, &3C
-    EQUB &42, &01, &18, &23, &4A
-    EQUB &81, &26, &19, &1A, &33
-    EQUB &00, &05, &10, &1D, &2F
-    EQUB &02, &32, &0F, &14, &3F
-    EQUB &03, &33, &0E, &04, &18
-    EQUB &03, &06, &0A, &0E, &2D
-    EQUB &04, &36, &0C, &1C, &40
-    EQUB &05, &06, &12, &20, &3B
-    EQUB &09, &26, &19, &1A, &33
-    EQUB &07, &14, &16, &00, &2F
-    EQUB &06, &04, &10, &24, &45
-.indexed_xor_room_record_table_source_end
-ASSERT indexed_xor_room_record_table_source = indexed_xor_room_record_table
-ASSERT indexed_xor_room_record_table_source_end = &0980
-COPYBLOCK indexed_xor_room_record_table_source, indexed_xor_room_record_table_source_end, &2230
-CLEAR indexed_xor_room_record_table_source, indexed_xor_room_record_table_source_end
+ORG roaming_graphic_room_record_table
+; Runtime 0930-097F: sixteen roaming-creature/lift records. The second byte's
+; high nibble selects ROAMING_GRAPHIC_*; the comments decode the packed room.
+.roaming_graphic_room_record_table_source
+    EQUB &40, &01, &10, &1D, &46 ; B0 caterpillar
+    EQUB &03, &00, &18, &30, &46 ; A3 caterpillar
+    EQUB &05, &01, &18, &04, &1B ; B5 caterpillar
+    EQUB &C4, &02, &13, &10, &2B ; C4 caterpillar
+    EQUB &01, &02, &0A, &2C, &3C ; C1 caterpillar
+    EQUB &42, &01, &18, &23, &4A ; B2 caterpillar
+    EQUB &81, &26, &19, &1A, &33 ; G1 mouse
+    EQUB &00, &05, &10, &1D, &2F ; F0 caterpillar
+    EQUB &02, &32, &0F, &14, &3F ; C2 lift
+    EQUB &03, &33, &0E, &04, &18 ; D3 lift
+    EQUB &03, &06, &0A, &0E, &2D ; G3 caterpillar
+    EQUB &04, &36, &0C, &1C, &40 ; G4 lift
+    EQUB &05, &06, &12, &20, &3B ; G5 caterpillar
+    EQUB &09, &26, &19, &1A, &33 ; G9 mouse
+    EQUB &07, &14, &16, &00, &2F ; E7 fish
+    EQUB &06, &04, &10, &24, &45 ; E6 caterpillar
+.roaming_graphic_room_record_table_source_end
+ASSERT roaming_graphic_room_record_table_source = roaming_graphic_room_record_table
+ASSERT roaming_graphic_room_record_table_source_end = &0980
+COPYBLOCK roaming_graphic_room_record_table_source, roaming_graphic_room_record_table_source_end, &2230
+CLEAR roaming_graphic_room_record_table_source, roaming_graphic_room_record_table_source_end
 
 ORG initial_item_and_goal_record_table
 ; Runtime 0980-09AF: twelve pristine new-game item/goal records.

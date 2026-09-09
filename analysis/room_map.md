@@ -20,7 +20,7 @@ Where the two disagree the disagreement is recorded rather than resolved.
 | --- | --- | --- | --- |
 | `room_appearance_table` | `$09B0` | 80 bytes, `$8F * 8 + $90` | palette nibble and tile-pair index per room |
 | `item_and_goal_record_table` | `$0900` | 12 records of 4 | eleven item-indexed records plus the Golden Dragon ending at index 3 |
-| `indexed_xor_room_record_table` | `$0930` | 16 records of 5 | room-specific type, display row, and position limits for four indexed XOR graphics |
+| `roaming_graphic_room_record_table` | `$0930` | 16 records of 5 | roaming graphics: caterpillars in B0/A3/B5/C4/C1/B2/F0/G3/G5/E6, mice in G1/G9, lifts in C2/D3/G4, and fish in E7 |
 | `initial_item_and_goal_record_table` | `$0980` | 12 records of 4 | new-game image copied over the mutable `$0900` records by `$3245` |
 | `room_enemy_record_table` | `$0A00` | 20 records of 6 | bat, small bouncing robot, or moth enemies, per room |
 | `second_room_entity_record_table` | `$0A96` | 20 records of 5 | the second entity class, per room |

@@ -234,7 +234,7 @@
       ]
     },
     {
-     "name": "indexed_xor_graphic_pointer_table",
+     "name": "active_roaming_graphic_pointer_table",
      "runtime_start": 2911,
      "runtime_end_exclusive": 2919,
      "loaded_start": 9311,
@@ -243,7 +243,7 @@
       "meaning_level": "behavioral",
       "record_size": 2,
       "evidence": [
-        "initialise_indexed_xor_graphics_for_room fills four little-endian pointers here; select_graphic_then_xor_draw reads them"
+        "initialise_roaming_graphics_for_room fills four little-endian caterpillar, fish, mouse or lift pointers here; select_graphic_then_xor_draw reads them"
       ]
     },
     {
@@ -436,7 +436,7 @@
       ]
     },
     {
-     "name": "indexed_xor_graphic_pointer_sets",
+     "name": "roaming_graphic_pointer_sets",
      "runtime_start": 7951,
      "runtime_end_exclusive": 7983,
      "loaded_start": 14095,
@@ -445,7 +445,7 @@
       "meaning_level": "behavioral",
       "record_size": 8,
       "evidence": [
-        "initialise_indexed_xor_graphics_for_room copies one of four eight-byte pointer sets into the runtime pointer table"
+        "initialise_roaming_graphics_for_room copies one of four eight-byte pointer sets: caterpillar $0400-$0460, fish $06A0/$1140, mouse $0680/$1160, or lift $0EA0"
       ]
     },
     {
@@ -462,7 +462,7 @@
       ]
     },
     {
-      "name": "indexed_xor_room_record_table",
+      "name": "roaming_graphic_room_record_table",
       "runtime_start": 2352,
       "runtime_end_exclusive": 2432,
       "loaded_start": 8752,
@@ -471,7 +471,7 @@
       "meaning_level": "behavioral",
       "record_size": 5,
       "evidence": [
-        "initialise_indexed_xor_graphics_for_room scans sixteen five-byte room records and copies the matched type, row and position limits"
+        "initialise_roaming_graphics_for_room scans sixteen five-byte records: ten caterpillar rooms, two mouse rooms, three lift rooms and one fish room, then copies the matched row and position limits"
       ]
     },
     {
@@ -2237,7 +2237,7 @@
       ]
     },
     {
-      "name": "initialise_indexed_xor_graphics_for_room",
+      "name": "initialise_roaming_graphics_for_room",
       "runtime_start": 7788,
       "runtime_end_exclusive": 7951,
       "loaded_start": 13932,
@@ -3911,7 +3911,7 @@
       ]
     },
     {
-      "name": "update_and_draw_indexed_xor_graphics",
+      "name": "update_and_draw_roaming_graphics",
       "runtime_start": 13249,
       "runtime_end_exclusive": 13370,
       "loaded_start": 19393,
@@ -3941,12 +3941,12 @@
       "evidence": [
         "pcode/game.pcode.json function $33C1 has 55 instructions, sole caller $2258, and calls the indexed-XOR limit, advance, draw and candidate-overlap helpers",
         "committed runtime traces enter the routine 1,487 times and execute 39 instructions, including both type-zero/type-three bypasses and 48 carry-clear candidate tests",
-        "Y advances by two through the two-byte display-pointer arrays until indexed_xor_instance_count, proving the even-indexed instance loop",
+        "Y advances by two through the two-byte display-pointer arrays until roaming_graphic_slot_limit, proving the even-indexed instance loop",
         "the traced type-zero path derives candidate fields from selector state and indexed state, sets height $12, and calls the player-bounds overlap entry before clearing the repeat-source flag"
       ]
     },
     {
-      "name": "reverse_indexed_xor_graphic_delta_at_limits",
+      "name": "reverse_roaming_graphic_delta_at_limits",
       "runtime_start": 13370,
       "runtime_end_exclusive": 13395,
       "loaded_start": 19514,
@@ -3961,7 +3961,7 @@
       ]
     },
     {
-      "name": "draw_indexed_xor_graphic",
+      "name": "draw_roaming_graphic",
       "runtime_start": 13395,
       "runtime_end_exclusive": 13448,
       "loaded_start": 19539,
@@ -3977,7 +3977,7 @@
       ]
     },
     {
-      "name": "advance_indexed_xor_graphic_state_and_pointer",
+      "name": "advance_roaming_graphic_state_and_pointer",
       "runtime_start": 13448,
       "runtime_end_exclusive": 13499,
       "loaded_start": 19592,
@@ -4181,7 +4181,7 @@
       "evidence": [
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv executes all eleven instructions 4,057 times, with 44 lower-limit and 33 upper-limit reversals against 4,027 pass-throughs",
         "analysis/runtime_trace/played_key_and_door/executed_pcs.csv proves the caller 0x35a2",
-        "the shape matches reverse_indexed_xor_graphic_delta_at_limits, which applies the same two-limit reversal to the graphic selector rather than the position"
+        "the shape matches reverse_roaming_graphic_delta_at_limits, which applies the same two-limit reversal to the graphic selector rather than the position"
       ]
     },
     {
