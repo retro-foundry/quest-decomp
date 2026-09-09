@@ -1136,57 +1136,57 @@ ORG process_player_cell_interactions
 .process_player_cell_interactions_source
     LDA #GRAPHIC_PATTERNED_SLOPE_B
     JSR display_pattern_test
-    BCC test_pattern_25_interaction
+    BCC test_uniform_pattern_interaction
     JSR collect_power_crystal_and_refill_energy
 
-.test_pattern_25_interaction
+.test_uniform_pattern_interaction
     LDA #GRAPHIC_UNIFORM_PATTERN
     JSR display_pattern_test
-    BCC test_pattern_06_interaction
+    BCC test_small_marker_terminal_interaction
     LDA saved_interaction_item_code
     JSR consume_matching_item_from_slots
     BCS replace_consumed_interaction_cell
     LDA saved_interaction_item_code
     CMP #ITEM_CODE_KEY_1
-    BNE test_pattern_06_interaction
+    BNE test_small_marker_terminal_interaction
     LDA #ITEM_CODE_KEY_3
     JSR consume_matching_item_from_slots
-    BCC test_pattern_06_interaction
+    BCC test_small_marker_terminal_interaction
 
 .replace_consumed_interaction_cell
     JSR replace_saved_cell_then_play_sound
 
-.test_pattern_06_interaction
+.test_small_marker_terminal_interaction
     LDA #GRAPHIC_SMALL_MARKER
     JSR display_pattern_test
-    BCC test_pattern_16_interaction
+    BCC test_solid_fill_item_interaction
     JSR enter_run_terminal_interaction
     JSR xor_draw_player_two_parts
 
-.test_pattern_16_interaction
+.test_solid_fill_item_interaction
     LDA #GRAPHIC_SOLID_FILL
     JSR display_pattern_test
-    BCC test_pattern_1a_interaction
+    BCC test_hydroponics_damage_interaction
     LDA room_interaction_code
     CMP #ROOM_CELL_ELEPHANT_HOUSE_SIGN
-    BNE test_pattern_16_type_21
+    BNE test_joke_shop_required_item
     LDA #ITEM_CODE_MOUSE
-    JMP consume_pattern_16_required_item
+    JMP consume_solid_fill_required_item
 
-.test_pattern_16_type_21
+.test_joke_shop_required_item
     CMP #ROOM_CELL_JOKE_SHOP_SIGN
-    BNE test_pattern_1a_interaction
+    BNE test_hydroponics_damage_interaction
     LDA #ITEM_CODE_HERRING
 
-.consume_pattern_16_required_item
+.consume_solid_fill_required_item
     JSR consume_matching_item_from_slots
-    BCC test_pattern_1a_interaction
+    BCC test_hydroponics_damage_interaction
     LDA #ROOM_CELL_FOUR_TILE_HALF_ROW
     JSR start_saved_display_block_shift_effect
     LDA #ROOM_MOVING_OBJECT_PUZZLE_STATE_CLEAR
     STA room_moving_object_puzzle_state
 
-.test_pattern_1a_interaction
+.test_hydroponics_damage_interaction
     LDA #GRAPHIC_DIAGONAL_SLOPE_A
     JSR display_pattern_test
     BCC player_cell_interactions_rts
