@@ -11345,8 +11345,9 @@ ORG room_and_item_graphic_records
     EQUB &0F, &0F, &3C, &3C, &3C, &3C, &0F, &0F, &0F, &0F, &C3, &C3, &C3, &83, &0F, &0F
 ; graphic record &2D
     EQUB &00, &00, &00, &0F, &0F, &00, &00, &00, &00, &00, &00, &0F, &0F, &0E, &0A, &0A
-.salt_item_graphic_pair
-; graphic records &2E-&2F: salt / Golden Dragon record index
+.golden_dragon_graphic_pair
+; graphic records &2E-&2F: the Golden Dragon. Numeric item code $2E also maps
+; the inventory label "salt" to this pair, so the same bytes have both roles.
 ; graphic record &2E
     EQUB &00, &00, &FF, &BB, &0C, &03, &33, &FF, &11, &FF, &FC, &FF, &0F, &7F, &FF, &88
 ; graphic record &2F

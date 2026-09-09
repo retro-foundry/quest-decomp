@@ -83,7 +83,7 @@ item_names = (
     "key_item_1",
     "key_item_2",
     "key_item_3",
-    "salt_item",
+    "golden_dragon__also_salt_item_code",
     "worm_item",
     "access_card_item",
     "herring_item",
