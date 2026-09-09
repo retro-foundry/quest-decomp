@@ -1866,8 +1866,8 @@ ORG copy_16_byte_graphic_to_display
 
 ; Runtime $1CE4-$1D51, including the two-entry pointer table at $1D34-$1D37.
 ; A bits 0-5 select a 16-byte record. Bit 6 selects reversed order within each
-; eight-byte half; bit 7 makes the byte helper apply EOR #$90. When the record
-; index is zero and $79 is nonzero, record $12 is selected instead. X and Y are
+; eight-byte half; bit 7 makes the byte helper apply EOR #$90. In a water
+; environment, record zero is replaced by GRAPHIC_HORIZONTAL_BAR. X and Y are
 ; preserved, while A returns the original masked record index.
 .copy_16_byte_graphic_to_display_source
     STA graphic_record_selector_flags
@@ -1881,7 +1881,7 @@ ORG copy_16_byte_graphic_to_display
 
     LDA graphic_record_byte_offset_low
     BNE copy_16_graphic_index_selected
-    LDA shared_workspace_79
+    LDA water_environment_flag
     BEQ copy_16_graphic_index_selected
     LDA #GRAPHIC_HORIZONTAL_BAR
     STA graphic_record_byte_offset_low
@@ -2760,8 +2760,8 @@ ORG initialise_room_enemy_from_table
     STA room_enemy_second_display_pointer_low
     LDA display_pointer_high
     STA room_enemy_second_display_pointer_high
-    LDY #ENEMY_JELLYFISH_DESCRIPTOR_OFFSET
-    LDA shared_workspace_79
+    LDY #WATER_ENEMY_JELLYFISH_DESCRIPTOR_OFFSET
+    LDA water_environment_flag
     BNE copy_entity_descriptor
     LDA active_enemy_species
     ASL A
@@ -4193,7 +4193,7 @@ ORG initialise_new_game
 
 .clear_next_icon_slot
     LDA #STATUS_GRAPHIC_REMAINING_ICON
-    STA shared_workspace_79
+    STA water_environment_flag ; this graphic selector is also WATER_ENVIRONMENT_INACTIVE
     BEQ draw_cleared_icon_slot
 
 ; Runtime $0C00-$0C0F is skipped unconditionally by the BEQ above. Its sixteen
@@ -4757,7 +4757,7 @@ ORG move_player_down_by_velocity
     JSR advance_player_vertical_position_and_display_pointer
     DEC player_vertical_steps_remaining
     BNE fall_one_step
-    LDA shared_workspace_79
+    LDA water_environment_flag
     BEQ move_player_down_by_velocity_branch_5
 
 .adjust_velocity_after_fall
@@ -5156,8 +5156,8 @@ CLEAR move_player_up_by_velocity_source, move_player_up_by_velocity_source_end
 ORG scan_four_display_bytes_for_markers
 
 ; Runtime $2957-$29A1. Inspect DISPLAY_MARKER_SCAN_COUNT bytes separated by
-; DISPLAY_MARKER_SCAN_STRIDE. Zero bytes are skipped. The C0 byte sets the
-; auxiliary marker flag; either deferred-damage byte requests damage after the
+; DISPLAY_MARKER_SCAN_STRIDE. Zero bytes are skipped. DISPLAY_MARKER_WATER
+; enables the water environment; either deferred-damage byte requests damage after the
 ; scan; and DISPLAY_MARKER_IMMEDIATE_DAMAGE applies it immediately. Any other
 ; nonzero byte, including the post-damage path, marks the column occupied and
 ; returns carry set. A completed clear scan returns carry clear.
@@ -5166,7 +5166,7 @@ ORG scan_four_display_bytes_for_markers
     LDY #&00
     STY display_grid_column
     STY display_marker_deferred_damage_flag
-    STY shared_workspace_79
+    STY water_environment_flag
     STY display_marker_scan_auxiliary_state
     JSR test_display_pointer_in_xor_draw_window
     BCS return_via_292e
@@ -5174,7 +5174,7 @@ ORG scan_four_display_bytes_for_markers
 .scan_next_display_byte
     LDA (display_pointer_low),Y
     BEQ advance_display_scan_offset
-    CMP #DISPLAY_MARKER_C0_FLAG
+    CMP #DISPLAY_MARKER_WATER
     BEQ mark_c0_display_byte
     CMP #DISPLAY_MARKER_DEFERRED_DAMAGE_0A
     BEQ mark_0a_or_05_display_byte
@@ -5191,8 +5191,8 @@ ORG scan_four_display_bytes_for_markers
     RTS
 
 .mark_c0_display_byte
-    LDA #&01
-    STA shared_workspace_79
+    LDA #WATER_ENVIRONMENT_ACTIVE
+    STA water_environment_flag
 
 .advance_display_scan_offset
     TYA
@@ -6522,13 +6522,13 @@ ORG draw_column_sensitive_room_patterns
     BPL draw_blank_or_alternating_row_by_column
     LDX #&03
     JSR draw_alternating_tile_run
-    LDA shared_workspace_79
+    LDA water_environment_flag
     PHA
-    STX shared_workspace_79
+    STX water_environment_flag
     LDX #&02
     JSR draw_blank_tile_run
     PLA
-    STA shared_workspace_79
+    STA water_environment_flag
     LDX #&03
     JMP draw_alternating_tile_run
 
@@ -8751,8 +8751,8 @@ ORG draw_fixed_pair_gap_and_bordered_rows
     RTS
 
 .select_blank_or_right_half_pattern_by_column_source
-    LDA #&01
-    STA shared_workspace_79
+    LDA #WATER_ENVIRONMENT_ACTIVE
+    STA water_environment_flag
     LDA tile_pair_source_selector
     CMP shared_workspace_09
     BNE draw_alternating_in_right_half
@@ -9873,7 +9873,7 @@ ORG draw_and_initialise_room
     STA lift_hazard_secondary_updates_active
     STA jet_boots_enabled_this_room
     STA room_moving_objects_active
-    STA shared_workspace_79
+    STA water_environment_flag
     STA room_tick_update_selector
     STA shared_workspace_6e
     STA timed_effect_selector
