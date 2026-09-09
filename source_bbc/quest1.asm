@@ -4049,7 +4049,7 @@ ORG set_velocity_step_from_horizontal_band
 ; alternates by band is consistent with a current, and the account of the map has
 ; many water rooms, but no trace has been tied to a named room.
 .set_velocity_step_from_horizontal_band_source
-    LDA shared_workspace_16
+    LDA player_horizontal_position_snapshot
     LSR A
     LSR A
     LSR A
@@ -4693,19 +4693,17 @@ ORG move_player_down_by_velocity
 
 ; Runtime $2813-$2892. Move the player downwards by however far the vertical
 ; velocity has carried them, and decide what happens on landing.
-; The step count at $0F is $FF less the velocity plus four, shifted right twice,
-; which is the falling mirror of the climb count. Each iteration tests the room
-; edge first: a halved vertical position between $60 and $6C leaves through
-; $2AFD after snapshotting the player.
-; The player-relative scan then decides the step. A clear scan reaches $286C,
-; which stores the signed +2 in $40, calls the vertical mover and loops.
-; A blocked scan is the ground. Landing below velocity $F2 costs energy through
+; player_vertical_steps_remaining is derived from the signed velocity and each
+; iteration tests the room edge before testing the cells under the player. A
+; position inside the lower transition band snapshots the player and enters the
+; room below.
+; A clear player-relative scan applies a signed +2 vertical step and loops. A
+; blocked scan is the ground. Landing below velocity $F2 costs energy through
 ; the damage routine and adds two to the velocity; otherwise the landing is
-; tested against the display pattern, and a match with $88 clear sets the
+; tested against the bounce pattern, and an available action sets the
 ; velocity to 9, plays a sound at pitch $3C and transfers to the climb, which is
 ; a bounce. Any other landing simply zeroes the velocity.
-; $287F onwards handles the case where the fall ended over $79: below velocity
-; $FC the velocity gains four, otherwise a set $13 forces it to $0A.
+; The tail adjusts velocity when the display scan found its special marker.
 .move_player_down_by_velocity_source
     SEC
     LDA #&FF
@@ -4713,7 +4711,7 @@ ORG move_player_down_by_velocity
     ADC #&04
     LSR A
     LSR A
-    STA shared_workspace_0f
+    STA player_vertical_steps_remaining
 
 .fall_one_step
     LDA player_vertical_position
@@ -4729,7 +4727,7 @@ ORG move_player_down_by_velocity
     JSR prepare_player_relative_display_scan
     BCC apply_downward_step
     LDA #&01
-    STA shared_workspace_15
+    STA player_ground_contact_flag
     LDA player_vertical_velocity
     CMP #&F2
     BPL test_landing_pattern
@@ -4763,11 +4761,11 @@ ORG move_player_down_by_velocity
 
 .apply_downward_step
     LDA #&00
-    STA shared_workspace_15
+    STA player_ground_contact_flag
     LDA #&02
     STA vertical_step_delta
     JSR advance_player_vertical_position_and_display_pointer
-    DEC shared_workspace_0f
+    DEC player_vertical_steps_remaining
     BNE fall_one_step
     LDA shared_workspace_79
     BEQ move_player_down_by_velocity_branch_5
@@ -4914,7 +4912,7 @@ ORG poll_controls_and_apply_gameplay_actions
     LDA player_display_pointer_snapshot_low
     CMP player_display_pointer_low
     BNE control_redraw_after_state_change
-    LDA shared_workspace_05
+    LDA player_horizontal_input_snapshot
     CMP horizontal_input_delta_copy
     BNE control_redraw_after_state_change
     LDA player_display_pointer_snapshot_high
@@ -4983,7 +4981,7 @@ ORG poll_controls_and_apply_gameplay_actions
     LDA #&00
     STA horizontal_input_delta
     STA display_grid_row
-    STA shared_workspace_15
+    STA player_ground_contact_flag
     STA display_grid_column
     SEC
     LDA player_vertical_velocity
@@ -5093,20 +5091,16 @@ ORG move_player_up_by_velocity
 
 ; Runtime $28A7-$28EE. Move the player upwards by however much vertical velocity
 ; the jet boots have built up.
-; The step count at $0F is the velocity plus four, shifted right twice, so four
-; velocity units buy one step. $28AE is a second entry for callers that have
-; already chosen a count.
+; player_vertical_steps_remaining is the velocity plus four, shifted right
+; twice, so four velocity units buy one step. step_up_by_count is the secondary
+; entry for callers that have already chosen a count.
 ; Each iteration first tests the room edge, and it is player_vertical_position
-; at $2C that it reads, not the display pointer, even though the two describe
-; the same thing. $2C is (character row - 5) * 8, so halving it and comparing
+; that it reads, not the display pointer, even though the two describe the same
+; thing. The position is (character row - 5) * 8, so halving it and comparing
 ; with 9 asks whether the player is above character row 7, the top of the play
-; area; unless $75 blocks it the player then leaves through enter_room_above.
-; Anything that moves the player without moving $2C makes this test unreachable:
-; collision stops the climb at the real ceiling while $2C still reports the old
-; row. Otherwise the display pointer is taken from the player and
-; the marker scan run; a clear scan reaches the step at $28E3, which stores the
-; signed -2 in $40 and calls the vertical mover, looping until the count runs
-; out.
+; area; unless the shared transition gate blocks it, the player enters the room
+; above. Otherwise the marker scan runs from the player display pointer; a clear
+; scan applies a signed -2 vertical step and loops until the count runs out.
 ; A blocked scan is a ceiling. Hitting one below velocity $0A simply stops the
 ; climb by zeroing the velocity; at $0A or above it costs energy through the
 ; damage routine and takes three off the velocity instead, so a fast climb into
@@ -5119,7 +5113,7 @@ ORG move_player_up_by_velocity
     LSR A
 
 .step_up_by_count
-    STA shared_workspace_0f
+    STA player_vertical_steps_remaining
 
 .climb_one_step
     LDA player_vertical_position
@@ -5156,7 +5150,7 @@ ORG move_player_up_by_velocity
     LDA #&FE
     STA vertical_step_delta
     JSR advance_player_vertical_position_and_display_pointer
-    DEC shared_workspace_0f
+    DEC player_vertical_steps_remaining
     BNE climb_one_step
     RTS
 .move_player_up_by_velocity_source_end
@@ -5628,16 +5622,15 @@ ORG xor_draw_player_two_parts
 
 ; Runtime $2A89-$2AB9. Draw the player as two XOR parts, called from the vsync
 ; display helpers so it runs once per frame.
-; The sign of $05 selects the facing pair: X is $18 or $1A for the first part
-; and $1E or $22 for the second. The first part is two character rows drawn at
-; the pointer held in $36/$37; the second is one row drawn at the display
-; pointer the first part left behind, and its graphic index is stepped back by
-; two when $14 is nonzero and bit 0 of $16 is set, which selects an alternate
-; frame. The second part is tail-called, so the XOR renderer returns to this
-; routine caller.
+; The sign of player_horizontal_input_snapshot selects the left- or right-facing
+; upper and lower pointer pair. The upper body is two character rows drawn at
+; player_display_pointer_snapshot; the lower body is one row drawn immediately
+; below it. Ground contact and the low bit of the saved horizontal position
+; select the alternate stepping frame. The lower draw is tail-called, so the XOR
+; renderer returns directly to this routine's caller.
 .xor_draw_player_two_parts_source
     LDX #PLAYER_UPPER_RIGHT_POINTER_OFFSET
-    LDA shared_workspace_05
+    LDA player_horizontal_input_snapshot
     BPL draw_first_player_part
     LDX #PLAYER_UPPER_LEFT_POINTER_OFFSET
 
@@ -5649,14 +5642,14 @@ ORG xor_draw_player_two_parts
     LDA player_display_pointer_snapshot_low
     JSR select_graphic_then_xor_draw
     LDX #PLAYER_LOWER_STEP_RIGHT_POINTER_OFFSET
-    LDA shared_workspace_05
+    LDA player_horizontal_input_snapshot
     BPL select_second_part_frame
     LDX #PLAYER_LOWER_STEP_LEFT_POINTER_OFFSET
 
 .select_second_part_frame
     LDA shared_workspace_14
     BEQ draw_second_player_part
-    LDA shared_workspace_16
+    LDA player_horizontal_position_snapshot
     LSR A
     BCC draw_second_player_part
     DEX
@@ -5760,24 +5753,23 @@ CLEAR enter_room_to_the_right_source, enter_room_to_the_right_source_end
 ORG capture_player_state_for_redraw
 
 ; Runtime $2ABA-$2ACE. Copy the live player state into the shadow copies the
-; sprite renderer draws from: the display pointer into $36/$37, the horizontal
-; input delta into $05, $15 into $14 and the horizontal position into $16.
+; sprite renderer draws from: display pointer, horizontal input, ground-contact
+; state and horizontal position.
 ; wait_vsync_then_call_display_helpers calls this between its two XOR draws, so
 ; the first draw erases the player using the previous snapshot and the second
 ; draws it using this one. Every value it writes is read by
-; xor_draw_player_two_parts: $36/$37 as the pointer, the sign of $05 as the
-; facing, and $14 and $16 as the alternate-frame selector.
+; xor_draw_player_two_parts as the position, facing and walking-frame state.
 .capture_player_state_for_redraw_source
     LDA player_display_pointer_low
     STA player_display_pointer_snapshot_low
     LDA player_display_pointer_high
     STA player_display_pointer_snapshot_high
     LDA horizontal_input_delta_copy
-    STA shared_workspace_05
-    LDA shared_workspace_15
+    STA player_horizontal_input_snapshot
+    LDA player_ground_contact_flag
     STA shared_workspace_14
     LDA player_horizontal_position
-    STA shared_workspace_16
+    STA player_horizontal_position_snapshot
 .return_from_room_transition
     RTS
 .capture_player_state_for_redraw_source_end
@@ -7000,7 +6992,7 @@ ORG initialise_indexed_pair_from_record
     LDX #&03
 
 .preset_pair_flags
-    STA shared_workspace_80,X
+    STA cross_room_enemy_redraw_countdown,X
     DEX
     BPL preset_pair_flags
     LDA indexed_pair_record_table,Y
@@ -7176,9 +7168,9 @@ CLEAR draw_record_08_or_edge_pattern_row_source, draw_record_08_or_edge_pattern_
 
 ORG update_and_draw_two_indexed_pairs
 
-; Runtime $2E44-$2E7B. Process the X=$00 and X=$02 indexed-pair states. Values
-; of reference byte $8F below eight use this loop; other values tail-transfer
-; to the original alternate updater at $3009. Each ordinary iteration selects
+; Runtime $2E44-$2E7B. Process the two cross-room enemy states. Robot levels use
+; this loop; ghost levels tail-transfer to alternate_indexed_pair_countdown_update.
+; Each robot iteration selects
 ; repeated-source drawing, optionally erases the current graphic and advances
 ; a countdown, conditionally updates pair state, then draws the resulting
 ; graphic. The final CLC/RTS is shared with the adjacent matching handler.
@@ -7196,10 +7188,10 @@ ORG update_and_draw_two_indexed_pairs
     LDA indexed_xor_erase_previous_graphic
     BEQ update_indexed_pair_state
     JSR draw_indexed_pair_if_reference_matches
-    DEC shared_workspace_80,X
+    DEC cross_room_enemy_redraw_countdown,X
     BNE draw_updated_indexed_pair
     LDA #&01
-    STA shared_workspace_80,X
+    STA cross_room_enemy_redraw_countdown,X
 
 .update_indexed_pair_state
     JSR set_indexed_pair_value_delta_at_thresholds
@@ -7407,7 +7399,7 @@ ORG draw_indexed_pair_if_reference_matches
     LDA reset_indexed_pair_countdowns
     BEQ indexed_pair_draw_state_ready
     LDA #&00
-    STA shared_workspace_80,X
+    STA cross_room_enemy_redraw_countdown,X
 
 .indexed_pair_draw_state_ready
     PLA
@@ -8084,15 +8076,15 @@ ORG alternate_indexed_pair_countdown_update
     LDX #ROAMING_ENEMY_PAIR_FIRST_INDEX
 
 .alternate_indexed_pair_countdown_loop
-    LDA shared_workspace_80,X
+    LDA cross_room_enemy_redraw_countdown,X
     BEQ draw_then_decrement_alternate_indexed_pair
     CMP #ROAMING_GHOST_REDRAW_COUNTDOWN
     BEQ draw_then_decrement_alternate_indexed_pair
 .decrement_alternate_indexed_pair_countdown
-    DEC shared_workspace_80,X
+    DEC cross_room_enemy_redraw_countdown,X
     BNE advance_alternate_indexed_pair_selector
     LDA #ROAMING_GHOST_COUNTDOWN_RESET
-    STA shared_workspace_80,X
+    STA cross_room_enemy_redraw_countdown,X
     LDA indexed_xor_erase_previous_graphic
     BEQ update_alternate_indexed_pair_state
     JSR draw_directional_indexed_pair_if_matching
