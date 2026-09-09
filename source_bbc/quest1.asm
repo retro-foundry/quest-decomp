@@ -1169,8 +1169,8 @@ CLEAR remove_last_icon_and_stamp_room_cell_source, remove_last_icon_and_stamp_ro
 
 ORG evntv_read_interval_timer
 
-; Runtime $0B83-$0B9A. Read the MOS interval timer through OSWORD $04 into the
-; five-byte block at $0B9B and keep its low byte in $6D.
+; Runtime $0B83-$0B9A. Read the MOS interval timer into interval_timer_block
+; and keep the returned low byte in game_clock_tick_pending.
 ; Everything is preserved across the call, the processor status included, which
 ; is what an installed event handler has to do: EVNTV is reached from an
 ; interrupt and must leave the interrupted code undisturbed.
@@ -1185,7 +1185,7 @@ ORG evntv_read_interval_timer
     LDY #HI(interval_timer_block)
     LDA #OSWORD_READ_INTERVAL_TIMER
     JSR OSWORD
-    STA shared_workspace_6d
+    STA game_clock_tick_pending
     PLA
     TAX
     PLA
@@ -1423,7 +1423,7 @@ ORG process_player_cell_interactions
     LDA #&11
     JSR start_saved_display_block_shift_effect
     LDA #&00
-    STA shared_workspace_63
+    STA room_moving_object_puzzle_state
 
 .test_pattern_1a_interaction
     LDA #GRAPHIC_DIAGONAL_SLOPE_A
@@ -2291,12 +2291,12 @@ ORG dispatch_game_tick_updates
     JSR update_and_draw_room_moving_objects
 
 .dispatch_game_tick_updates_branch_3
-    LDA shared_workspace_a3
+    LDA lift_hazard_primary_updates_active
     BEQ dispatch_game_tick_updates_branch_4
     JSR update_lift_and_hazard_slots
 
 .dispatch_game_tick_updates_branch_4
-    LDA shared_workspace_a5
+    LDA lift_hazard_secondary_updates_active
     BEQ dispatch_game_tick_updates_branch_5
     JSR advance_record_counter_then_dispatch
 
@@ -2313,7 +2313,7 @@ ORG dispatch_game_tick_updates
     JSR advance_saved_display_block_shift_effect
 
 .dispatch_game_tick_updates_branch_7
-    LDA shared_workspace_6d
+    LDA game_clock_tick_pending
     BEQ dispatch_game_tick_updates_branch_8
     JSR advance_bcd_counter_and_print
 
@@ -2359,7 +2359,7 @@ ORG dispatch_game_tick_updates
     LDX #&01
     STX indexed_xor_erase_previous_graphic
     DEX
-    STX shared_workspace_74
+    STX reset_indexed_pair_countdowns
 
 .dispatch_game_tick_updates_branch_15
     LDA #&01
@@ -2524,7 +2524,7 @@ ORG advance_bcd_counter_and_print
 ; low two-digit bytes separated by VDU 9.
 .advance_bcd_counter_and_print_source
     LDA #&00
-    STA shared_workspace_6d
+    STA game_clock_tick_pending
     SED
     CLC
     LDA bcd_counter_low
@@ -3333,13 +3333,14 @@ CLEAR osbyte_81_inkey_source, osbyte_81_inkey_source_end
 
 ORG advance_record_counter_then_dispatch
 
-; Runtime $23F6-$2400. Increment the counter at $29, copy it into the record
-; selector at $34, preset Y to 8, and dispatch to $22DE. The counter is the
-; record index, so successive calls step through consecutive records.
+; Runtime $23F6-$2400. Increment lift_hazard_secondary_record_counter, copy it
+; into the shared record selector, preset the final indexed slot, and dispatch
+; through update_lift_or_hazard_from_preselected_slot. Successive calls therefore
+; step through consecutive records.
 .advance_record_counter_then_dispatch_source
     LDY #&08
-    INC shared_workspace_29
-    LDA shared_workspace_29
+    INC lift_hazard_secondary_record_counter
+    LDA lift_hazard_secondary_record_counter
     STA shared_workspace_34
     JMP update_lift_or_hazard_from_preselected_slot
 .advance_record_counter_then_dispatch_source_end
@@ -3420,18 +3421,17 @@ ORG update_lift_and_hazard_slots
 
 ; Runtime $22D6-$22FD. Update the lift/hazard slots on a schedule driven
 ; by a rolling counter.
-; The counter at $28 is incremented once per call and copied into $34, which is
-; then used as a bit mask: after the first three slots are updated
+; lift_hazard_primary_record_counter is incremented once per call and copied
+; into the shared selector, which is then used as a bit mask: after the first three slots are updated
 ; unconditionally, each further slot is updated only when the next bit rotated
-; out of $34 is set. So slots beyond the third take turns across frames rather
+; out of that selector is set. So slots beyond the third take turns across frames rather
 ; than all moving every frame, which spreads the work.
 ; Y indexes the slots and advances by two between them, so each entity occupies
-; a two-byte pair in the $18, $19 and $51/$52 arrays. The draws that bracket the
-; group use the $23C7 entry, which skips the slot check the per-entity path
-; performs.
+; a two-byte pair in the moving-entity delta, position and display-pointer
+; arrays. The draws that bracket the group use the no-slot-check renderer entry.
 .update_lift_and_hazard_slots_source
-    INC shared_workspace_28
-    LDA shared_workspace_28
+    INC lift_hazard_primary_record_counter
+    LDA lift_hazard_primary_record_counter
     STA shared_workspace_34
     LDY #&00
 .update_lift_or_hazard_from_preselected_slot
@@ -4360,7 +4360,7 @@ ORG run_startup_room_sequence_until_space
     LDX #&04
     STX shared_workspace_a2
     DEX
-    STX shared_workspace_89
+    STX collected_icon_erase_index
     LDA #&01
     STA xor_graphic_character_rows_remaining
     LDY #&10
@@ -4943,14 +4943,14 @@ ORG poll_controls_and_apply_gameplay_actions
     JSR osbyte_81_inkey
     BCC control_poll_sound_on
     LDA #&01
-    STA shared_workspace_9e
+    STA sound_disabled_flag
 
 .control_poll_sound_on
     LDX #INKEY_SOUND_ON
     JSR osbyte_81_inkey
     BCC control_poll_last_chance_chord
     LDA #&00
-    STA shared_workspace_9e
+    STA sound_disabled_flag
 
 .control_poll_last_chance_chord
     LDX #INKEY_LAST_CHANCE_TRIGGER
@@ -6229,7 +6229,7 @@ ORG pick_up_item_below_player
 
 .consume_pickup_prerequisite
     TXA
-    STA shared_workspace_63
+    STA room_moving_object_puzzle_state
     JSR consume_matching_item_from_slots
     LDA current_room_cell
     BEQ find_empty_item_slot
@@ -7404,7 +7404,7 @@ ORG draw_indexed_pair_if_reference_matches
     STA display_pointer_high
     LDA indexed_pair_display_pointer_low,X
     PHA
-    LDA shared_workspace_74
+    LDA reset_indexed_pair_countdowns
     BEQ indexed_pair_draw_state_ready
     LDA #&00
     STA shared_workspace_80,X
@@ -8353,13 +8353,13 @@ ORG consume_collected_icon_and_apply_effect
     LDA collected_icon_count
     JSR erase_collected_icon
     LDA #&01
-    STA shared_workspace_74
+    STA reset_indexed_pair_countdowns
     LDA shared_workspace_4e
     CMP #&FF
     BNE play_descending_flash_sequence
     DEC shared_workspace_a2
-    DEC shared_workspace_89
-    LDA shared_workspace_89
+    DEC collected_icon_erase_index
+    LDA collected_icon_erase_index
     JSR erase_collected_icon
     LDA #&53
     JSR store_byte_through_saved_pointer
@@ -8709,7 +8709,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 
 .mark_record_counter_and_draw_blank_row
     LDA #&01
-    STA shared_workspace_a5
+    STA lift_hazard_secondary_updates_active
 
 .draw_blank_dynamic_object_row
     JMP draw_eight_blank_tiles
@@ -8723,7 +8723,7 @@ ORG draw_fixed_pair_gap_and_bordered_rows
 
 .mark_dynamic_room_object_present
     LDA #&01
-    STA shared_workspace_a3
+    STA lift_hazard_primary_updates_active
 
 .require_dynamic_object_selector_seven
     CMP #&07
@@ -9458,11 +9458,11 @@ ORG submit_sound_block_with_pitch
 ; The $334C entry writes A as the pitch and fills the rest of the OSWORD $07
 ; block with fixed values: channel $10, which is flush plus channel 0, amplitude
 ; $FFF1, and duration 1. It then falls into the submission.
-; The $3363 submission is also entered directly by play_sound_with_amplitude,
-; which fills the block differently first. A nonzero $9E abandons the call
-; through the RTS at $334B, so that byte silences sound without the callers
-; knowing. Otherwise A, X and Y are preserved around OSWORD $07 with the block
-; address $32A0 in X and Y.
+; The submission entry is also called directly by play_sound_with_amplitude,
+; which fills the block differently first. A nonzero sound_disabled_flag
+; abandons submission, so sound is silenced without changing callers. Otherwise
+; A, X and Y are preserved around OSWORD SOUND with the block beginning at
+; sound_block_channel.
 .submit_sound_block_with_pitch_source
     STA sound_block_pitch
     LDA #&10
@@ -9475,7 +9475,7 @@ ORG submit_sound_block_with_pitch
     STA sound_block_duration
 
 .submit_sound_block
-    LDA shared_workspace_9e
+    LDA sound_disabled_flag
     BNE configure_two_row_repeated_xor_graphic_rts
     PHA
     TXA
@@ -9881,10 +9881,10 @@ ORG draw_and_initialise_room
 ; The body is then drawn a row at a time: eight cells per row through $1284,
 ; stepping the room pointer 40 bytes per row, until the row counter reaches
 ; $1F. Records, enemies, and lifts/hazards are initialised from their
-; three tables, the keyboard is reset through OSBYTE $09, $0A and $15, and the
-; player position is snapshotted into $2D to $30 as the room entry point.
-; Finally, a secondary reference below 8 takes the $221F vector before the
-; routine tail-jumps into the system clock write.
+; three tables, the keyboard buffers are reset, and the player position and
+; display pointer are snapshotted into the named walk-target and room-setup
+; fields. Finally, levels below ROAMING_GHOST_FIRST_LEVEL initialise the
+; per-level roaming pair before the routine tail-jumps into the clock write.
 .draw_and_initialise_room_source
     LDA #&01
     STA alternate_palette_selector
@@ -9893,8 +9893,8 @@ ORG draw_and_initialise_room
     LDA #HI(room_render_display_start)
     STA display_pointer_high
     LDA #&00
-    STA shared_workspace_a3
-    STA shared_workspace_a5
+    STA lift_hazard_primary_updates_active
+    STA lift_hazard_secondary_updates_active
     STA jet_boots_enabled_this_room
     STA room_moving_objects_active
     STA shared_workspace_79
@@ -9911,9 +9911,9 @@ ORG draw_and_initialise_room
     LDA #&08
     STA bounded_tick_target_value
     LDA level_room_map_offset_low
-    STA shared_workspace_72
+    STA room_cell_level_base_low
     LDA level_room_map_offset_high
-    STA shared_workspace_73
+    STA room_cell_level_base_high
     LDA #&07
     STA shared_workspace_04
     STA shared_workspace_09
@@ -10069,12 +10069,10 @@ ORG set_room_data_pointer
 
 ; Runtime $1C87-$1CA8. Build the pointer to the current room cell data.
 ; The horizontal reference at $90 is multiplied by five and added to the level
-; base at $72/$73, then biased by $37D0 into $76/$77. So a room occupies five
-; bytes of the table and the level base selects which band of rooms.
-; $72/$73 is a copy of $70/$71, which the level transitions maintain: $1CC7 adds
-; $78 to it going down and $1CB5 subtracts $78 going up, so the level base
-; advances one row of rooms at a time. The result is the pointer $1284 reads
-; cells through when it draws a room.
+; base in room_cell_level_base_low/high, then adds room_cell_map to form
+; room_data_pointer_low/high. A room occupies five bytes and the saved level
+; base selects its horizontal band. The level transitions maintain the source
+; level_room_map_offset by one complete level stride in either direction.
 ; The RTS at $1CA8 is shared, running far more often than this body.
 .set_room_data_pointer_source
     LDA reference_pair_primary_value
@@ -10082,10 +10080,10 @@ ORG set_room_data_pointer
     ASL A
     ADC reference_pair_primary_value
     STA shared_workspace_32
-    LDA shared_workspace_72
+    LDA room_cell_level_base_low
     ADC shared_workspace_32
     STA shared_workspace_32
-    LDA shared_workspace_73
+    LDA room_cell_level_base_high
     ADC #&00
     STA shared_workspace_33
     LDA #LO(room_cell_map)
@@ -10813,18 +10811,18 @@ CLEAR show_golden_dragon_ending_source, show_golden_dragon_ending_source_end
 
 ORG initialise_room_moving_objects
 
-; Runtime $1E6C-$1F0E. Scan the sixteen five-byte records at $0930 for the
+; Runtime $1E6C-$1F0E. Scan room_moving_object_record_table for the
 ; current room. No match returns without changing the room-moving-object
 ; configuration. A match saves the record type and a selector derived from the
 ; packed room bytes; fish and mouse records return early when the existing
-; puzzle state at $63 is nonzero.
+; room_moving_object_puzzle_state is nonzero.
 ;
 ; Otherwise the record's final three bytes become a display row and lower and
 ; upper position limits. Four selector states derived from those limits are
-; converted into display pointers. An eight-byte graphic-pointer set selected
-; by the record type is copied from $1F0F to $0B5F, and the four alternating +1/-1
-; selector deltas are initialised. The downstream $343A/$3453/$3488 routines
-; clamp, draw, and advance these same four room-local instances.
+; converted into display pointers. The record type selects one named eight-byte
+; set from room_moving_object_pointer_sets for the active pointer table, and the
+; four alternating signed selector deltas are initialised. The room-local update,
+; draw, and advance routines consume those same four instances.
 .initialise_room_moving_objects_source
     LDX #&00
     LDA #LO(room_moving_object_record_table)
@@ -10861,7 +10859,7 @@ ORG initialise_room_moving_objects
     BNE initialise_indexed_xor_record
 
 .test_existing_special_xor_state
-    LDA shared_workspace_63
+    LDA room_moving_object_puzzle_state
     BEQ initialise_indexed_xor_record
     RTS
 
@@ -11675,9 +11673,10 @@ COPYBLOCK room_enemy_record_table_source, room_enemy_record_table_source_end, &2
 CLEAR room_enemy_record_table_source, room_enemy_record_table_source_end
 
 ORG indexed_pair_record_table
-; Runtime 0A78-0A95: ten per-level indexed-pair records. These are separate
-; from the room-enemy table. Their update code can cross room columns, but the
-; sprites and gameplay identity selected by this subsystem are not yet proven.
+; Runtime $0A78-$0A95: ten per-level cross-room enemy records, one per level.
+; These are separate from the room-enemy table. Levels 0-7 select the small
+; bouncing robot frames; levels 8-9 select the ghost frames. Only those two
+; enemy classes use this cross-room subsystem.
 .indexed_pair_record_table_source
     EQUB &51, &8D, &0F
     EQUB &1D, &46, &07
