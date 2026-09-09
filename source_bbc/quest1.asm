@@ -2615,7 +2615,7 @@ ORG initialise_lifts_and_hazards_from_table
 .unpack_matched_lift_or_hazard_record
     LDA packed_record_even_field
     CLC
-    ADC #LIFT_HAZARD_SLOT_INDEX_BIAS
+    ADC #LIFT_HAZARD_SLOT_LIMIT_BASE
     STA lift_and_hazard_slot_limit
     LDA packed_record_type_field
     STA active_lift_or_hazard_class
@@ -2634,12 +2634,12 @@ ORG initialise_lifts_and_hazards_from_table
     ASL A
     ASL A
     STA lift_or_hazard_lower_position
-    STA lift_hazard_slot_10_position
+    STA lift_hazard_second_slot_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA lift_hazard_slot_10_display_pointer_low
+    STA lift_hazard_second_slot_display_pointer_low
     LDA display_pointer_high
-    STA lift_hazard_slot_10_display_pointer_high
+    STA lift_hazard_second_slot_display_pointer_high
     LDA lift_or_hazard_horizontal_extent
     STA display_grid_column
     INY
@@ -2650,17 +2650,17 @@ ORG initialise_lifts_and_hazards_from_table
     ASL A
     ASL A
     ASL A
-    STA lift_hazard_slot_8_position
+    STA lift_hazard_first_slot_position
     ADC #LIFT_HAZARD_UPPER_POSITION_SPAN
     STA lift_or_hazard_upper_position
     JSR set_display_pointer_from_grid_position
     LDA display_pointer_low
-    STA lift_hazard_slot_8_display_pointer_low
+    STA lift_hazard_first_slot_display_pointer_low
     LDA display_pointer_high
-    STA lift_hazard_slot_8_display_pointer_high
+    STA lift_hazard_first_slot_display_pointer_high
     LDA #LIFT_HAZARD_INITIAL_STEP
-    STA lift_hazard_slot_8_delta
-    STA lift_hazard_slot_10_delta
+    STA lift_hazard_first_slot_delta
+    STA lift_hazard_second_slot_delta
 .copy_lift_or_hazard_descriptor_for_active_class
     LDA active_lift_or_hazard_class
     ASL A
