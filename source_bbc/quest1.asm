@@ -1391,9 +1391,10 @@ CLEAR store_byte_and_advance_source_pointer_source, store_byte_and_advance_sourc
 ORG enter_copy_16_byte_graphic_to_display
 
 ; A single JMP vector into the 16-byte graphic blitter,
-; sitting between named runtime variables rather than in the table at $1200.
-; The bytes either side are data: $1225 is read by the character renderer and
-; the IRQ handler, and room_moving_object_graphic_selector_delta holds the first room-object selector step.
+; sitting between named runtime variables rather than in
+; display_action_jump_table. The bytes on either side are data:
+; complete_current_room_cell is consumed by room rendering, while
+; room_moving_object_graphic_selector_delta begins the room-object selector state.
 .enter_copy_16_byte_graphic_to_display_source
     JMP copy_16_byte_graphic_to_display
 .enter_copy_16_byte_graphic_to_display_source_end
@@ -2232,7 +2233,8 @@ ORG load_room_palette_and_tile_pair
 ; range A to H the title program describes.
 ; That byte carries two fields. Its low nibble becomes the lower-screen palette
 ; value in lower_screen_palette_base, which the IRQ handler writes to the Video ULA after its timer
-; split. Its upper bits, shifted down twice and masked to $FC, index the
+; split. Its upper bits, shifted down twice and masked with
+; ROOM_APPEARANCE_TILE_OFFSET_MASK, index the
 ; four-byte room_tile_pair_sets, which are copied into the named primary and alternate pairs that
 ; stored pairs draw_alternating_tile_run chooses between.
 ; So a single byte decides both what colour a room is below the raster split and
@@ -2977,8 +2979,9 @@ CLEAR music_tune_progress_source, music_tune_progress_source_end
 ORG place_initial_map_objects
 
 ; Write the mutable starting cell types into named locations in the room map.
-; This straight-line initialiser stamps twelve centered slopes, three $FF-state
-; motifs, both key motifs, and the remaining named layouts. It runs once from
+; This straight-line initialiser stamps twelve centered slopes, three
+; ROOM_CELL_FF_STATE_MOTIF values, both key motifs, and the remaining named
+; layouts. It runs once from
 ; initialise_new_game before the first room is drawn.
 ; The Music Room location starts as ROOM_CELL_MUSIC_ROOM_SIGN;
 ; play_note_for_position_and_test_tune replaces it with
@@ -6729,7 +6732,8 @@ ORG initialise_cross_room_robot_ghost_from_record
 ; reference_pair_secondary_value selects one CROSS_ROOM_ROBOT_GHOST_RECORD_BYTES
 ; record from cross_room_robot_ghost_record_table. The first byte carries two fields:
 ; its low three bits become the primary field, and the byte shifted right and
-; masked to $FC becomes the value field. The second byte is unpacked the same
+; masked with CROSS_ROOM_ROBOT_GHOST_THRESHOLD_OFFSET_MASK becomes the value
+; field. The second byte is unpacked the same
 ; way into the negative-delta selector and threshold. The third byte, masked to
 ; six bits, is multiplied by eight and biased down by eight to become the offset
 ; field.
@@ -7514,7 +7518,8 @@ COPYBLOCK draw_table_selected_left_half_row_source, draw_table_selected_left_hal
 CLEAR draw_table_selected_left_half_row_source, draw_table_selected_left_half_row_source_end
 
 ORG left_half_four_tile_graphic_sequences
-; Four four-selector records selected by room column modulo four for cell $1B.
+; Four four-selector records selected by room column modulo four for
+; ROOM_CELL_LEFT_HALF_SEQUENCE.
 .left_half_four_tile_graphic_sequences_source
     EQUB GRAPHIC_STEPPED_FILL, GRAPHIC_BLANK, GRAPHIC_BLANK, GRAPHIC_SLOPING_LEDGE_A ; columns zero/four
     EQUB GRAPHIC_SOLID_FILL, GRAPHIC_STEPPED_FILL, GRAPHIC_SLOPING_LEDGE_A, GRAPHIC_RECORD_XOR_FLAG+GRAPHIC_RECORD_MIRROR_FLAG+GRAPHIC_DIAGONAL_SLOPE_A ; columns one/five
@@ -8033,7 +8038,8 @@ ORG toggle_first_ghost_axis_mode_when_positions_match
 
 ; Compare the value and offset fields of ghost 0
 ; with pair 1 (the same arrays at index 2). A mismatch returns through the
-; preceding shared RTS at $30AB. When both fields match, change the first pair's
+; shared cross_room_robot_ghost_positions_differ_return. When both fields match,
+; change the first pair's
 ; mode between the named horizontal and vertical modes. The alternate updater calls
 ; this once after processing both entries, so it detects the two positions
 ; meeting and alternates the first entry's mode.
@@ -8184,7 +8190,7 @@ CLEAR consume_collected_icon_and_apply_effect_source, consume_collected_icon_and
 
 ORG run_horizontal_16_warp_sequence
 
-; Return through the shared $3199 RTS unless the player
+; Return through return_from_horizontal_16_warp_sequence unless the player
 ; horizontal position is HORIZONTAL_WARP_TRIGGER_POSITION. On a match, count X
 ; from HORIZONTAL_WARP_STEP_COUNT to zero; each step preserves X, XOR-draws the
 ; player, waits for two vertical syncs, and submits a channel-one sound whose pitch is X.
@@ -9006,7 +9012,8 @@ ORG xor_graphic_into_display
 ; xor_graphic_repeat_source_scanlines can repeat each source scanline twice.
 ; Without repetition, eight INCs consume one source byte per scanline. The
 ; final scanline comparison leaves carry set, so the subsequent source-pointer
-; ADC adds $19 to the consumed $08: the next source row begins $21 bytes later.
+; addition combines XOR_GRAPHIC_NEXT_SOURCE_ROW_LOW_ADJUST with that carry and
+; the consumed scanlines to reach the next source row.
 .xor_graphic_into_display_source
     STA display_pointer_low
     TYA
@@ -9227,7 +9234,7 @@ ORG configure_two_row_repeated_xor_graphic
 
 ; Configure the adjacent XOR renderer to draw two
 ; eight-scanline character rows while repeating each source scanline twice.
-; A returns $02; X, Y, and all flags except N/Z are unchanged. The routine
+; A returns XOR_GRAPHIC_TWO_CHARACTER_ROWS; X, Y, and all flags except N/Z are unchanged. The routine
 ; does not touch the stack before its normal RTS.
 .configure_two_row_repeated_xor_graphic_source
     LDA #XOR_GRAPHIC_REPEAT_ENABLED
@@ -9306,7 +9313,7 @@ ORG draw_character_row_as_tiles
 ; block's first byte and shifted left eight times. A clear bit draws one blank
 ; tile and a set bit draws one alternating-pair tile, so text and patterned
 ; detail reach the display through the same tile pipeline as the room itself.
-; Reached only by the tail JMP at $12AE.
+; Reached only by dispatch_room_cell's character-row tail jump.
 .draw_character_row_as_tiles_source
     LDA current_room_cell
     AND #ROOM_CELL_MIRROR_FLAG
