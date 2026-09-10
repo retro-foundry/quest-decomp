@@ -15,6 +15,8 @@ declared in the two maintained source files:
 The assembly does not include binary fragments and does not require an
 original disk image or an authority payload to build.
 
+Original image: https://bbcmicro.co.uk/game.php?id=660
+
 ## Community
 
 Join the project discussion on [Discord](https://discord.gg/QjARJ67V9U).
