@@ -11669,17 +11669,28 @@ COPYBLOCK relocation_loader_source, relocation_loader_source_end, loader_initial
 CLEAR relocation_loader_source, relocation_loader_source_end
 
 
-; Literal dormant message immediately after the loader, followed by six zero
-; bytes. The high relocation also copies it into display RAM; no code or
-; pointer reference to the text is known.
-ORG EMBEDDED_MESSAGE_SOURCE_STAGING_ADDRESS
+; Intended hidden-message plaintext. In the released payload the relocation
+; loader occupies the first 99 character positions, so only the 92-character
+; suffix beginning at the final "e" of "Skyline" survives immediately after
+; the loader. The full supplied text is retained here as source, while the
+; COPYBLOCK below reproduces only the surviving suffix and six trailing zeros.
+; The high relocation copies that released block into display RAM; no code or
+; pointer reference to the literal text is known.
+ORG EMBEDDED_MESSAGE_FULL_SOURCE_STAGING_ADDRESS
+.embedded_message_intended_plaintext_source
+    EQUS "(C) Tony Oakden 1988. Thanks to Shawn and Andy.Trevor, Wayne and Gary(phycastria)Partis .The Skylin"
 .embedded_mountaineering_message_source
     EQUS "e Mountaineering Club.'Swing out Sister for Break-out. And goodluck Sally were ever you are!"
+.embedded_message_intended_plaintext_end
     EQUB &00, &00, &00, &00, &00, &00
 .embedded_mountaineering_message_source_end
-ASSERT embedded_mountaineering_message_source_end-embedded_mountaineering_message_source = EMBEDDED_MOUNTAINEERING_MESSAGE_BYTES
+ASSERT embedded_mountaineering_message_source-embedded_message_intended_plaintext_source = EMBEDDED_MESSAGE_LOST_PREFIX_BYTES
+ASSERT embedded_message_intended_plaintext_end-embedded_message_intended_plaintext_source = EMBEDDED_MESSAGE_INTENDED_PLAINTEXT_BYTES
+ASSERT embedded_message_intended_plaintext_end-embedded_mountaineering_message_source = EMBEDDED_MESSAGE_SURVIVING_SUFFIX_BYTES
+ASSERT embedded_mountaineering_message_source = EMBEDDED_MESSAGE_SOURCE_STAGING_ADDRESS
+ASSERT embedded_mountaineering_message_source_end-embedded_mountaineering_message_source = EMBEDDED_MESSAGE_LOADED_BLOCK_BYTES
 COPYBLOCK embedded_mountaineering_message_source, embedded_mountaineering_message_source_end, LOADED_EMBEDDED_MOUNTAINEERING_MESSAGE
-CLEAR embedded_mountaineering_message_source, embedded_mountaineering_message_source_end
+CLEAR embedded_message_intended_plaintext_source, embedded_mountaineering_message_source_end
 
 
 ; Copied verbatim to transient_xor_message_decoder before gameplay. X selects

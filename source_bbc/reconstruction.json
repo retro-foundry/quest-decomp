@@ -83,7 +83,8 @@
       "source_file": "source_bbc/quest1.asm",
       "meaning_level": "behavioral",
       "evidence": [
-        "the exact 92-character ASCII text begins immediately after the loader's JMP $0B00 and is followed by six zero bytes",
+        "the released payload contains only the 92-character suffix beginning with the final e of Skyline immediately after the loader's JMP $0B00, followed by six zero bytes",
+        "the complete 191-character intended plaintext supplied for reconstruction is retained in source; its first 99 characters are annotation-only because those positions are occupied by the released relocation loader",
         "the high relocation copies this region to display RAM $429E-$42FF; no code or pointer xref to the literal text has been found"
       ]
     },
